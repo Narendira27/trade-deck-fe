@@ -13,11 +13,6 @@ interface AddTradeModalProps {
   onClose: () => void;
 }
 
-interface indexData {
-  indices: string[];
-  expiry: { [index: string]: string[] };
-}
-
 const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState<TradeFormData>({
     index: "",
@@ -26,12 +21,12 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
     ltpRange: 0,
   });
 
-  const [indexData, setIndexData] = useState<indexData>({
-    indices: [],
-    expiry: {},
-  });
+  // const [indexData, setIndexData] = useState<indexData>({
+  //   indices: [],
+  //   expiry: {},
+  // });
 
-  const { setTrades } = useStore();
+  const { setTrades, setIndexData, indexData } = useStore();
   useEffect(() => {
     const auth = cookies.get("auth");
     if (auth) {

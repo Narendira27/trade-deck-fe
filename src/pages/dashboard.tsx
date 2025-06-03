@@ -6,19 +6,27 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import SideNav from "../components/SideNav";
 import TradeTable from "../components/TradeTable";
+import DraggableBoxManager from "../components/DraggableBoxManager";
 import { jwtDecode } from "jwt-decode";
 
 import { API_URL } from "../config/config";
 
 import { toast } from "sonner";
 import useStore from "../store/store";
+import DraggableBox from "../components/DraggableBox";
 
 interface MyJwtPayload {
   updatePassword: boolean;
 }
 
 function Dashboard() {
-  const { trades, setTrades } = useStore();
+  const {
+    trades,
+    draggableData,
+    setTrades,
+    updateHideStatus,
+    removeDraggableData,
+  } = useStore();
 
   const navigate = useNavigate();
 
@@ -44,19 +52,16 @@ function Dashboard() {
   useEffect(() => {
     const auth = cookies.get("auth");
 
-    if (!auth) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode<MyJwtPayload>(auth);
-      if (decoded.updatePassword === true) {
-        navigate("/onboarding");
-        return;
+    if (auth) {
+      try {
+        const decoded = jwtDecode<MyJwtPayload>(auth);
+        if (decoded.updatePassword === true) {
+          navigate("/onboarding");
+          return;
+        }
+      } catch {
+        navigate("/login");
       }
-    } catch {
-      navigate("/login");
     }
 
     getTradeData();
@@ -81,13 +86,30 @@ function Dashboard() {
     };
   }, [getTradeData, setTrades]);
 
+  const removeBox = (id: string) => {
+    removeDraggableData(id);
+  };
+
+  const hideBox = (id: string) => {
+    updateHideStatus(id, true);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <SideNav />
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden relative">
           <TradeTable trades={trades} />
+          <DraggableBoxManager />
+          {draggableData.map((each) => (
+            <DraggableBox
+              key={each.id}
+              data={each}
+              removeBox={() => removeBox(each.id)}
+              hideBox={() => hideBox(each.id)}
+            />
+          ))}
         </main>
       </div>
     </div>
@@ -95,7 +117,6 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
 // {
 //   id: "1",
 //   index: "nifty",
