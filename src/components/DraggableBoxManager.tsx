@@ -22,7 +22,7 @@ const DraggableBoxManager: React.FC = () => {
           id: Date.now().toString(),
           index: formData.index,
           expiry: formData.expiry,
-          ltpRange: formData.index,
+          ltpRange: formData.ltpRange,
           isHidden: false,
         },
       ]);
