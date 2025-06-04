@@ -1,5 +1,11 @@
 import React from "react";
-import { LayoutDashboard, Menu, BarChart2, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Menu,
+  BarChart2,
+  LogOut,
+  KeyRound,
+} from "lucide-react";
 import cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -57,21 +63,32 @@ const SideNav: React.FC = () => {
             </a>
           </div>
 
-          {/* Logout Button */}
-          <button
-            className="flex items-center text-gray-400 px-3 py-2 rounded-md hover:text-white hover:bg-gray-800 transition-colors mt-auto w-full"
-            onClick={() => {
-              setIsOpen(false);
-              cookies.remove("auth");
-              navigate("/login");
-              toast.info("Successfully logged out");
-            }}
-          >
-            <LogOut className="flex-shrink-0" size={18} />
-            <span className="ml-3 whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
-              Logout
-            </span>
-          </button>
+          <div>
+            <button
+              className="flex items-center text-gray-400 px-3 py-2 rounded-md hover:text-white hover:bg-gray-800 transition-colors mt-auto w-full"
+
+            >
+              <KeyRound className="flex-shrink-0" size={18} />
+              <span className="ml-3 whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+                Add Keys
+              </span>
+            </button>
+
+            <button
+              className="flex items-center text-gray-400 px-3 py-2 rounded-md hover:text-white hover:bg-gray-800 transition-colors mt-auto w-full"
+              onClick={() => {
+                setIsOpen(false);
+                cookies.remove("auth");
+                navigate("/login");
+                toast.info("Successfully logged out");
+              }}
+            >
+              <LogOut className="flex-shrink-0" size={18} />
+              <span className="ml-3 whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+                Logout
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </>
