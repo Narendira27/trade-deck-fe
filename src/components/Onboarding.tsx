@@ -20,7 +20,6 @@ const Onboarding: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [qrUrl, setQrUrl] = useState("");
-  const [authCode, setAuthcode] = useState("");
 
   const navigate = useNavigate();
 
