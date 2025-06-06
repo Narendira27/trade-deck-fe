@@ -48,6 +48,8 @@ const useStore = create<TradeStoreState>((set) => ({
         item.id === id ? { ...item, isHidden } : item
       ),
     })),
+  // indexPrice: [],
+  // setIndexPrice: (data: []) => set({ indexPrice: data }),
 }));
 
 export default useStore;

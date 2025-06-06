@@ -46,7 +46,7 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
     const auth = cookies.get("auth");
     const reqPromise = axios.put(
       API_URL + "/user/tradeInfo?id=" + tradeId,
-      { stopLoss: formData.sl, takeProfit: formData.target },
+      { stopLossPremium: formData.sl, takeProfitPremium: formData.target },
       {
         headers: { Authorization: "Bearer " + auth },
       }

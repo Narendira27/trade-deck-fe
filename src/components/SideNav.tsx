@@ -8,10 +8,12 @@ import {
 } from "lucide-react";
 import cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import KeyModal from "./modals/keyModal";
 import { toast } from "sonner";
 
 const SideNav: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isKeyModalOpen, setIsKeyModalOpen] = React.useState(false);
   const navigate = useNavigate();
 
   return (
@@ -66,11 +68,11 @@ const SideNav: React.FC = () => {
           <div>
             <button
               className="flex items-center text-gray-400 px-3 py-2 rounded-md hover:text-white hover:bg-gray-800 transition-colors mt-auto w-full"
-
+              onClick={() => setIsKeyModalOpen(true)}
             >
               <KeyRound className="flex-shrink-0" size={18} />
               <span className="ml-3 whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
-                Add Keys
+                Update API Key
               </span>
             </button>
 
@@ -91,6 +93,10 @@ const SideNav: React.FC = () => {
           </div>
         </div>
       </div>
+      <KeyModal
+        isOpen={isKeyModalOpen}
+        onClose={() => setIsKeyModalOpen(false)}
+      />
     </>
   );
 };
