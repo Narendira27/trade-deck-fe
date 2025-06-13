@@ -2,22 +2,23 @@ import { useCallback, useEffect, useState } from "react";
 import cookies from "js-cookie";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import Header from "../components/Header";
 import SideNav from "../components/SideNav";
 import TradeTable from "../components/TradeTable";
 import { jwtDecode } from "jwt-decode";
 import { type Column } from "../components/TradeTable/ColumnManager";
-
-import { API_URL } from "../config/config";
-
-import { toast } from "sonner";
-import useStore from "../store/store";
 import MarketDataComponent from "../components/marketData";
 import GetValues from "../components/getValues";
 import ResizablePanel from "../components/ResizablePanel";
 import ChartContainer from "../components/Chart/ChartContainer";
 import PositionTracker from "../components/PositionTracker/PositionTracker";
+import DraggableBoxManager from "../components/DraggableBoxManager";
+import DraggableBox from "../components/DraggableBox";
+
+import { API_URL } from "../config/config";
+import useStore from "../store/store";
 
 interface MyJwtPayload {
   updatePassword: boolean;
@@ -41,12 +42,6 @@ const defaultColumns: Column[] = [
     width: "140px",
   },
   { id: "mtm", label: "MTM", visible: true, width: "100px" },
-  {
-    id: "livePosition",
-    label: "Live Position",
-    visible: false,
-    width: "120px",
-  },
   {
     id: "pointOfAdjustment",
     label: "Point of Adjustment",
@@ -150,7 +145,7 @@ function Dashboard() {
             maxSize={50}
           >
             {/* Top section - Trade Table (30%) */}
-            <div className="h-full overflow-scroll bg-gray-900 border-b border-gray-700">
+            <div className="h-full  bg-gray-900 border-b border-gray-700">
               <TradeTable trades={trades} columns={columns} />
             </div>
 
@@ -167,11 +162,13 @@ function Dashboard() {
               </div>
 
               {/* Position Tracker section */}
-              <div className="h-inherit p-2">
+              <div className="h-full p-2">
                 <PositionTracker />
               </div>
             </ResizablePanel>
           </ResizablePanel>
+          <DraggableBoxManager />
+          <DraggableBox />
 
           <MarketDataComponent />
           <GetValues />

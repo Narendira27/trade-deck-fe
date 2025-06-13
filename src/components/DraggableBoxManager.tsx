@@ -1,29 +1,27 @@
 import React, { useState } from "react";
-import { FileStack, Plus } from "lucide-react";
+import { Eye, EyeOff, Plus } from "lucide-react";
 import useStore from "../store/store";
 
 const DraggableBoxManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
-  const [showHiddenList, setHiddenList] = useState(false);
   const [formData, setFormData] = useState({
     expiry: "",
     index: "",
     ltpRange: "",
   });
 
-  const { indexData, draggableData, setDraggableData, updateHideStatus } =
+  const { indexData, showDraggable, setDraggableData, setShowDraggable } =
     useStore();
 
   const handleAddBox = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.index && formData.ltpRange && formData.expiry) {
+    if (formData.index && formData.expiry) {
       setDraggableData([
         {
           id: Date.now().toString(),
           index: formData.index,
           expiry: formData.expiry,
           ltpRange: formData.ltpRange,
-          isHidden: false,
         },
       ]);
       setFormData({
@@ -44,53 +42,16 @@ const DraggableBoxManager: React.FC = () => {
         <Plus size={24} />
       </button>
       <button
-        onClick={() => setHiddenList(true)}
+        onClick={() => setShowDraggable()}
         className="fixed bottom-4 right-20 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors"
       >
-        <FileStack />
+        {showDraggable === true ? <Eye /> : <EyeOff />}
       </button>
-      {showHiddenList && (
-        <div className="fixed inset-0 flex items-center justify-center">
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-96">
-            <h3 className="text-lg font-semibold mb-4">List of Hidden Box</h3>
-            <div>
-              {draggableData.map((each) => {
-                return (
-                  <div className="mb-4" key={each.id}>
-                    <div className="text-md font-black mb-2">
-                      Index - Expiry - Range
-                    </div>
-                    {each.isHidden && (
-                      <div className="flex">
-                        <div className="text-md">
-                          {each.index}- {each.expiry} - {each.ltpRange}
-                        </div>
-                        <button
-                          onClick={() => updateHideStatus(each.id, false)}
-                          className="px-3 py-1 ml-4 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
-                        >
-                          Show
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              <button
-                type="button"
-                onClick={() => setHiddenList(false)}
-                className="px-4 py-2 w-full flex justify-end items-center text-gray-300 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
       {showForm && (
-        <div className="fixed inset-0 flex items-center justify-center">
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-96">
-            <h3 className="text-lg font-semibold mb-4">Add New Box</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="bg-gray-900 border border-gray-500 p-6 rounded-lg shadow-xl w-96">
+            <h3 className="text-lg font-semibold mb-4">Add Row</h3>
             <form onSubmit={handleAddBox}>
               <div className="space-y-4">
                 <div>

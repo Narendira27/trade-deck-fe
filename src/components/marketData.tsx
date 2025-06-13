@@ -17,12 +17,24 @@ interface Instrument {
   exchangeInstrumentID: number;
 }
 
+// interface optionSubscribeArr {
+//   id: string;
+//   indexName: string;
+//   expiry: string;
+//   ltpRange: string;
+// }
+
 const MarketDataComponent = () => {
-  const { setIndexPrice } = useStore();
+  const {
+    // draggableData,
+    setIndexPrice,
+  } = useStore();
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   // const [subscriptions, setSubscriptions] = useState<string[]>([]);
   const socketRef = useRef<Socket | null>(null);
+
+  // const optionSubscribedArr: optionSubscribeArr[] = [];
 
   // Function to subscribe to instruments
   const subscribeToInstruments = (instruments: Instrument[]) => {
@@ -38,6 +50,17 @@ const MarketDataComponent = () => {
       })),
     });
   };
+
+  // const subscribeToOptionInfo = (data: {
+  //   data: { id: string; indexName: string; expiry: string; ltpRange: string };
+  // }) => {
+  //   if (!socketRef.current || !isConnected) {
+  //     toast.error("Socket not connected");
+  //     return;
+  //   }
+
+  //   socketRef.current.emit("subscribe-options-data", { data });
+  // };
 
   // List of instruments to subscribe to
   const instrumentsToSubscribe: Instrument[] = [
@@ -105,6 +128,21 @@ const MarketDataComponent = () => {
       subscribeToInstruments(instrumentsToSubscribe);
     }
   }, [isConnected]);
+
+  // useEffect(() => {
+  //   if (!isConnected) return;
+
+  //   const notSubsArr = draggableData.map((data) => {
+  //     const index = optionSubscribedArr.findIndex(
+  //       (each) => each.id === data.id
+  //     );
+  //     if (index === -1) return data;
+  //   });
+  //   console.log(notSubsArr);
+
+  //   if (notSubsArr.length > 0 )
+  //     notSubsArr.forEach((data) => subscribeToOptionInfo(data));
+  // }, [draggableData]);
 
   return <></>;
 };

@@ -10,8 +10,10 @@ interface draggableData {
   id: string;
   index: string;
   ltpRange: string;
+  lowestValue?: string;
+  myValue1?: string;
+  myValue2?: string;
   expiry: string;
-  isHidden: boolean;
 }
 
 interface IndexPriceData {
@@ -42,13 +44,18 @@ interface TradeStoreState {
   draggableData: draggableData[];
   indexPrice: IndexPriceData[];
   optionValues: optionValuesData[];
+  showDraggable: boolean;
   setTrades: (data: Trade[]) => void;
   setIndexData: (data: indexData) => void;
   setDraggableData: (data: draggableData[]) => void;
   removeDraggableData: (id: string) => void;
-  updateHideStatus: (id: string, isHidden: boolean) => void;
   setIndexPrice: (data: IndexPriceData) => void;
   setOptionValues: (data: optionValuesData[]) => void;
+  setShowDraggable: () => void;
+  updateDraggableData: (
+    id: string,
+    updatedData: Partial<draggableData>
+  ) => void;
 }
 
 const useStore = create<TradeStoreState>((set) => ({
@@ -60,6 +67,7 @@ const useStore = create<TradeStoreState>((set) => ({
   draggableData: [],
   indexPrice: [],
   optionValues: [],
+  showDraggable: false,
   setTrades: (data: Trade[]) => set({ trades: data }),
   setIndexData: (data: indexData) => set({ indexData: data }),
   setDraggableData: (data: draggableData[]) =>
@@ -69,12 +77,6 @@ const useStore = create<TradeStoreState>((set) => ({
   removeDraggableData: (id) =>
     set((state) => ({
       draggableData: state.draggableData.filter((item) => item.id !== id),
-    })),
-  updateHideStatus: (id, isHidden) =>
-    set((state) => ({
-      draggableData: state.draggableData.map((item) =>
-        item.id === id ? { ...item, isHidden } : item
-      ),
     })),
   setIndexPrice: (data) =>
     set((state) => {
@@ -97,6 +99,18 @@ const useStore = create<TradeStoreState>((set) => ({
   setOptionValues: (data: optionValuesData[]) => {
     set({ optionValues: data });
   },
+  setShowDraggable: () => {
+    set((state) => ({
+      showDraggable: !state.showDraggable,
+    }));
+  },
+
+  updateDraggableData: (id, updatedData) =>
+    set((state) => ({
+      draggableData: state.draggableData.map((item) =>
+        item.id === id ? { ...item, ...updatedData } : item
+      ),
+    })),
 }));
 
 export default useStore;

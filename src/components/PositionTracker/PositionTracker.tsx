@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { formatCurrency, formatNumber } from '../../utils/formatters';
+import React, { useState } from "react";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { formatCurrency, formatNumber } from "../../utils/formatters";
 
 interface Position {
   id: string;
@@ -8,79 +8,83 @@ interface Position {
   price: number;
   mtm: number;
   quantity: number;
-  type: 'CE' | 'PE';
+  type: "CE" | "PE";
 }
 
 const PositionTracker: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Position;
-    direction: 'asc' | 'desc';
+    direction: "asc" | "desc";
   } | null>(null);
 
   // Mock data - replace with real data from your store
   const [positions] = useState<Position[]>([
     {
-      id: '1',
-      optionName: 'NIFTY 25000 CE',
-      price: 125.50,
+      id: "1",
+      optionName: "NIFTY 25000 CE",
+      price: 125.5,
       mtm: 1250,
       quantity: 50,
-      type: 'CE',
+      type: "CE",
     },
     {
-      id: '2',
-      optionName: 'NIFTY 24800 PE',
+      id: "2",
+      optionName: "NIFTY 24800 PE",
       price: 89.75,
       mtm: -450,
       quantity: 25,
-      type: 'PE',
+      type: "PE",
     },
     {
-      id: '3',
-      optionName: 'BANKNIFTY 52000 CE',
+      id: "3",
+      optionName: "BANKNIFTY 52000 CE",
       price: 245.25,
       mtm: 875,
       quantity: 15,
-      type: 'CE',
+      type: "CE",
     },
     {
-      id: '4',
-      optionName: 'BANKNIFTY 51500 PE',
-      price: 156.80,
+      id: "4",
+      optionName: "BANKNIFTY 51500 PE",
+      price: 156.8,
       mtm: -320,
       quantity: 20,
-      type: 'PE',
+      type: "PE",
     },
     {
-      id: '5',
-      optionName: 'FINNIFTY 23500 CE',
-      price: 78.90,
+      id: "5",
+      optionName: "FINNIFTY 23500 CE",
+      price: 78.9,
       mtm: 560,
       quantity: 40,
-      type: 'CE',
+      type: "CE",
     },
     {
-      id: '6',
-      optionName: 'MIDCPNIFTY 12000 PE',
-      price: 45.30,
+      id: "6",
+      optionName: "MIDCPNIFTY 12000 PE",
+      price: 45.3,
       mtm: -180,
       quantity: 30,
-      type: 'PE',
+      type: "PE",
     },
     {
-      id: '7',
-      optionName: 'SENSEX 72000 CE',
-      price: 189.60,
+      id: "7",
+      optionName: "SENSEX 72000 CE",
+      price: 189.6,
       mtm: 720,
       quantity: 10,
-      type: 'CE',
+      type: "CE",
     },
   ]);
 
   const handleSort = (key: keyof Position) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction: "asc" | "desc" = "asc";
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "asc"
+    ) {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
@@ -92,14 +96,16 @@ const PositionTracker: React.FC = () => {
       const aValue = a[sortConfig.key];
       const bValue = b[sortConfig.key];
 
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortConfig.direction === 'asc'
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortConfig.direction === "asc"
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
 
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortConfig.direction === "asc"
+          ? aValue - bValue
+          : bValue - aValue;
       }
 
       return 0;
@@ -110,7 +116,7 @@ const PositionTracker: React.FC = () => {
     if (!sortConfig || sortConfig.key !== columnKey) {
       return <ArrowUpDown size={14} className="text-gray-500" />;
     }
-    return sortConfig.direction === 'asc' ? (
+    return sortConfig.direction === "asc" ? (
       <ArrowUp size={14} className="text-blue-400" />
     ) : (
       <ArrowDown size={14} className="text-blue-400" />
@@ -128,7 +134,7 @@ const PositionTracker: React.FC = () => {
             <p className="text-sm text-gray-400">Total MTM</p>
             <p
               className={`text-lg font-semibold ${
-                totalMtm >= 0 ? 'text-green-400' : 'text-red-400'
+                totalMtm >= 0 ? "text-green-400" : "text-red-400"
               }`}
             >
               {formatCurrency(totalMtm)}
@@ -137,37 +143,37 @@ const PositionTracker: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-x-scroll   flex flex-col">
         {/* Fixed Header */}
         <div className="bg-gray-800 border-b border-gray-700 flex-shrink-0">
           <div className="grid grid-cols-4 gap-2 p-3">
             <button
-              onClick={() => handleSort('optionName')}
+              onClick={() => handleSort("optionName")}
               className="flex items-center space-x-1 text-left hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
               <span>Option</span>
-              {getSortIcon('optionName')}
+              {getSortIcon("optionName")}
             </button>
             <button
-              onClick={() => handleSort('price')}
+              onClick={() => handleSort("price")}
               className="flex items-center justify-end space-x-1 hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
               <span>Price</span>
-              {getSortIcon('price')}
+              {getSortIcon("price")}
             </button>
             <button
-              onClick={() => handleSort('quantity')}
+              onClick={() => handleSort("quantity")}
               className="flex items-center justify-end space-x-1 hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
               <span>Qty</span>
-              {getSortIcon('quantity')}
+              {getSortIcon("quantity")}
             </button>
             <button
-              onClick={() => handleSort('mtm')}
+              onClick={() => handleSort("mtm")}
               className="flex items-center justify-end space-x-1 hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
               <span>MTM</span>
-              {getSortIcon('mtm')}
+              {getSortIcon("mtm")}
             </button>
           </div>
         </div>
@@ -186,7 +192,7 @@ const PositionTracker: React.FC = () => {
                   </span>
                   <span
                     className={`text-xs ${
-                      position.type === 'CE' ? 'text-green-400' : 'text-red-400'
+                      position.type === "CE" ? "text-green-400" : "text-red-400"
                     }`}
                   >
                     {position.type}
@@ -198,12 +204,14 @@ const PositionTracker: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm text-white">{position.quantity}</span>
+                  <span className="text-sm text-white">
+                    {position.quantity}
+                  </span>
                 </div>
                 <div className="text-right">
                   <span
                     className={`text-sm font-medium ${
-                      position.mtm >= 0 ? 'text-green-400' : 'text-red-400'
+                      position.mtm >= 0 ? "text-green-400" : "text-red-400"
                     }`}
                   >
                     {formatCurrency(position.mtm)}

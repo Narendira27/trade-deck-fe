@@ -69,7 +69,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
 
   return (
     <div className="fixed inset-0  flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+      <div className="bg-gray-800 border border-gray-400  rounded-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-white">Edit Order</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
