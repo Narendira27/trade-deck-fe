@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+html,
+body {
+  font-family: var(--font-sans);
+  @apply bg-gray-900 text-white overflow-hidden;
+}
+
+/* Sidebar hover functionality */
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+.group:hover .group-hover\:w-64 {
+  width: 16rem;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-600;
+}
+
+/* Monospace numbers for financial data */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Transition for hover states */
+.transition-colors {
+  @apply transition-all duration-200;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .modal-content {
+    @apply mx-4;
+  }
+
+  .table-cell {
+    @apply p-2;
+  }
+}

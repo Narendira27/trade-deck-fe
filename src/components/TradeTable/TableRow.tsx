@@ -1,0 +1,202 @@
+import React, { useState, useEffect } from "react";
+import { Edit, Trash2, Play, X } from "lucide-react";
+import { type Trade } from "../../types/trade";
+import { type Column } from "./ColumnManager";
+import { formatNumber, formatCurrency } from "../../utils/formatters";
+import useStore from "../../store/store";
+
+interface TableRowProps {
+  trade: Trade;
+  columns: Column[];
+  onPlaceOrder: () => void;
+  onDeleteOrder: () => void;
+  onEdit: () => void;
+  onCancelOrder: () => void;
+}
+
+const TableRow: React.FC<TableRowProps> = ({
+  trade,
+  columns,
+  onPlaceOrder,
+  onDeleteOrder,
+  onEdit,
+  onCancelOrder,
+}) => {
+  const [getindexPrice, setGetindexPrice] = useState(0);
+  const [lowestValue, setLowestValue] = useState(0);
+
+  const { indexPrice, optionValues } = useStore();
+
+  useEffect(() => {
+    const priceData = indexPrice.find((each) => each.name === trade.indexName);
+    if (priceData) {
+      setGetindexPrice(priceData.price);
+    }
+  }, [indexPrice, trade.indexName]);
+
+  useEffect(() => {
+    if (optionValues) {
+      const findArr = optionValues.find((each) => each.id === trade.id);
+      if (findArr) {
+        const premiumCombinedArr = findArr.combinedPremiumArray;
+
+        if (premiumCombinedArr.length > 0) {
+          const minPremium = Math.min(
+            ...premiumCombinedArr.map((item) => item.combinedPremium)
+          );
+          setLowestValue(minPremium);
+        }
+      }
+    }
+  }, [optionValues, trade.id]);
+
+  const getCellValue = (columnId: string) => {
+    switch (columnId) {
+      case "index":
+        return trade.indexName;
+      case "ltpSpot":
+        return formatNumber(getindexPrice);
+      case "legCount":
+        return trade.legCount;
+      case "expiry":
+        return trade.expiry;
+      case "ltpRange":
+        return formatNumber(trade.ltpRange);
+      case "lowestValue":
+        return lowestValue || formatNumber(0); // Placeholder
+      case "entry":
+        return trade.entryPrice ? formatNumber(trade.entryPrice) : "-";
+      case "qty":
+        return trade.qty || "-";
+      case "sl":
+        return trade.stopLoss ? formatNumber(trade.stopLoss) : "-";
+      case "target":
+        return trade.takeProfit ? formatNumber(trade.takeProfit) : "-";
+      case "entrySpot":
+        return formatNumber(trade.entrySpotPrice);
+      case "mtm":
+        return formatCurrency(0); // Placeholder
+      case "livePosition":
+        return "-"; // Placeholder
+      case "pointOfAdjustment":
+        return trade.pointOfAdjustment
+          ? formatNumber(trade.pointOfAdjustment)
+          : "-";
+      case "adjustmentUpperLimit":
+        return trade.pointOfAdjustmentUpperLimit
+          ? formatNumber(trade.pointOfAdjustmentUpperLimit)
+          : "-";
+      case "adjustmentLowerLimit":
+        return trade.pointOfAdjustmentLowerLimit
+          ? formatNumber(trade.pointOfAdjustmentLowerLimit)
+          : "-";
+      case "orderType":
+        return trade.entryType;
+      case "entryTriggered":
+        return trade.entryTriggered ? "Yes" : "No";
+      case "exitPercentages":
+        return (
+          <div className="flex space-x-1">
+            <button className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600">
+              25%
+            </button>
+            <button className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600">
+              50%
+            </button>
+            <button className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600">
+              100%
+            </button>
+          </div>
+        );
+      default:
+        return "-";
+    }
+  };
+
+  const getCellClassName = (columnId: string) => {
+    const baseClass = "px-3 py-2 text-xs border-b border-gray-800";
+
+    switch (columnId) {
+      case "sl":
+        return `${baseClass} text-red-400`;
+      case "target":
+        return `${baseClass} text-green-400`;
+      case "mtm":
+        return `${baseClass} text-white`; // Will be dynamic based on value
+      default:
+        return `${baseClass} text-white`;
+    }
+  };
+
+  return (
+    <tr className="hover:bg-gray-800/50 transition-colors">
+      <td className="px-2 py-2 text-xs font-medium text-white border-b border-gray-800">
+        <div className="flex space-x-1">
+          {trade.entryType === "UNDEFINED" ? (
+            <>
+              <button
+                onClick={onPlaceOrder}
+                className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                title="Place Order"
+              >
+                <Play size={12} />
+              </button>
+              <button
+                onClick={onEdit}
+                className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                title="Edit"
+              >
+                <Edit size={12} />
+              </button>
+              <button
+                onClick={onDeleteOrder}
+                className="p-1 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
+                title="Delete"
+              >
+                <Trash2 size={12} />
+              </button>
+            </>
+          ) : (
+            <>
+              {trade.entryTriggered === false && trade.entryType === "LIMIT" ? (
+                <>
+                  <button
+                    onClick={onCancelOrder}
+                    className="p-1 bg-red-500/80 rounded hover:bg-red-400 transition-colors"
+                    title="Cancel Order"
+                  >
+                    <X size={12} />
+                  </button>
+                  <button
+                    onClick={onEdit}
+                    className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                    title="Edit"
+                  >
+                    <Edit size={12} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={onEdit}
+                  className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                  title="Edit"
+                >
+                  <Edit size={12} />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </td>
+      {columns
+        .filter((col) => col.visible)
+        .map((column) => (
+          <td key={column.id} className={getCellClassName(column.id)}>
+            {getCellValue(column.id)}
+          </td>
+        ))}
+    </tr>
+  );
+};
+
+export default TableRow;
