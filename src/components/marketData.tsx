@@ -3,6 +3,7 @@ import { io, Socket } from "socket.io-client";
 import cookies from "js-cookie";
 import { toast } from "sonner";
 import useStore from "../store/store";
+import { SOCKET_FE } from "../config/config";
 
 // Define types
 interface PriceUpdate {
@@ -80,7 +81,7 @@ const MarketDataComponent = () => {
       return;
     }
 
-    socketRef.current = io("http://localhost:3002", {
+    socketRef.current = io(SOCKET_FE, {
       auth: {
         token: `Bearer ${token}`,
       },

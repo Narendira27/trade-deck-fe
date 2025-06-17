@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KeyRound, QrCode, ArrowRight, Key } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import axios from "axios";
@@ -133,6 +133,7 @@ const Onboarding: React.FC = () => {
       }
     });
     toast.success("Onboarding Done,Redirecting ....");
+    cookies.remove("auth");
     navigate("/login");
   };
 
