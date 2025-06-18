@@ -4,6 +4,7 @@ import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
 import useStore from "../store/store";
+import { type DraggableBoxColumn } from "./DraggableBox";
 
 interface HeaderProps {
   columns: Column[];
