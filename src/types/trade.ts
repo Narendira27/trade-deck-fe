@@ -9,8 +9,8 @@ export interface Trade {
   qty: number;
   stopLossPremium: number;
   takeProfitPremium: number;
-  stopLoss: number;
-  takeProfit: number;
+  stopLossPoints: number;
+  takeProfitPoints: number;
   entrySpotPrice: number;
   lastPointOfAdjustment: number;
   pointOfAdjustment: number; // pending
@@ -32,6 +32,7 @@ export interface TradeFormData {
   legCount: number;
   expiry: string;
   ltpRange: number;
+  pointOfAdjustment: number;
 }
 
 export interface OrderFormData {
@@ -46,4 +47,9 @@ export interface EditFormData {
   pointOfAdjustment: number;
   pointOfAdjustmentUpperLimit: number;
   pointOfAdjustmentLowerLimit: number;
+  entryPrice: number;
+  stopLossPoints: number;
+  stopLossPremium: number;
+  takeProfitPoints: number;
+  takeProfitPremium: number;
 }

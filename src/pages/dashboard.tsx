@@ -38,42 +38,42 @@ const defaultColumns: Column[] = [
   {
     id: "entrySpot",
     label: "Entry Spot Price",
-    visible: false,
+    visible: true,
     width: "140px",
   },
   { id: "mtm", label: "MTM", visible: true, width: "100px" },
   {
     id: "pointOfAdjustment",
     label: "Point of Adjustment",
-    visible: false,
+    visible: true,
     width: "160px",
   },
   {
     id: "adjustmentUpperLimit",
     label: "Adjustment Upper Limit",
-    visible: false,
+    visible: true,
     width: "180px",
   },
   {
     id: "adjustmentLowerLimit",
     label: "Adjustment Lower Limit",
-    visible: false,
+    visible: true,
     width: "180px",
   },
-  { id: "orderType", label: "Order Type", visible: false, width: "120px" },
+  { id: "orderType", label: "Order Type", visible: true, width: "120px" },
   {
     id: "entryTriggered",
     label: "Entry Triggered",
-    visible: false,
+    visible: true,
     width: "140px",
   },
-  { id: "exitPercentages", label: "Exit %", visible: false, width: "150px" },
+  { id: "exitPercentages", label: "Exit %", visible: true, width: "150px" },
 ];
 
 function Dashboard() {
   const { trades, setTrades } = useStore();
-
   const [columns, setColumns] = useState<Column[]>(defaultColumns);
+  const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const navigate = useNavigate();
 
   const getTradeData = useCallback(() => {
@@ -134,9 +134,13 @@ function Dashboard() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
-      <Header columns={columns} onColumnsChange={setColumns} />
+      <Header
+        columns={columns}
+        onColumnsChange={setColumns}
+        onMenuToggle={() => setIsSideNavOpen(!isSideNavOpen)}
+      />
+
       <div className="flex flex-1 overflow-hidden">
-        <SideNav />
         <main className="flex-1 overflow-hidden relative">
           <ResizablePanel
             direction="vertical"
@@ -145,7 +149,7 @@ function Dashboard() {
             maxSize={50}
           >
             {/* Top section - Trade Table (30%) */}
-            <div className="h-full  bg-gray-900 border-b border-gray-700">
+            <div className="h-full bg-gray-900 border-b border-gray-700">
               <TradeTable trades={trades} columns={columns} />
             </div>
 
@@ -167,12 +171,18 @@ function Dashboard() {
               </div>
             </ResizablePanel>
           </ResizablePanel>
+
           <DraggableBoxManager />
           <DraggableBox />
 
           <MarketDataComponent />
           <GetValues />
         </main>
+
+        <SideNav
+          isOpen={isSideNavOpen}
+          onToggle={() => setIsSideNavOpen(!isSideNavOpen)}
+        />
       </div>
     </div>
   );

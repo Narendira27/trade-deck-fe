@@ -19,6 +19,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
     legCount: 1,
     expiry: "",
     ltpRange: 0,
+    pointOfAdjustment: 0,
   });
 
   // const [indexData, setIndexData] = useState<indexData>({
@@ -63,6 +64,9 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
     if (formData.ltpRange <= 0) {
       return toast.warning("Enter valid LTP Range");
     }
+    if (formData.ltpRange <= 0) {
+      return toast.warning("Enter valid Point of Adjustment");
+    }
     const addTradeRequest = axios.post(
       API_URL + "/user/tradeInfo",
       {
@@ -70,6 +74,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
         expiry: formData.expiry,
         legCount: formData.legCount,
         ltpRange: formData.ltpRange,
+        pointOfAdjustment: formData.pointOfAdjustment,
       },
       { headers: { Authorization: "Bearer " + auth } }
     );
@@ -82,6 +87,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
           legCount: 1,
           expiry: "",
           ltpRange: 0,
+          pointOfAdjustment: 0,
         });
         const result = await getTradeData();
         if (result.status === "ok") {
@@ -185,6 +191,23 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
                 setFormData({
                   ...formData,
                   ltpRange: parseFloat(e.target.value),
+                })
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Point of Adjustment
+            </label>
+            <input
+              type="number"
+              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.pointOfAdjustment}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  pointOfAdjustment: parseFloat(e.target.value),
                 })
               }
             />

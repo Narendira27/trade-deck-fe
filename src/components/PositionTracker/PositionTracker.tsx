@@ -114,12 +114,12 @@ const PositionTracker: React.FC = () => {
 
   const getSortIcon = (columnKey: keyof Position) => {
     if (!sortConfig || sortConfig.key !== columnKey) {
-      return <ArrowUpDown size={14} className="text-gray-500" />;
+      return <ArrowUpDown size={12} className="text-gray-500" />;
     }
     return sortConfig.direction === "asc" ? (
-      <ArrowUp size={14} className="text-blue-400" />
+      <ArrowUp size={12} className="text-blue-400" />
     ) : (
-      <ArrowDown size={14} className="text-blue-400" />
+      <ArrowDown size={12} className="text-blue-400" />
     );
   };
 
@@ -127,13 +127,13 @@ const PositionTracker: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-gray-900 border border-gray-700 rounded-lg">
-      <div className="p-4 border-b border-gray-700 flex-shrink-0">
+      <div className="p-3 border-b border-gray-700 flex-shrink-0">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-white">Live Positions</h3>
+          <h3 className="text-base font-semibold text-white">Live Positions</h3>
           <div className="text-right">
-            <p className="text-sm text-gray-400">Total MTM</p>
+            <p className="text-xs text-gray-400">Total MTM</p>
             <p
-              className={`text-lg font-semibold ${
+              className={`text-sm font-semibold ${
                 totalMtm >= 0 ? "text-green-400" : "text-red-400"
               }`}
             >
@@ -143,36 +143,36 @@ const PositionTracker: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-scroll   flex flex-col">
+      <div className="flex-1 overflow-x-auto flex flex-col">
         {/* Fixed Header */}
         <div className="bg-gray-800 border-b border-gray-700 flex-shrink-0">
-          <div className="grid grid-cols-4 gap-2 p-3">
+          <div className="grid grid-cols-4 gap-1 p-2">
             <button
               onClick={() => handleSort("optionName")}
               className="flex items-center space-x-1 text-left hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
-              <span>Option</span>
+              <span className="text-xs">Option</span>
               {getSortIcon("optionName")}
             </button>
             <button
               onClick={() => handleSort("price")}
               className="flex items-center justify-end space-x-1 hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
-              <span>Price</span>
+              <span className="text-xs">Price</span>
               {getSortIcon("price")}
             </button>
             <button
               onClick={() => handleSort("quantity")}
               className="flex items-center justify-end space-x-1 hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
-              <span>Qty</span>
+              <span className="text-xs">Qty</span>
               {getSortIcon("quantity")}
             </button>
             <button
               onClick={() => handleSort("mtm")}
               className="flex items-center justify-end space-x-1 hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
-              <span>MTM</span>
+              <span className="text-xs">MTM</span>
               {getSortIcon("mtm")}
             </button>
           </div>
@@ -180,14 +180,14 @@ const PositionTracker: React.FC = () => {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-2 space-y-1">
+          <div className="p-1 space-y-1">
             {sortedPositions.map((position) => (
               <div
                 key={position.id}
-                className="grid grid-cols-4 gap-2 p-3 bg-gray-800 rounded-md hover:bg-gray-750 transition-colors"
+                className="grid grid-cols-4 gap-1 p-2 bg-gray-800 rounded hover:bg-gray-750 transition-colors"
               >
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm text-white font-medium truncate">
+                  <span className="text-xs text-white font-medium truncate">
                     {position.optionName}
                   </span>
                   <span
@@ -199,18 +199,18 @@ const PositionTracker: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm text-white font-medium">
+                  <span className="text-xs text-white font-medium">
                     {formatNumber(position.price)}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm text-white">
+                  <span className="text-xs text-white">
                     {position.quantity}
                   </span>
                 </div>
                 <div className="text-right">
                   <span
-                    className={`text-sm font-medium ${
+                    className={`text-xs font-medium ${
                       position.mtm >= 0 ? "text-green-400" : "text-red-400"
                     }`}
                   >

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { type OrderFormData } from "../../types/trade";
 import cookies from "js-cookie";
@@ -29,18 +29,25 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
 
   const { trades, setTrades } = useStore();
 
+  const lastTradeId = useRef<string | null>(null);
+
   useEffect(() => {
     if (!tradeId) return;
+
+    // Always fetch trade data when modal is open and tradeId is given
     const trade = trades.find((trade) => trade.id === tradeId);
 
     if (trade) {
       setFormData((prev) => ({
         ...prev,
+        entry: trade.entryPrice,
         sl: trade.stopLossPremium,
         target: trade.takeProfitPremium,
       }));
+
+      lastTradeId.current = tradeId;
     }
-  }, [tradeId]);
+  }, [isOpen, tradeId, trades]);
 
   const updateTp = () => {
     const auth = cookies.get("auth");
@@ -96,6 +103,12 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
       error: "Cannot Place Order",
     });
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      lastTradeId.current = null; // reset on modal close
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

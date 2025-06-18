@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Edit, Trash2, Play, X } from "lucide-react";
 import { type Trade } from "../../types/trade";
 import { type Column } from "./ColumnManager";
-import { formatNumber, formatCurrency } from "../../utils/formatters";
+import { formatNumber } from "../../utils/formatters";
 import useStore from "../../store/store";
 
 interface TableRowProps {
@@ -69,15 +69,17 @@ const TableRow: React.FC<TableRowProps> = ({
       case "qty":
         return trade.qty || "-";
       case "sl":
-        return trade.stopLoss ? formatNumber(trade.stopLoss) : "-";
+        return trade.stopLossPremium
+          ? formatNumber(trade.stopLossPremium)
+          : "-";
       case "target":
-        return trade.takeProfit ? formatNumber(trade.takeProfit) : "-";
+        return trade.takeProfitPremium
+          ? formatNumber(trade.takeProfitPremium)
+          : "-";
       case "entrySpot":
         return formatNumber(trade.entrySpotPrice);
       case "mtm":
-        return formatCurrency(0); // Placeholder
-      case "livePosition":
-        return "-"; // Placeholder
+        return 0; // Placeholder
       case "pointOfAdjustment":
         return trade.pointOfAdjustment
           ? formatNumber(trade.pointOfAdjustment)
