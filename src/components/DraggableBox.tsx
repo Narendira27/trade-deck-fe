@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { Minus, Trash2 } from "lucide-react";
 import useStore from "../store/store";
-import DraggableBoxColumnManager, {
-  type DraggableBoxColumn,
-} from "./DraggableBox/DraggableBoxColumnManager";
 
-const defaultColumns: DraggableBoxColumn[] = [
+export interface DraggableBoxColumn {
+  id: string;
+  label: string;
+  visible: boolean;
+  width?: string;
+}
+
+export const defaultDraggableColumns: DraggableBoxColumn[] = [
   { id: "index", label: "Index", visible: true, width: "120px" },
   { id: "lowestValue", label: "Lowest Value", visible: true, width: "100px" },
   { id: "myValue1", label: "My Value", visible: true, width: "80px" },
@@ -15,11 +19,14 @@ const defaultColumns: DraggableBoxColumn[] = [
   { id: "action", label: "Action", visible: true, width: "60px" },
 ];
 
-const DraggableBox = () => {
+interface DraggableBoxProps {
+  columns: DraggableBoxColumn[];
+}
+
+const DraggableBox: React.FC<DraggableBoxProps> = ({ columns }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [columns, setColumns] = useState<DraggableBoxColumn[]>(defaultColumns);
   const boxRef = useRef<HTMLDivElement>(null);
 
   const { showDraggable, setShowDraggable } = useStore();
@@ -72,11 +79,7 @@ const DraggableBox = () => {
       }}
       onMouseDown={handleMouseDown}
     >
-      <div className="space-x-2 flex w-full h-full flex-row justify-between items-center cursor-pointer mb-2">
-        <DraggableBoxColumnManager
-          columns={columns}
-          onColumnsChange={setColumns}
-        />
+      <div className="space-x-2 flex w-full h-full flex-row justify-end items-center cursor-pointer mb-2">
         <button
           onClick={setShowDraggable}
           className="text-gray-400 hover:text-white"

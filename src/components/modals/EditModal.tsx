@@ -27,43 +27,41 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
   });
 
   const [orderTriggered, setOrderTriggered] = useState(true);
-
   const [enablePremium, setEnablePremium] = useState(false);
-
   const [enablePremiumTp, setEnablePremiumTP] = useState(false);
 
   const { trades, setTrades } = useStore();
+  const isInitialized = useRef(false);
 
-  const lastTradeId = useRef<string | null>(null);
-
+  // Initialize form data when modal opens with a trade
   useEffect(() => {
-    if (!tradeId || lastTradeId.current === tradeId) return;
+    if (isOpen && tradeId && !isInitialized.current) {
+      const trade = trades.find((trade) => trade.id === tradeId);
+      
+      if (trade) {
+        setFormData({
+          pointOfAdjustment: trade.pointOfAdjustment || 0,
+          pointOfAdjustmentUpperLimit: trade.pointOfAdjustmentUpperLimit || 0,
+          pointOfAdjustmentLowerLimit: trade.pointOfAdjustmentLowerLimit || 0,
+          entryPrice: trade.entryPrice || 0,
+          takeProfitPremium: trade.takeProfitPremium || 0,
+          takeProfitPoints: trade.takeProfitPoints || 0,
+          stopLossPoints: trade.stopLossPoints || 0,
+          stopLossPremium: trade.stopLossPremium || 0,
+        });
 
-    const trade = trades.find((trade) => trade.id === tradeId);
-
-    if (trade) {
-      setFormData((prev) => ({
-        ...prev,
-        pointOfAdjustment: trade.pointOfAdjustment,
-        pointOfAdjustmentUpperLimit: trade.pointOfAdjustmentUpperLimit,
-        pointOfAdjustmentLowerLimit: trade.pointOfAdjustmentLowerLimit,
-        entryPrice: trade.entryPrice,
-        takeProfitPremium: trade.takeProfitPremium,
-        takeProfitPoints: trade.takeProfitPoints,
-        stopLossPoints: trade.stopLossPoints,
-        stopLossPremium: trade.stopLossPremium,
-      }));
-
-      lastTradeId.current = tradeId; // Update ref so it doesn't repeat
+        setOrderTriggered(trade.entryTriggered);
+        isInitialized.current = true;
+      }
     }
   }, [isOpen, tradeId, trades]);
 
+  // Reset initialization flag when modal closes
   useEffect(() => {
-    const trade = trades.find((trade) => trade.id === tradeId);
-    if (trade) {
-      setOrderTriggered(trade.entryTriggered);
+    if (!isOpen) {
+      isInitialized.current = false;
     }
-  }, [tradeId, trades]);
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,12 +96,6 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
     });
   };
 
-  useEffect(() => {
-    if (!isOpen) {
-      lastTradeId.current = null; // reset on modal close
-    }
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
@@ -129,7 +121,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  entryPrice: parseFloat(e.target.value),
+                  entryPrice: parseFloat(e.target.value) || 0,
                 })
               }
             />
@@ -157,14 +149,14 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                   type="number"
                   className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.stopLossPoints}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const points = parseFloat(e.target.value) || 0;
                     setFormData({
                       ...formData,
-                      stopLossPoints: parseFloat(e.target.value),
-                      stopLossPremium:
-                        parseFloat(e.target.value) + formData.entryPrice,
-                    })
-                  }
+                      stopLossPoints: points,
+                      stopLossPremium: points + formData.entryPrice,
+                    });
+                  }}
                 />
               </div>
               <div>
@@ -176,14 +168,14 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                   disabled={!enablePremium}
                   className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.stopLossPremium}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const premium = parseFloat(e.target.value) || 0;
                     setFormData({
                       ...formData,
-                      stopLossPremium: parseFloat(e.target.value),
-                      stopLossPoints:
-                        parseFloat(e.target.value) - formData.entryPrice,
-                    })
-                  }
+                      stopLossPremium: premium,
+                      stopLossPoints: premium - formData.entryPrice,
+                    });
+                  }}
                 />
               </div>
             </div>
@@ -211,14 +203,14 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                   type="number"
                   className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.takeProfitPoints}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const points = parseFloat(e.target.value) || 0;
                     setFormData({
                       ...formData,
-                      takeProfitPoints: parseFloat(e.target.value),
-                      takeProfitPremium:
-                        formData.entryPrice - parseFloat(e.target.value),
-                    })
-                  }
+                      takeProfitPoints: points,
+                      takeProfitPremium: formData.entryPrice - points,
+                    });
+                  }}
                 />
               </div>
               <div>
@@ -230,14 +222,14 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                   disabled={!enablePremiumTp}
                   className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.takeProfitPremium}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const premium = parseFloat(e.target.value) || 0;
                     setFormData({
                       ...formData,
-                      takeProfitPremium: parseFloat(e.target.value),
-                      takeProfitPoints:
-                        formData.entryPrice - parseFloat(e.target.value),
-                    })
-                  }
+                      takeProfitPremium: premium,
+                      takeProfitPoints: formData.entryPrice - premium,
+                    });
+                  }}
                 />
               </div>
             </div>
@@ -254,7 +246,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  pointOfAdjustment: parseInt(e.target.value),
+                  pointOfAdjustment: parseInt(e.target.value) || 0,
                 })
               }
             />
@@ -271,7 +263,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  pointOfAdjustmentUpperLimit: parseFloat(e.target.value),
+                  pointOfAdjustmentUpperLimit: parseFloat(e.target.value) || 0,
                 })
               }
             />
@@ -288,7 +280,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  pointOfAdjustmentLowerLimit: parseFloat(e.target.value),
+                  pointOfAdjustmentLowerLimit: parseFloat(e.target.value) || 0,
                 })
               }
             />

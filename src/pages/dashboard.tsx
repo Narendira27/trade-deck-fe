@@ -15,7 +15,10 @@ import ResizablePanel from "../components/ResizablePanel";
 import ChartContainer from "../components/Chart/ChartContainer";
 import PositionTracker from "../components/PositionTracker/PositionTracker";
 import DraggableBoxManager from "../components/DraggableBoxManager";
-import DraggableBox from "../components/DraggableBox";
+import DraggableBox, { 
+  defaultDraggableColumns,
+  type DraggableBoxColumn 
+} from "../components/DraggableBox";
 
 import { API_URL } from "../config/config";
 import useStore from "../store/store";
@@ -73,6 +76,7 @@ const defaultColumns: Column[] = [
 function Dashboard() {
   const { trades, setTrades } = useStore();
   const [columns, setColumns] = useState<Column[]>(defaultColumns);
+  const [draggableColumns, setDraggableColumns] = useState<DraggableBoxColumn[]>(defaultDraggableColumns);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -137,6 +141,8 @@ function Dashboard() {
       <Header
         columns={columns}
         onColumnsChange={setColumns}
+        draggableColumns={draggableColumns}
+        onDraggableColumnsChange={setDraggableColumns}
         onMenuToggle={() => setIsSideNavOpen(!isSideNavOpen)}
       />
 
@@ -173,7 +179,7 @@ function Dashboard() {
           </ResizablePanel>
 
           <DraggableBoxManager />
-          <DraggableBox />
+          <DraggableBox columns={draggableColumns} />
 
           <MarketDataComponent />
           <GetValues />

@@ -28,26 +28,32 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
   });
 
   const { trades, setTrades } = useStore();
+  const isInitialized = useRef(false);
 
-  const lastTradeId = useRef<string | null>(null);
-
+  // Initialize form data when modal opens with a trade
   useEffect(() => {
-    if (!tradeId) return;
+    if (isOpen && tradeId && !isInitialized.current) {
+      const trade = trades.find((trade) => trade.id === tradeId);
 
-    // Always fetch trade data when modal is open and tradeId is given
-    const trade = trades.find((trade) => trade.id === tradeId);
-
-    if (trade) {
-      setFormData((prev) => ({
-        ...prev,
-        entry: trade.entryPrice,
-        sl: trade.stopLossPremium,
-        target: trade.takeProfitPremium,
-      }));
-
-      lastTradeId.current = tradeId;
+      if (trade) {
+        setFormData({
+          entry: trade.entryPrice || 0,
+          qty: trade.qty || 0,
+          sl: trade.stopLossPremium || 0,
+          target: trade.takeProfitPremium || 0,
+          orderType: "LIMIT",
+        });
+        isInitialized.current = true;
+      }
     }
   }, [isOpen, tradeId, trades]);
+
+  // Reset initialization flag when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      isInitialized.current = false;
+    }
+  }, [isOpen]);
 
   const updateTp = () => {
     const auth = cookies.get("auth");
@@ -68,7 +74,6 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
         onClose();
         return "Updated SL and TP";
       },
-
       error: "Cannot update SL & TP",
     });
   };
@@ -103,12 +108,6 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
       error: "Cannot Place Order",
     });
   };
-
-  useEffect(() => {
-    if (!isOpen) {
-      lastTradeId.current = null; // reset on modal close
-    }
-  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -164,7 +163,7 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    entry: parseFloat(e.target.value),
+                    entry: parseFloat(e.target.value) || 0,
                   })
                 }
               />
@@ -180,7 +179,7 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
               className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.qty}
               onChange={(e) =>
-                setFormData({ ...formData, qty: parseInt(e.target.value) })
+                setFormData({ ...formData, qty: parseInt(e.target.value) || 0 })
               }
             />
           </div>
@@ -194,7 +193,7 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
               className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.sl}
               onChange={(e) =>
-                setFormData({ ...formData, sl: parseFloat(e.target.value) })
+                setFormData({ ...formData, sl: parseFloat(e.target.value) || 0 })
               }
             />
           </div>
@@ -208,7 +207,7 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
               className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.target}
               onChange={(e) =>
-                setFormData({ ...formData, target: parseFloat(e.target.value) })
+                setFormData({ ...formData, target: parseFloat(e.target.value) || 0 })
               }
             />
           </div>

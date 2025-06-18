@@ -2,15 +2,28 @@ import React, { useState } from "react";
 import { BarChart2, Plus, Menu } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
+import DraggableBoxColumnManager, {
+  type DraggableBoxColumn,
+} from "./DraggableBox/DraggableBoxColumnManager";
+import useStore from "../store/store";
 
 interface HeaderProps {
   columns: Column[];
   onColumnsChange: (columns: Column[]) => void;
   onMenuToggle: () => void;
+  draggableColumns: DraggableBoxColumn[];
+  onDraggableColumnsChange: (columns: DraggableBoxColumn[]) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ columns, onColumnsChange, onMenuToggle }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  columns, 
+  onColumnsChange, 
+  onMenuToggle,
+  draggableColumns,
+  onDraggableColumnsChange
+}) => {
   const [isAddTradeModalOpen, setIsAddTradeModalOpen] = useState(false);
+  const { showDraggable } = useStore();
 
   return (
     <>
@@ -22,6 +35,14 @@ const Header: React.FC<HeaderProps> = ({ columns, onColumnsChange, onMenuToggle 
 
         <div className="flex items-center space-x-3">
           <ColumnManager columns={columns} onColumnsChange={onColumnsChange} />
+          
+          {/* Draggable Box Column Manager - only show when draggable box is visible */}
+          {showDraggable && (
+            <DraggableBoxColumnManager
+              columns={draggableColumns}
+              onColumnsChange={onDraggableColumnsChange}
+            />
+          )}
           
           <button
             onClick={() => setIsAddTradeModalOpen(true)}
