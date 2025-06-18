@@ -37,7 +37,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
   useEffect(() => {
     if (isOpen && tradeId && !isInitialized.current) {
       const trade = trades.find((trade) => trade.id === tradeId);
-      
+
       if (trade) {
         setFormData({
           pointOfAdjustment: trade.pointOfAdjustment || 0,
@@ -122,6 +122,10 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                 setFormData({
                   ...formData,
                   entryPrice: parseFloat(e.target.value) || 0,
+                  stopLossPremium:
+                    parseFloat(e.target.value) + formData.stopLossPoints,
+                  takeProfitPremium:
+                    parseFloat(e.target.value) - formData.takeProfitPoints,
                 })
               }
             />
