@@ -133,13 +133,17 @@ const TradeCard: React.FC<TradeCardProps> = ({
             <div>
               <p className="text-sm text-gray-400">Stop Loss</p>
               <p className="text-sm font-medium text-red-400">
-                {trade.stopLoss ? formatNumber(trade.stopLoss) : "-"}
+                {trade.stopLossPremium
+                  ? formatNumber(trade.stopLossPremium)
+                  : "-"}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-400">Target</p>
               <p className="text-sm font-medium text-green-400">
-                {trade.takeProfit ? formatNumber(trade.takeProfit) : "-"}
+                {trade.takeProfitPremium
+                  ? formatNumber(trade.takeProfitPremium)
+                  : "-"}
               </p>
             </div>
             <div>

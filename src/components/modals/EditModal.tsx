@@ -250,7 +250,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  pointOfAdjustment: parseInt(e.target.value) || 0,
+                  pointOfAdjustment: parseFloat(e.target.value) || 0,
                 })
               }
             />

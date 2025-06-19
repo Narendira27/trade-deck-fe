@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Minus, Trash2 } from "lucide-react";
 import useStore from "../store/store";
 

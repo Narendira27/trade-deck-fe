@@ -24,6 +24,8 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
     qty: 0,
     sl: 0,
     target: 0,
+    slPoints: 0,
+    tpPoints: 0,
     orderType: "LIMIT",
   });
 
@@ -41,6 +43,8 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
           qty: trade.qty || 0,
           sl: trade.stopLossPremium || 0,
           target: trade.takeProfitPremium || 0,
+          tpPoints: trade.takeProfitPoints || 0,
+          slPoints: trade.stopLossPoints || 0,
           orderType: "LIMIT",
         });
         isInitialized.current = true;
@@ -56,10 +60,23 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
   }, [isOpen]);
 
   const updateTp = () => {
+    let data;
+    if (formData.orderType === "LIMIT") {
+      data = {
+        stopLossPremium: formData.sl,
+        takeProfitPremium: formData.target,
+      };
+    }
+    if (formData.orderType === "MARKET") {
+      data = {
+        stopLossPoints: formData.slPoints,
+        takeProfitPoints: formData.tpPoints,
+      };
+    }
     const auth = cookies.get("auth");
     const reqPromise = axios.put(
       API_URL + "/user/tradeInfo?id=" + tradeId,
-      { stopLossPremium: formData.sl, takeProfitPremium: formData.target },
+      data,
       {
         headers: { Authorization: "Bearer " + auth },
       }
@@ -79,18 +96,32 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const auth = cookies.get("auth");
-    const reqPromise = axios.put(
-      API_URL + "/user/tradeInfo?id=" + tradeId,
-      {
+    let DATA = {};
+    if (formData.orderType === "LIMIT") {
+      DATA = {
         stopLossPremium: formData.sl,
         takeProfitPremium: formData.target,
         entryType: formData.orderType,
         entryPrice: formData.entry,
         qty: formData.qty,
         currentQty: formData.qty,
-      },
+      };
+    }
+    if (formData.orderType === "MARKET") {
+      DATA = {
+        stopLossPoints: formData.slPoints,
+        takeProfitPoints: formData.tpPoints,
+        entryType: formData.orderType,
+        entryPrice: formData.entry,
+        qty: formData.qty,
+        currentQty: formData.qty,
+      };
+    }
+    e.preventDefault();
+    const auth = cookies.get("auth");
+    const reqPromise = axios.put(
+      API_URL + "/user/tradeInfo?id=" + tradeId,
+      DATA,
       {
         headers: { Authorization: "Bearer " + auth },
       }
@@ -151,66 +182,129 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
             </label>
           </div>
 
-          {formData.orderType === "LIMIT" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Entry Price
-              </label>
-              <input
-                type="number"
-                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.entry}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    entry: parseFloat(e.target.value) || 0,
-                  })
-                }
-              />
-            </div>
+          {formData.orderType === "LIMIT" ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Entry Price
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.entry}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      entry: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.qty}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      qty: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Stop Loss (PREMIUM)
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.sl}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      sl: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Target (PREMIUM)
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.target}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      target: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.qty}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      qty: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Stop Loss (POINTS)
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.slPoints}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      slPoints: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Target (POINTS)
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.tpPoints}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      tpPoints: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+            </>
           )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Quantity
-            </label>
-            <input
-              type="number"
-              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.qty}
-              onChange={(e) =>
-                setFormData({ ...formData, qty: parseInt(e.target.value) || 0 })
-              }
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Stop Loss
-            </label>
-            <input
-              type="number"
-              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.sl}
-              onChange={(e) =>
-                setFormData({ ...formData, sl: parseFloat(e.target.value) || 0 })
-              }
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Target
-            </label>
-            <input
-              type="number"
-              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.target}
-              onChange={(e) =>
-                setFormData({ ...formData, target: parseFloat(e.target.value) || 0 })
-              }
-            />
-          </div>
 
           <div className="flex justify-end space-x-3 mt-6">
             <button

@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  LayoutDashboard,
-  Menu,
-  BarChart2,
-  LogOut,
-  KeyRound,
-  X,
-} from "lucide-react";
+import { LayoutDashboard, BarChart2, LogOut, KeyRound, X } from "lucide-react";
 import cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import KeyModal from "./modals/keyModal";

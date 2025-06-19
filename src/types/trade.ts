@@ -40,6 +40,8 @@ export interface OrderFormData {
   qty: number;
   sl: number;
   target: number;
+  slPoints: number;
+  tpPoints: number;
   orderType: "LIMIT" | "MARKET";
 }
 
