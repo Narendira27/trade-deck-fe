@@ -63,7 +63,7 @@ const TableRow: React.FC<TableRowProps> = ({
       case "ltpRange":
         return formatNumber(trade.ltpRange);
       case "lowestValue":
-        return lowestValue || formatNumber(0); // Placeholder
+        return formatNumber(lowestValue) || formatNumber(0); // Placeholder
       case "entry":
         return trade.entryPrice ? formatNumber(trade.entryPrice) : "-";
       case "qty":
