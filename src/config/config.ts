@@ -16,4 +16,4 @@ export const API_URL = "https://charts-recruiting-sponsored-indoor.trycloudflare
 
 export const SOCKET_MAIN = "http://localhost:3001";
 
-export const SOCKET_FE = "http://localhost:3002";
+export const SOCKET_FE = "https://guaranteed-collective-dec-focuses.trycloudflare.com";
