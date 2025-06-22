@@ -16,7 +16,12 @@ const ChartContainer: React.FC = () => {
     { id: "1", symbol: "NIFTY", timeframe: "5m", chartType: "candlestick" },
     { id: "2", symbol: "BANKNIFTY", timeframe: "5m", chartType: "candlestick" },
     { id: "3", symbol: "FINNIFTY", timeframe: "5m", chartType: "candlestick" },
-    { id: "4", symbol: "MIDCPNIFTY", timeframe: "5m", chartType: "candlestick" },
+    {
+      id: "4",
+      symbol: "MIDCPNIFTY",
+      timeframe: "5m",
+      chartType: "candlestick",
+    },
   ]);
   const [activeTab, setActiveTab] = useState("1");
   const [layout, setLayout] = useState<LayoutType>("single");
@@ -52,7 +57,7 @@ const ChartContainer: React.FC = () => {
   const getVisibleTabs = () => {
     switch (layout) {
       case "single":
-        return tabs.filter(tab => tab.id === activeTab);
+        return tabs.filter((tab) => tab.id === activeTab);
       case "2x2":
         return tabs.slice(0, 2);
       case "3x1":
@@ -60,7 +65,7 @@ const ChartContainer: React.FC = () => {
       case "2x2-grid":
         return tabs.slice(0, 4);
       default:
-        return tabs.filter(tab => tab.id === activeTab);
+        return tabs.filter((tab) => tab.id === activeTab);
     }
   };
 
@@ -84,32 +89,33 @@ const ChartContainer: React.FC = () => {
       {/* Tab Bar */}
       <div className="flex items-center bg-gray-800 border-b border-gray-700 rounded-t-lg">
         <div className="flex-1 flex items-center overflow-x-auto">
-          {layout === "single" && tabs.map((tab) => (
-            <div
-              key={tab.id}
-              className={`flex items-center space-x-2 px-3 py-2 border-r border-gray-700 cursor-pointer min-w-0 ${
-                activeTab === tab.id
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-400 hover:text-white hover:bg-gray-750"
-              }`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="text-sm font-medium truncate">
-                {tab.symbol} {tab.timeframe}
-              </span>
-              {tabs.length > 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeTab(tab.id);
-                  }}
-                  className="text-gray-500 hover:text-white"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-          ))}
+          {layout === "single" &&
+            tabs.map((tab) => (
+              <div
+                key={tab.id}
+                className={`flex items-center space-x-2 px-3 py-2 border-r border-gray-700 cursor-pointer min-w-0 ${
+                  activeTab === tab.id
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-400 hover:text-white hover:bg-gray-750"
+                }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <span className="text-sm font-medium truncate">
+                  {tab.symbol} {tab.timeframe}
+                </span>
+                {tabs.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTab(tab.id);
+                    }}
+                    className="text-gray-500 hover:text-white"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            ))}
         </div>
 
         <div className="flex items-center space-x-1 px-2">
@@ -172,11 +178,11 @@ const ChartContainer: React.FC = () => {
       </div>
 
       {/* Chart Controls - Only show for single layout */}
-      {layout === "single" && tabs.find(tab => tab.id === activeTab) && (
+      {layout === "single" && tabs.find((tab) => tab.id === activeTab) && (
         <div className="flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
           <div className="flex items-center space-x-4">
             <select
-              value={tabs.find(tab => tab.id === activeTab)?.symbol || ""}
+              value={tabs.find((tab) => tab.id === activeTab)?.symbol || ""}
               onChange={(e) => updateTab(activeTab, { symbol: e.target.value })}
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -188,7 +194,7 @@ const ChartContainer: React.FC = () => {
             </select>
 
             <select
-              value={tabs.find(tab => tab.id === activeTab)?.timeframe || ""}
+              value={tabs.find((tab) => tab.id === activeTab)?.timeframe || ""}
               onChange={(e) =>
                 updateTab(activeTab, { timeframe: e.target.value })
               }
@@ -205,7 +211,7 @@ const ChartContainer: React.FC = () => {
               <button
                 onClick={() => updateTab(activeTab, { chartType: "line" })}
                 className={`px-3 py-1 text-sm rounded-l ${
-                  tabs.find(tab => tab.id === activeTab)?.chartType === "line"
+                  tabs.find((tab) => tab.id === activeTab)?.chartType === "line"
                     ? "bg-blue-500 text-white"
                     : "text-gray-300 hover:text-white"
                 }`}
@@ -217,7 +223,8 @@ const ChartContainer: React.FC = () => {
                   updateTab(activeTab, { chartType: "candlestick" })
                 }
                 className={`px-3 py-1 text-sm rounded-r ${
-                  tabs.find(tab => tab.id === activeTab)?.chartType === "candlestick"
+                  tabs.find((tab) => tab.id === activeTab)?.chartType ===
+                  "candlestick"
                     ? "bg-blue-500 text-white"
                     : "text-gray-300 hover:text-white"
                 }`}
