@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { X, GripHorizontal } from "lucide-react";
 import { type EditFormData } from "../../types/trade";
 import cookies from "js-cookie";
 import { API_URL } from "../../config/config";
@@ -30,8 +30,49 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
   const [enablePremium, setEnablePremium] = useState(false);
   const [enablePremiumTp, setEnablePremiumTP] = useState(false);
 
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const modalRef = useRef<HTMLDivElement>(null);
+
   const { trades, setTrades } = useStore();
   const isInitialized = useRef(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (modalRef.current) {
+      const rect = modalRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+      setIsDragging(true);
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
 
   // Initialize form data when modal opens with a trade
   useEffect(() => {
@@ -99,10 +140,26 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0  flex items-center justify-center z-50">
-      <div className="bg-gray-800 border border-gray-400  rounded-lg p-6 w-full max-w-md">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div
+        ref={modalRef}
+        className={`bg-gray-800 border border-gray-400 rounded-lg p-6 w-full max-w-md cursor-move select-none ${
+          isDragging ? "opacity-90" : ""
+        }`}
+        style={{
+          position: "absolute",
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+        }}
+      >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-white">Edit Order</h3>
+          <div
+            className="flex items-center space-x-2 cursor-move"
+            onMouseDown={handleMouseDown}
+          >
+            <GripHorizontal size={16} className="text-gray-400" />
+            <h3 className="text-lg font-semibold text-white">Edit Order</h3>
+          </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X size={20} />
           </button>

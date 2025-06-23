@@ -70,6 +70,8 @@ const defaultColumns: Column[] = [
     visible: true,
     width: "140px",
   },
+  { id: "strategySl", label: "Strategy SL", visible: true, width: "120px" },
+  { id: "strategyTrailing", label: "Strategy Trailing", visible: true, width: "140px" },
   { id: "exitPercentages", label: "Exit %", visible: true, width: "150px" },
 ];
 
@@ -151,20 +153,20 @@ function Dashboard() {
           <ResizablePanel
             direction="vertical"
             initialSize={30}
-            minSize={20}
-            maxSize={50}
+            minSize={5}
+            maxSize={95}
           >
-            {/* Top section - Trade Table (30%) */}
+            {/* Top section - Trade Table */}
             <div className="h-full bg-gray-900 border-b border-gray-700">
               <TradeTable trades={trades} columns={columns} />
             </div>
 
-            {/* Bottom section - Chart and Position Tracker (70%) */}
+            {/* Bottom section - Chart and Position Tracker */}
             <ResizablePanel
               direction="horizontal"
               initialSize={65}
-              minSize={40}
-              maxSize={80}
+              minSize={5}
+              maxSize={95}
             >
               {/* Chart section */}
               <div className="h-full p-2">
