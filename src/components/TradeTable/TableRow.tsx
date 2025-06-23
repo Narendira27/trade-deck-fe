@@ -63,7 +63,7 @@ const TableRow: React.FC<TableRowProps> = ({
       case "ltpRange":
         return formatNumber(trade.ltpRange);
       case "lowestValue":
-        return formatNumber(lowestValue) || formatNumber(0); // Placeholder
+        return formatNumber(lowestValue) || formatNumber(0);
       case "entry":
         return trade.entryPrice ? formatNumber(trade.entryPrice) : "-";
       case "qty":
@@ -79,7 +79,7 @@ const TableRow: React.FC<TableRowProps> = ({
       case "entrySpot":
         return formatNumber(trade.entrySpotPrice);
       case "mtm":
-        return 0; // Placeholder
+        return 0;
       case "pointOfAdjustment":
         return trade.pointOfAdjustment
           ? formatNumber(trade.pointOfAdjustment)
@@ -96,6 +96,18 @@ const TableRow: React.FC<TableRowProps> = ({
         return trade.entryType;
       case "entryTriggered":
         return trade.entryTriggered ? "Yes" : "No";
+      case "strategySl":
+        return (
+          <button className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+            Set SL
+          </button>
+        );
+      case "strategyTrailing":
+        return (
+          <button className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+            Set Trail
+          </button>
+        );
       case "exitPercentages":
         return (
           <div className="flex space-x-1">
@@ -124,7 +136,7 @@ const TableRow: React.FC<TableRowProps> = ({
       case "target":
         return `${baseClass} text-green-400`;
       case "mtm":
-        return `${baseClass} text-white`; // Will be dynamic based on value
+        return `${baseClass} text-white`;
       default:
         return `${baseClass} text-white`;
     }

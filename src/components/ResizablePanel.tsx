@@ -13,8 +13,8 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
   children,
   direction,
   initialSize = 50,
-  minSize = 10,
-  maxSize = 90,
+  minSize = 5,
+  maxSize = 95,
   className = '',
 }) => {
   const [size, setSize] = useState(initialSize);

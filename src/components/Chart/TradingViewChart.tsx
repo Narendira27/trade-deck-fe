@@ -18,6 +18,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const priceLinesRef = useRef({});
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   const [priceLines, setPriceLines] = useState({ limit: 100, sl: 95, tp: 105 });
   const [cursor, setCursor] = useState("default");
@@ -84,13 +85,23 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
     });
   };
 
+  const resizeChart = () => {
+    if (chartRef.current && chartContainerRef.current) {
+      const container = chartContainerRef.current;
+      chartRef.current.applyOptions({
+        width: container.clientWidth,
+        height: container.clientHeight,
+      });
+    }
+  };
+
   useEffect(() => {
     if (!chartContainerRef.current) return;
     const container = chartContainerRef.current;
 
     const chart = createChart(container, {
       width: container.clientWidth,
-      height: 500,
+      height: container.clientHeight,
       layout: {
         background: { color: "#1f2937" },
         textColor: "#d1d5db",
@@ -189,16 +200,19 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
     container.addEventListener("mousedown", handleMouseDown);
     container.addEventListener("mouseup", handleMouseUp);
 
-    const resizeObserver = new ResizeObserver(() => {
-      chart.applyOptions({ width: container.clientWidth });
+    // Setup ResizeObserver for responsive chart
+    resizeObserverRef.current = new ResizeObserver(() => {
+      resizeChart();
     });
-    resizeObserver.observe(container);
+    resizeObserverRef.current.observe(container);
 
     return () => {
       container.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mousedown", handleMouseDown);
       container.removeEventListener("mouseup", handleMouseUp);
-      resizeObserver.disconnect();
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
       chart.remove();
     };
   }, []);
@@ -221,7 +235,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
   }, [orderType]);
 
   return (
-    <div style={{ width: "100%", height: "500px", position: "relative" }}>
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
       <div
         ref={chartContainerRef}
         style={{ width: "100%", height: "100%", cursor: cursor }}
@@ -233,7 +247,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
           top: 10,
           left: 10,
           backgroundColor: "#374151",
-
           padding: 10,
           borderRadius: 8,
           boxShadow: "0 0 8px rgba(0,0,0,0.2)",
