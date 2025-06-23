@@ -106,6 +106,10 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (trades[0].entryType === "UNDEFINED") {
+      return toast.error("Cannot Edit Trade Before placing order!");
+    }
+
     const auth = cookies.get("auth");
     const reqPromise = axios.put(
       API_URL + "/user/tradeInfo?id=" + tradeId,

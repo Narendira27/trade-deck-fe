@@ -14,6 +14,17 @@ interface PlaceOrderModalProps {
   tradeId: string | null;
 }
 
+interface DataType {
+  stopLossPremium?: number;
+  takeProfitPremium?: number;
+  stopLossPoints?: number;
+  takeProfitPoints?: number;
+  entryType: "MARKET" | "LIMIT";
+  entryPrice: number;
+  qty: number;
+  currentQty: number;
+}
+
 const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
   isOpen,
   onClose,
@@ -137,28 +148,48 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    let DATA = {};
-    if (formData.orderType === "LIMIT") {
-      DATA = {
-        stopLossPremium: formData.sl,
-        takeProfitPremium: formData.target,
-        entryType: formData.orderType,
-        entryPrice: formData.entry,
-        qty: formData.qty,
-        currentQty: formData.qty,
-      };
-    }
-    if (formData.orderType === "MARKET") {
-      DATA = {
-        stopLossPoints: formData.slPoints,
-        takeProfitPoints: formData.tpPoints,
-        entryType: formData.orderType,
-        entryPrice: formData.entry,
-        qty: formData.qty,
-        currentQty: formData.qty,
-      };
-    }
     e.preventDefault();
+
+    if (!formData.entry && formData.orderType === "LIMIT") {
+      return toast.warning("entry price is required");
+    }
+
+    if (!formData.qty) {
+      return toast.warning("qty is required");
+    }
+
+    console.log(formData.orderType);
+    if (formData.orderType.length < 0) {
+      return toast.warning("order type is required");
+    }
+
+    if (formData.sl === 0 && formData.slPoints === 0) {
+      return toast.warning("sl is required");
+    }
+
+    if (formData.target === 0 && formData.tpPoints === 0) {
+      return toast.warning("tp is required");
+    }
+
+    const DATA: DataType = {
+      entryType: formData.orderType,
+      entryPrice: formData.entry,
+      qty: formData.qty,
+      currentQty: formData.qty,
+    };
+
+    if (formData.orderType === "LIMIT") {
+      DATA.stopLossPremium = formData.sl;
+      DATA.takeProfitPremium = formData.target;
+      DATA.stopLossPoints = formData.sl - formData.entry;
+      DATA.takeProfitPoints = formData.entry - formData.target;
+    }
+
+    if (formData.orderType === "MARKET") {
+      if (formData.slPoints) DATA.stopLossPoints = formData.slPoints;
+      if (formData.tpPoints) DATA.takeProfitPoints = formData.tpPoints;
+    }
+
     const auth = cookies.get("auth");
     const reqPromise = axios.put(
       API_URL + "/user/tradeInfo?id=" + tradeId,
