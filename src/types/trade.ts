@@ -13,9 +13,9 @@ export interface Trade {
   takeProfitPoints: number;
   entrySpotPrice: number;
   lastPointOfAdjustment: number;
-  pointOfAdjustment: number; // pending
-  pointOfAdjustmentLowerLimit: number; // pending
-  pointOfAdjustmentUpperLimit: number; // pending
+  pointOfAdjustment: number;
+  pointOfAdjustmentLowerLimit: number;
+  pointOfAdjustmentUpperLimit: number;
   entryTriggered: boolean;
   slTriggered: boolean;
   tpTriggered: boolean;
@@ -26,13 +26,17 @@ export interface Trade {
   updatedAt: string;
   mtm: number;
   isActive: boolean;
+  strategySl?: number;
+  strategyTrailing?: number;
 }
+
 export interface TradeFormData {
   index: string;
   legCount: number;
   expiry: string;
   ltpRange: number;
   pointOfAdjustment: number;
+  side: "BUY" | "SELL";
 }
 
 export interface OrderFormData {
@@ -54,4 +58,6 @@ export interface EditFormData {
   stopLossPremium: number;
   takeProfitPoints: number;
   takeProfitPremium: number;
+  strategySl: number;
+  strategyTrailing: number;
 }

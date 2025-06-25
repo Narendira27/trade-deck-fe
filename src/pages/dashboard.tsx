@@ -170,35 +170,55 @@ function Dashboard() {
 
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-hidden relative">
-          <ResizablePanel
-            direction="vertical"
-            initialSize={30}
-            minSize={5}
-            maxSize={95}
-          >
-            {/* Top section - Trade Table */}
-            <div className="h-full bg-gray-900 border-b border-gray-700">
+          {/* Mobile Layout */}
+          <div className="lg:hidden h-full flex flex-col">
+            <div className="flex-1 min-h-0">
               <TradeTable trades={trades} columns={columns} />
             </div>
+            <div className="h-64 border-t border-gray-700">
+              <div className="grid grid-cols-1 sm:grid-cols-2 h-full gap-1 p-1">
+                <div className="bg-gray-900">
+                  <ChartContainer />
+                </div>
+                <div className="bg-gray-900">
+                  <PositionTracker />
+                </div>
+              </div>
+            </div>
+          </div>
 
-            {/* Bottom section - Chart and Position Tracker */}
+          {/* Desktop Layout */}
+          <div className="hidden lg:block h-full">
             <ResizablePanel
-              direction="horizontal"
-              initialSize={65}
+              direction="vertical"
+              initialSize={30}
               minSize={5}
               maxSize={95}
             >
-              {/* Chart section */}
-              <div className="h-full p-2">
-                <ChartContainer />
+              {/* Top section - Trade Table */}
+              <div className="h-full bg-gray-900 border-b border-gray-700">
+                <TradeTable trades={trades} columns={columns} />
               </div>
 
-              {/* Position Tracker section */}
-              <div className="h-full p-2">
-                <PositionTracker />
-              </div>
+              {/* Bottom section - Chart and Position Tracker */}
+              <ResizablePanel
+                direction="horizontal"
+                initialSize={65}
+                minSize={5}
+                maxSize={95}
+              >
+                {/* Chart section */}
+                <div className="h-full p-2">
+                  <ChartContainer />
+                </div>
+
+                {/* Position Tracker section */}
+                <div className="h-full p-2">
+                  <PositionTracker />
+                </div>
+              </ResizablePanel>
             </ResizablePanel>
-          </ResizablePanel>
+          </div>
 
           <DraggableBoxManager />
           <DraggableBox columns={draggableColumns} />

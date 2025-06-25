@@ -97,17 +97,9 @@ const TableRow: React.FC<TableRowProps> = ({
       case "entryTriggered":
         return trade.entryTriggered ? "Yes" : "No";
       case "strategySl":
-        return (
-          <button className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
-            Set SL
-          </button>
-        );
+        return trade.strategySl ? formatNumber(trade.strategySl) : "-";
       case "strategyTrailing":
-        return (
-          <button className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-            Set Trail
-          </button>
-        );
+        return trade.strategyTrailing ? formatNumber(trade.strategyTrailing) : "-";
       case "exitPercentages":
         return (
           <div className="flex space-x-1">
@@ -137,6 +129,10 @@ const TableRow: React.FC<TableRowProps> = ({
         return `${baseClass} text-green-400`;
       case "mtm":
         return `${baseClass} text-white`;
+      case "strategySl":
+        return `${baseClass} text-red-400`;
+      case "strategyTrailing":
+        return `${baseClass} text-green-400`;
       default:
         return `${baseClass} text-white`;
     }
