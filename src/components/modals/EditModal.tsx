@@ -24,11 +24,15 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
     takeProfitPremium: 0,
     stopLossPoints: 0,
     stopLossPremium: 0,
+    strategySl: 0,
+    strategyTrailing: 0,
   });
 
   const [orderTriggered, setOrderTriggered] = useState(true);
   const [enablePremium, setEnablePremium] = useState(false);
   const [enablePremiumTp, setEnablePremiumTP] = useState(false);
+  const [enableStrategySl, setEnableStrategySl] = useState(false);
+  const [enableStrategyTrailing, setEnableStrategyTrailing] = useState(false);
 
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -89,6 +93,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
           takeProfitPoints: trade.takeProfitPoints || 0,
           stopLossPoints: trade.stopLossPoints || 0,
           stopLossPremium: trade.stopLossPremium || 0,
+          strategySl: 0,
+          strategyTrailing: 0,
         });
 
         setOrderTriggered(trade.entryTriggered);
@@ -122,6 +128,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
         takeProfitPoints: formData.takeProfitPoints,
         stopLossPoints: formData.stopLossPoints,
         stopLossPremium: formData.stopLossPremium,
+        strategySl: formData.strategySl,
+        strategyTrailing: formData.strategyTrailing,
       },
       {
         headers: { Authorization: "Bearer " + auth },
@@ -144,10 +152,10 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div
         ref={modalRef}
-        className={`bg-gray-800 border border-gray-400 rounded-lg p-6 w-full max-w-md cursor-move select-none ${
+        className={`bg-gray-800 border border-gray-400 rounded-lg p-4 sm:p-6 w-full max-w-lg cursor-move select-none max-h-[90vh] overflow-y-auto ${
           isDragging ? "opacity-90" : ""
         }`}
         style={{
@@ -205,9 +213,9 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                 Enable Premium
               </span>
             </label>
-            <div className="flex gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
               <div>
-                <label className="flex gap-2 text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Stop Loss (Points)
                 </label>
                 <input
@@ -259,9 +267,9 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                 Enable Premium
               </span>
             </label>
-            <div className="flex gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
               <div>
-                <label className="flex gap-2 text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Take Profit (Points)
                 </label>
                 <input
@@ -317,39 +325,104 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Point Of Adjustment Upper Limit
-            </label>
-            <input
-              type="number"
-              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.pointOfAdjustmentUpperLimit}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  pointOfAdjustmentUpperLimit: parseFloat(e.target.value) || 0,
-                })
-              }
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Adjustment Upper Limit
+              </label>
+              <input
+                type="number"
+                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.pointOfAdjustmentUpperLimit}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    pointOfAdjustmentUpperLimit: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Adjustment Lower Limit
+              </label>
+              <input
+                type="number"
+                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.pointOfAdjustmentLowerLimit}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    pointOfAdjustmentLowerLimit: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Point Of Adjustment Lower Limit
-            </label>
-            <input
-              type="number"
-              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.pointOfAdjustmentLowerLimit}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  pointOfAdjustmentLowerLimit: parseFloat(e.target.value) || 0,
-                })
-              }
-            />
+          {/* Strategy Controls */}
+          <div className="border-t border-gray-600 pt-4">
+            <h4 className="text-md font-medium text-white mb-3">Strategy Controls</h4>
+            
+            <div>
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={enableStrategySl}
+                  onChange={() => setEnableStrategySl((prev) => !prev)}
+                />
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                <span className="ms-3 text-sm font-medium text-white">
+                  Enable Strategy Stop Loss
+                </span>
+              </label>
+              {enableStrategySl && (
+                <input
+                  type="number"
+                  className="w-full mt-2 bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                  value={formData.strategySl}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      strategySl: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="Enter strategy stop loss amount"
+                />
+              )}
+            </div>
+
+            <div className="mt-4">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={enableStrategyTrailing}
+                  onChange={() => setEnableStrategyTrailing((prev) => !prev)}
+                />
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                <span className="ms-3 text-sm font-medium text-white">
+                  Enable Strategy Trailing
+                </span>
+              </label>
+              {enableStrategyTrailing && (
+                <input
+                  type="number"
+                  className="w-full mt-2 bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={formData.strategyTrailing}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      strategyTrailing: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="Enter strategy trailing amount"
+                />
+              )}
+            </div>
           </div>
+
           <div className="flex justify-end space-x-3 mt-6">
             <button
               type="button"

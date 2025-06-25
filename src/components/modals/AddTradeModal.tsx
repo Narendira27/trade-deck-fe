@@ -20,6 +20,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
     expiry: "",
     ltpRange: 0,
     pointOfAdjustment: 0,
+    side: "BUY",
   });
 
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -112,6 +113,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
         legCount: formData.legCount,
         ltpRange: formData.ltpRange,
         pointOfAdjustment: formData.pointOfAdjustment,
+        side: formData.side,
       },
       { headers: { Authorization: "Bearer " + auth } }
     );
@@ -125,6 +127,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
           expiry: "",
           ltpRange: 0,
           pointOfAdjustment: 0,
+          side: "BUY",
         });
         const result = await getTradeData();
         if (result.status === "ok") {
@@ -144,10 +147,10 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div
         ref={modalRef}
-        className={`bg-gray-800 border border-gray-400 rounded-lg p-6 w-full max-w-md cursor-move select-none ${
+        className={`bg-gray-800 border border-gray-400 rounded-lg p-4 sm:p-6 w-full max-w-md cursor-move select-none ${
           isDragging ? "opacity-90" : ""
         }`}
         style={{
@@ -194,19 +197,37 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Straddle Count
-            </label>
-            <input
-              type="number"
-              min="1"
-              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.legCount}
-              onChange={(e) =>
-                setFormData({ ...formData, legCount: parseInt(e.target.value) })
-              }
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Side
+              </label>
+              <select
+                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.side}
+                onChange={(e) =>
+                  setFormData({ ...formData, side: e.target.value as "BUY" | "SELL" })
+                }
+              >
+                <option value="BUY">BUY</option>
+                <option value="SELL">SELL</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Straddle Count
+              </label>
+              <input
+                type="number"
+                min="1"
+                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.legCount}
+                onChange={(e) =>
+                  setFormData({ ...formData, legCount: parseInt(e.target.value) })
+                }
+              />
+            </div>
           </div>
 
           <div>

@@ -88,10 +88,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
   const resizeChart = () => {
     if (chartRef.current && chartContainerRef.current) {
       const container = chartContainerRef.current;
+      const rect = container.getBoundingClientRect();
       chartRef.current.applyOptions({
-        width: container.clientWidth,
-        height: container.clientHeight,
+        width: rect.width,
+        height: rect.height,
       });
+      chartRef.current.timeScale().fitContent();
     }
   };
 
@@ -202,9 +204,17 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
 
     // Setup ResizeObserver for responsive chart
     resizeObserverRef.current = new ResizeObserver(() => {
-      resizeChart();
+      // Use requestAnimationFrame to avoid layout thrashing
+      requestAnimationFrame(() => {
+        resizeChart();
+      });
     });
     resizeObserverRef.current.observe(container);
+
+    // Initial resize
+    setTimeout(() => {
+      resizeChart();
+    }, 100);
 
     return () => {
       container.removeEventListener("mousemove", handleMouseMove);
@@ -215,6 +225,18 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
       }
       chart.remove();
     };
+  }, []);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setTimeout(() => {
+        resizeChart();
+      }, 100);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -235,36 +257,24 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
   }, [orderType]);
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+    <div className="w-full h-full relative">
       <div
         ref={chartContainerRef}
-        style={{ width: "100%", height: "100%", cursor: cursor }}
+        className="w-full h-full"
+        style={{ cursor: cursor }}
       />
-      <div
-        className="text-white"
-        style={{
-          position: "absolute",
-          top: 10,
-          left: 10,
-          backgroundColor: "#374151",
-          padding: 10,
-          borderRadius: 8,
-          boxShadow: "0 0 8px rgba(0,0,0,0.2)",
-          zIndex: 20,
-        }}
-      >
-        <div>
-          <label>Qty:</label>
+      <div className="absolute top-2 left-2 bg-gray-800 p-2 rounded-lg shadow-lg z-20 text-white text-xs">
+        <div className="mb-2">
+          <label className="block mb-1">Qty:</label>
           <input
-            className="border rounded-md px-1"
+            className="border rounded px-1 py-0.5 w-16 text-black"
             type="number"
             value={qty}
             onChange={(e) => setQty(Number(e.target.value))}
-            style={{ width: 60, marginLeft: 5 }}
           />
         </div>
-        <div style={{ marginTop: 8 }}>
-          <label>
+        <div className="mb-2">
+          <label className="block mb-1">
             <input
               type="radio"
               checked={orderType === "limit"}
@@ -272,10 +282,11 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
                 setOrderType("limit");
                 setShowPlaceOrder(true);
               }}
+              className="mr-1"
             />
             Limit
           </label>
-          <label style={{ marginLeft: 10 }}>
+          <label className="block">
             <input
               type="radio"
               checked={orderType === "market"}
@@ -283,41 +294,35 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
                 setOrderType("market");
                 setShowPlaceOrder(false);
               }}
+              className="mr-1"
             />
             Market
           </label>
         </div>
 
         {orderType === "market" && (
-          <div style={{ marginTop: 10 }}>
-            <div>
-              SL (pts):
+          <div className="mb-2">
+            <div className="mb-1">
+              <label className="block text-xs">SL (pts):</label>
               <input
                 type="number"
                 value={slPoints}
                 onChange={(e) => setSlPoints(Number(e.target.value))}
-                style={{ width: 50, marginLeft: 5 }}
+                className="w-12 px-1 py-0.5 text-black rounded"
               />
             </div>
-            <div>
-              TP (pts):
+            <div className="mb-1">
+              <label className="block text-xs">TP (pts):</label>
               <input
                 type="number"
                 value={tpPoints}
                 onChange={(e) => setTpPoints(Number(e.target.value))}
-                style={{ width: 50, marginLeft: 5 }}
+                className="w-12 px-1 py-0.5 text-black rounded"
               />
             </div>
             <button
               onClick={() => setShowPlaceOrder(true)}
-              style={{
-                marginTop: 10,
-                backgroundColor: "#26a69a",
-                color: "#fff",
-                padding: "6px 12px",
-                border: "none",
-                borderRadius: 4,
-              }}
+              className="mt-1 bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
             >
               Set SL/TP
             </button>
@@ -325,18 +330,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = () => {
         )}
 
         {showPlaceOrder && (
-          <button
-            style={{
-              marginTop: 4,
-              backgroundColor: "#2962FF",
-              color: "white",
-              padding: "6px 12px",
-              border: "none",
-              borderRadius: "4px",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
+          <button className="mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 font-medium">
             Place Order
           </button>
         )}
