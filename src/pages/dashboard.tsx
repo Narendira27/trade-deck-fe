@@ -15,9 +15,9 @@ import ResizablePanel from "../components/ResizablePanel";
 import ChartContainer from "../components/Chart/ChartContainer";
 import PositionTracker from "../components/PositionTracker/PositionTracker";
 import DraggableBoxManager from "../components/DraggableBoxManager";
-import DraggableBox, { 
+import DraggableBox, {
   defaultDraggableColumns,
-  type DraggableBoxColumn 
+  type DraggableBoxColumn,
 } from "../components/DraggableBox";
 
 import { API_URL } from "../config/config";
@@ -71,14 +71,21 @@ const defaultColumns: Column[] = [
     width: "140px",
   },
   { id: "strategySl", label: "Strategy SL", visible: true, width: "120px" },
-  { id: "strategyTrailing", label: "Strategy Trailing", visible: true, width: "140px" },
+  {
+    id: "strategyTrailing",
+    label: "Strategy Trailing",
+    visible: true,
+    width: "140px",
+  },
   { id: "exitPercentages", label: "Exit %", visible: true, width: "150px" },
 ];
 
 function Dashboard() {
-  const { trades, setTrades } = useStore();
+  const { trades, setTrades, setOptionLotSize } = useStore();
   const [columns, setColumns] = useState<Column[]>(defaultColumns);
-  const [draggableColumns, setDraggableColumns] = useState<DraggableBoxColumn[]>(defaultDraggableColumns);
+  const [draggableColumns, setDraggableColumns] = useState<
+    DraggableBoxColumn[]
+  >(defaultDraggableColumns);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -133,10 +140,23 @@ function Dashboard() {
           toast.error("Cannot update the Trade Data, Refresh the page");
         });
     }, 5 * 1000);
+
+    const auth = cookies.get("auth");
+    axios
+      .get(API_URL + "/user/lotSize", {
+        headers: { Authorization: "Bearer " + auth },
+      })
+      .then((data) => {
+        setOptionLotSize(data.data.data);
+      })
+      .catch(() => {
+        toast.error("Cannot get Option Lot Size, Refresh the page");
+      });
+
     return () => {
       clearInterval(interval);
     };
-  }, [getTradeData, setTrades]);
+  }, [getTradeData, setTrades, setOptionLotSize]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">

@@ -38,12 +38,18 @@ interface optionValuesData {
   spreadPremiumArray: SpreadPremiumArray[];
 }
 
+interface optionLotSizeType {
+  optionName: string;
+  lotSize: number;
+}
+
 interface TradeStoreState {
   trades: Trade[];
   indexData: indexData;
   draggableData: draggableData[];
   indexPrice: IndexPriceData[];
   optionValues: optionValuesData[];
+  optionLotSize: optionLotSizeType[];
   showDraggable: boolean;
   setTrades: (data: Trade[]) => void;
   setIndexData: (data: indexData) => void;
@@ -56,6 +62,7 @@ interface TradeStoreState {
     id: string,
     updatedData: Partial<draggableData>
   ) => void;
+  setOptionLotSize: (data: optionLotSizeType[]) => void;
 }
 
 const useStore = create<TradeStoreState>((set) => ({
@@ -67,6 +74,7 @@ const useStore = create<TradeStoreState>((set) => ({
   draggableData: [],
   indexPrice: [],
   optionValues: [],
+  optionLotSize: [],
   showDraggable: false,
   setTrades: (data: Trade[]) => set({ trades: data }),
   setIndexData: (data: indexData) => set({ indexData: data }),
@@ -111,6 +119,10 @@ const useStore = create<TradeStoreState>((set) => ({
         item.id === id ? { ...item, ...updatedData } : item
       ),
     })),
+
+  setOptionLotSize: (data: optionLotSizeType[]) => {
+    set({ optionLotSize: data });
+  },
 }));
 
 export default useStore;

@@ -45,7 +45,7 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const { trades, setTrades } = useStore();
+  const { trades, setTrades, optionLotSize } = useStore();
   const isInitialized = useRef(false);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -83,6 +83,26 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
+
+  const getTradeInfo = () => {
+    if (trades.length > 0 && trades && tradeId) {
+      const filterInTrade = trades.filter((each) => each.id === tradeId);
+      if (filterInTrade.length > 0) return filterInTrade[0];
+      throw new Error("Trade Not Found");
+    }
+  };
+
+  const getLotSizeInfo = () => {
+    const infoObj = getTradeInfo();
+    if (infoObj) {
+      const lotData = optionLotSize.find(
+        (each) =>
+          each.optionName ===
+          `${infoObj?.indexName.toLowerCase()}${infoObj?.expiry}`
+      );
+      return lotData?.lotSize;
+    }
+  };
 
   // Initialize form data when modal opens with a trade
   useEffect(() => {
@@ -290,7 +310,7 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Quantity
+                  Lots (qty : {getLotSizeInfo()})
                 </label>
                 <input
                   type="number"
@@ -343,7 +363,7 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Quantity
+                  Lots (qty : {getLotSizeInfo()})
                 </label>
                 <input
                   type="number"
