@@ -152,25 +152,15 @@ const PositionTracker: React.FC = () => {
     });
   };
 
-  // const handlePortfolioStopLoss = () => {
-  //   console.log("Set portfolio stop loss");
-  //   // Implement portfolio stop loss logic
-  // };
-
-  // const handlePortfolioTrailing = () => {
-  //   console.log("Set portfolio trailing");
-  //   // Implement portfolio trailing logic
-  // };
-
   return (
     <div className="h-full flex flex-col bg-gray-900 border border-gray-700 rounded-lg">
-      <div className="p-3 border-b border-gray-700 flex-shrink-0">
+      <div className="p-2 sm:p-3 border-b border-gray-700 flex-shrink-0">
         <div className="flex justify-between items-center">
-          <h3 className="text-base font-semibold text-white">Live Positions</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-white">Live Positions</h3>
           <div className="text-right">
             <p className="text-xs text-gray-400">Total MTM</p>
             <p
-              className={`text-sm font-semibold ${
+              className={`text-xs sm:text-sm font-semibold ${
                 totalMtm >= 0 ? "text-green-400" : "text-red-400"
               }`}
             >
@@ -180,7 +170,7 @@ const PositionTracker: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto flex flex-col">
+      <div className="flex-1 overflow-hidden flex flex-col">
         {/* Fixed Header */}
         <div className="bg-gray-800 border-b border-gray-700 flex-shrink-0">
           <div className="grid grid-cols-4 gap-1 p-2">
@@ -188,7 +178,7 @@ const PositionTracker: React.FC = () => {
               onClick={() => handleSort("optionName")}
               className="flex items-center space-x-1 text-left hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
-              <span className="text-xs">Option</span>
+              <span className="text-xs truncate">Option</span>
               {getSortIcon("optionName")}
             </button>
             <button
@@ -261,7 +251,7 @@ const PositionTracker: React.FC = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="p-3 border-t border-gray-700 flex-shrink-0">
+      <div className="p-2 sm:p-3 border-t border-gray-700 flex-shrink-0">
         <div className="grid grid-cols-1 gap-2">
           <button
             onClick={handleSquareOffAll}
@@ -269,20 +259,12 @@ const PositionTracker: React.FC = () => {
           >
             <span>Square Off All</span>
           </button>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              // onClick={handlePortfolioStopLoss}
-              className="flex items-center justify-center space-x-1 px-2 py-2 text-orange-500 text-xs rounded transition-colors"
-            >
-              <span>Portfolio SL :</span>
-              <span>Undefined</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button className="flex items-center justify-center space-x-1 px-2 py-2 text-orange-500 text-xs rounded transition-colors">
+              <span className="truncate">Portfolio SL: Undefined</span>
             </button>
-            <button
-              // onClick={handlePortfolioTrailing}
-              className="flex items-center justify-center space-x-1 px-2 py-2 text-blue-500 text-xs rounded "
-            >
-              <span>Portfolio Trail :</span>
-              <span>Undefined</span>
+            <button className="flex items-center justify-center space-x-1 px-2 py-2 text-blue-500 text-xs rounded">
+              <span className="truncate">Portfolio Trail: Undefined</span>
             </button>
           </div>
         </div>
