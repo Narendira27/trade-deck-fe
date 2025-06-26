@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { BarChart2, Plus, Menu, Shield, TrendingUp } from "lucide-react";
+import { BarChart2, Plus, Menu, Shield, TrendingUp, Filter } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
 import PortfolioModal from "./modals/PortfolioModal";
 import HedgeModal from "./modals/HedgeModal";
+import FilterModal from "./modals/FilterModal";
 import useStore from "../store/store";
 import { type DraggableBoxColumn } from "./DraggableBox";
 
@@ -26,17 +27,18 @@ const Header: React.FC<HeaderProps> = ({
   const [isAddTradeModalOpen, setIsAddTradeModalOpen] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [isHedgeModalOpen, setIsHedgeModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const { showDraggable } = useStore();
 
   return (
     <>
-      <header className="bg-gray-900 text-white py-2 px-2 lg:py-3 lg:px-4 flex items-center justify-between border-b border-gray-800">
-        <div className="flex items-center space-x-2 lg:space-x-3">
-          <BarChart2 className="text-blue-500" size={20} />
-          <h1 className="text-lg lg:text-xl font-semibold">TradeDeck</h1>
+      <header className="bg-gray-900 text-white py-2 px-2 sm:py-3 sm:px-4 flex items-center justify-between border-b border-gray-800 min-h-[60px]">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+          <BarChart2 className="text-blue-500 flex-shrink-0" size={20} />
+          <h1 className="text-base sm:text-lg lg:text-xl font-semibold truncate">TradeDeck</h1>
         </div>
 
-        <div className="flex items-center space-x-1 lg:space-x-3">
+        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
           {/* Desktop Controls */}
           <div className="hidden lg:flex items-center space-x-3">
             <ColumnManager
@@ -52,6 +54,14 @@ const Header: React.FC<HeaderProps> = ({
             )}
 
             <button
+              onClick={() => setIsFilterModalOpen(true)}
+              className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              <Filter size={16} />
+              <span className="text-sm">Filter</span>
+            </button>
+
+            <button
               onClick={() => setIsPortfolioModalOpen(true)}
               className="flex items-center space-x-2 px-3 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
             >
@@ -59,14 +69,14 @@ const Header: React.FC<HeaderProps> = ({
               <span className="text-sm">Portfolio</span>
             </button>
 
-            {/* <button
+            <button
               onClick={() => setIsHedgeModalOpen(true)}
               className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
             >
               <TrendingUp size={16} />
               <span className="text-sm">Hedge</span>
             </button>
-             */}
+
             <button
               onClick={() => setIsAddTradeModalOpen(true)}
               className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
@@ -76,14 +86,22 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* Mobile Controls */}
-          <div className="flex lg:hidden items-center space-x-2">
+          {/* Mobile/Tablet Controls */}
+          <div className="flex lg:hidden items-center space-x-1 sm:space-x-2">
+            <button
+              onClick={() => setIsFilterModalOpen(true)}
+              className="flex items-center space-x-1 px-2 py-1.5 bg-green-600 text-white text-xs rounded-md hover:bg-green-700 transition-colors"
+            >
+              <Filter size={14} />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
+
             <button
               onClick={() => setIsAddTradeModalOpen(true)}
               className="flex items-center space-x-1 px-2 py-1.5 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors"
             >
               <Plus size={14} />
-              <span>Add</span>
+              <span className="hidden sm:inline">Add</span>
             </button>
 
             <button
@@ -91,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-1 px-2 py-1.5 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors"
             >
               <Shield size={14} />
-              <span>Portfolio</span>
+              <span className="hidden sm:inline">Portfolio</span>
             </button>
 
             <button
@@ -99,14 +117,14 @@ const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-1 px-2 py-1.5 bg-purple-600 text-white text-xs rounded-md hover:bg-purple-700 transition-colors"
             >
               <TrendingUp size={14} />
-              <span>Hedge</span>
+              <span className="hidden sm:inline">Hedge</span>
             </button>
           </div>
 
           {/* Hamburger Menu Button */}
           <button
             onClick={onMenuToggle}
-            className="p-2 rounded-md bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-md bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors flex-shrink-0"
           >
             <Menu size={20} />
           </button>
@@ -126,6 +144,11 @@ const Header: React.FC<HeaderProps> = ({
       <HedgeModal
         isOpen={isHedgeModalOpen}
         onClose={() => setIsHedgeModalOpen(false)}
+      />
+
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
       />
     </>
   );

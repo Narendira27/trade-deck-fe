@@ -181,7 +181,7 @@ function Dashboard() {
             <div className="flex-1 min-h-0">
               <TradeTable trades={trades} columns={columns} />
             </div>
-            <div className="h-64 border-t border-gray-700">
+            <div className="h-48 sm:h-64 border-t border-gray-700">
               <div className="grid grid-cols-1 sm:grid-cols-2 h-full gap-1 p-1">
                 <div className="bg-gray-900">
                   <ChartContainer />

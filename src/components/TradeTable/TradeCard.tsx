@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Play, Edit, Trash2, X } from "lucide-react";
 import { type Trade } from "../../types/trade";
 import { formatNumber, formatCurrency } from "../../utils/formatters";
 
@@ -21,52 +21,73 @@ const TradeCard: React.FC<TradeCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+    <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-gray-600 transition-colors">
       <div className="p-3 sm:p-4">
         <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="text-base sm:text-lg font-medium text-white">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm sm:text-base font-medium text-white truncate">
               {trade.indexName}
             </h3>
-            <p className="text-xs sm:text-sm text-gray-400">Expiry: {trade.expiry}</p>
+            <p className="text-xs text-gray-400">
+              {trade.entrySide} • {trade.expiry}
+            </p>
+            <div className="flex items-center space-x-2 mt-1">
+              <span className={`text-xs px-2 py-1 rounded ${
+                trade.entryType === "MARKET" ? "bg-green-500/20 text-green-400" :
+                trade.entryType === "LIMIT" ? "bg-blue-500/20 text-blue-400" :
+                "bg-gray-500/20 text-gray-400"
+              }`}>
+                {trade.entryType}
+              </span>
+              <span className={`text-xs px-2 py-1 rounded ${
+                trade.entryTriggered ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+              }`}>
+                {trade.entryTriggered ? "Triggered" : "Pending"}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+          <div className="flex flex-col gap-1 ml-2">
             {trade.entryType === "UNDEFINED" ? (
               <>
                 <button
                   onClick={onPlaceOrder}
-                  className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                  className="p-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  title="Place Order"
                 >
-                  Place Order
+                  <Play size={12} />
                 </button>
                 <button
                   onClick={onEdit}
-                  className="px-2 py-1 bg-gray-700 text-xs rounded hover:bg-gray-600"
+                  className="p-1.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                  title="Edit"
                 >
-                  Edit
+                  <Edit size={12} />
                 </button>
                 <button
                   onClick={onDeleteOrder}
-                  className="px-2 py-1 bg-red-500/80 text-white text-xs rounded hover:bg-red-600"
+                  className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
+                  title="Delete"
                 >
-                  Delete
+                  <Trash2 size={12} />
                 </button>
               </>
             ) : (
               <>
-                {trade.entryTriggered === false && trade.entryType === "LIMIT" ? (
+                {trade.entryTriggered === false && trade.entryType === "LIMIT" && (
                   <button
                     onClick={onCancelOrder}
-                    className="px-2 py-1 bg-red-500/80 text-xs rounded hover:bg-red-400"
+                    className="p-1.5 bg-red-500/80 rounded hover:bg-red-400 transition-colors"
+                    title="Cancel Order"
                   >
-                    Cancel Order
+                    <X size={12} />
                   </button>
-                ) : null}
+                )}
                 <button
                   onClick={onEdit}
-                  className="px-2 py-1 bg-gray-700 text-xs rounded hover:bg-gray-600"
+                  className="p-1.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                  title="Edit"
                 >
-                  Edit
+                  <Edit size={12} />
                 </button>
               </>
             )}
@@ -90,15 +111,17 @@ const TradeCard: React.FC<TradeCardProps> = ({
           </div>
           <div>
             <p className="text-xs text-gray-400">MTM</p>
-            <p className="text-xs sm:text-sm font-medium text-white">
-              {formatCurrency(0)}
+            <p className={`text-xs sm:text-sm font-medium ${
+              trade.mtm >= 0 ? "text-green-400" : "text-red-400"
+            }`}>
+              {formatCurrency(trade.mtm)}
             </p>
           </div>
         </div>
 
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center text-xs sm:text-sm text-gray-400 hover:text-white transition-colors"
+          className="flex items-center text-xs sm:text-sm text-gray-400 hover:text-white transition-colors w-full"
         >
           <span>View Details</span>
           {isExpanded ? (
@@ -159,15 +182,17 @@ const TradeCard: React.FC<TradeCardProps> = ({
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Live Position</p>
-              <p className="text-xs sm:text-sm font-medium text-white">{"-"}</p>
+              <p className="text-xs text-gray-400">Created</p>
+              <p className="text-xs sm:text-sm font-medium text-white">
+                {new Date(trade.createdAt).toLocaleDateString()}
+              </p>
             </div>
             <div className="col-span-2">
               <p className="text-xs text-gray-400 mb-2">Exit Percentages</p>
-              <div className="flex space-x-1 sm:space-x-2">
-                <button className="px-2 py-1 text-xs bg-gray-700 rounded hover:bg-gray-600">25%</button>
-                <button className="px-2 py-1 text-xs bg-gray-700 rounded hover:bg-gray-600">50%</button>
-                <button className="px-2 py-1 text-xs bg-gray-700 rounded hover:bg-gray-600">100%</button>
+              <div className="flex flex-wrap gap-1 sm:gap-2">
+                <button className="px-2 py-1 text-xs bg-gray-700 rounded hover:bg-gray-600 transition-colors">25%</button>
+                <button className="px-2 py-1 text-xs bg-gray-700 rounded hover:bg-gray-600 transition-colors">50%</button>
+                <button className="px-2 py-1 text-xs bg-gray-700 rounded hover:bg-gray-600 transition-colors">100%</button>
               </div>
             </div>
           </div>

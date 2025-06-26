@@ -1,32 +1,38 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X, GripHorizontal, Shield } from "lucide-react";
+import { X, GripHorizontal, Shield, Plus, Trash2, Edit } from "lucide-react";
 
 interface HedgeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface HedgeSettings {
-  hedgeType: "ATM" | "OTM" | "ITM";
-  strikeDistance: number;
-  hedgeRatio: number;
-  autoHedge: boolean;
-  hedgeTrigger: number;
+interface HedgeRow {
+  id: string;
+  hedgeBuy: "BUY" | "SELL";
+  expiry: string;
+  strike: number;
+  premium: number;
+  multiplier: number;
 }
 
 const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState<HedgeSettings>({
-    hedgeType: "ATM",
-    strikeDistance: 0,
-    hedgeRatio: 1,
-    autoHedge: false,
-    hedgeTrigger: 0,
-  });
-
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const [hedgeRows, setHedgeRows] = useState<HedgeRow[]>([
+    {
+      id: "1",
+      hedgeBuy: "BUY",
+      expiry: "",
+      strike: 0,
+      premium: 0,
+      multiplier: 1,
+    },
+  ]);
+
+  const [editingRow, setEditingRow] = useState<string | null>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (modalRef.current) {
@@ -64,20 +70,47 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
     };
   }, [isDragging]);
 
+  const addNewRow = () => {
+    const newRow: HedgeRow = {
+      id: Date.now().toString(),
+      hedgeBuy: "BUY",
+      expiry: "",
+      strike: 0,
+      premium: 0,
+      multiplier: 1,
+    };
+    setHedgeRows([...hedgeRows, newRow]);
+  };
+
+  const deleteRow = (id: string) => {
+    if (hedgeRows.length > 1) {
+      setHedgeRows(hedgeRows.filter((row) => row.id !== id));
+    }
+  };
+
+  const updateRow = (id: string, field: keyof HedgeRow, value: any) => {
+    setHedgeRows(
+      hedgeRows.map((row) =>
+        row.id === id ? { ...row, [field]: value } : row
+      )
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle hedge settings submission
-    console.log("Hedge settings:", formData);
+    console.log("Hedge settings:", hedgeRows);
     onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
       <div
         ref={modalRef}
-        className={`bg-gray-800 border border-gray-400 rounded-lg p-6 w-full max-w-md cursor-move select-none ${
+        className={`bg-gray-800 border border-gray-400 rounded-lg p-4 sm:p-6 w-full max-w-6xl cursor-move select-none max-h-[90vh] overflow-hidden relative z-10 ${
           isDragging ? "opacity-90" : ""
         }`}
         style={{
@@ -92,7 +125,7 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
             onMouseDown={handleMouseDown}
           >
             <GripHorizontal size={16} className="text-gray-400" />
-            <h3 className="text-lg font-semibold text-white">Hedge Settings</h3>
+            <h3 className="text-lg font-semibold text-white">Hedge Management</h3>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X size={20} />
@@ -100,101 +133,162 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Hedge Type
-            </label>
-            <select
-              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.hedgeType}
-              onChange={(e) =>
-                setFormData({ ...formData, hedgeType: e.target.value as "ATM" | "OTM" | "ITM" })
-              }
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Shield className="text-orange-400" size={20} />
+              <span className="text-white font-medium">Hedge Positions</span>
+            </div>
+            <button
+              type="button"
+              onClick={addNewRow}
+              className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
-              <option value="ATM">At The Money (ATM)</option>
-              <option value="OTM">Out of The Money (OTM)</option>
-              <option value="ITM">In The Money (ITM)</option>
-            </select>
+              <Plus size={16} />
+              <span className="hidden sm:inline">Add Row</span>
+            </button>
           </div>
 
-          {formData.hedgeType !== "ATM" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Strike Distance
-              </label>
-              <input
-                type="number"
-                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.strikeDistance}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    strikeDistance: parseInt(e.target.value) || 0,
-                  })
-                }
-                placeholder="Enter strike distance"
-              />
+          {/* Table Container with Horizontal Scroll */}
+          <div className="overflow-x-auto border border-gray-600 rounded-lg max-h-96 overflow-y-auto">
+            <table className="w-full min-w-[600px]">
+              <thead className="bg-gray-700 sticky top-0">
+                <tr>
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
+                    Hedge Buy/Sell
+                  </th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
+                    Expiry
+                  </th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
+                    Strike
+                  </th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
+                    Premium
+                  </th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
+                    Multiplier
+                  </th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {hedgeRows.map((row, index) => (
+                  <tr key={row.id} className="border-b border-gray-600 hover:bg-gray-750">
+                    <td className="px-2 sm:px-4 py-2">
+                      <select
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={row.hedgeBuy}
+                        onChange={(e) =>
+                          updateRow(row.id, "hedgeBuy", e.target.value as "BUY" | "SELL")
+                        }
+                      >
+                        <option value="BUY">BUY</option>
+                        <option value="SELL">SELL</option>
+                      </select>
+                    </td>
+                    <td className="px-2 sm:px-4 py-2">
+                      <input
+                        type="text"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={row.expiry}
+                        onChange={(e) => updateRow(row.id, "expiry", e.target.value)}
+                        placeholder="Expiry"
+                      />
+                    </td>
+                    <td className="px-2 sm:px-4 py-2">
+                      <input
+                        type="number"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={row.strike}
+                        onChange={(e) =>
+                          updateRow(row.id, "strike", parseFloat(e.target.value) || 0)
+                        }
+                        placeholder="Strike"
+                      />
+                    </td>
+                    <td className="px-2 sm:px-4 py-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={row.premium}
+                        onChange={(e) =>
+                          updateRow(row.id, "premium", parseFloat(e.target.value) || 0)
+                        }
+                        placeholder="Premium"
+                      />
+                    </td>
+                    <td className="px-2 sm:px-4 py-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={row.multiplier}
+                        onChange={(e) =>
+                          updateRow(row.id, "multiplier", parseFloat(e.target.value) || 1)
+                        }
+                        placeholder="Multiplier"
+                      />
+                    </td>
+                    <td className="px-2 sm:px-4 py-2">
+                      <div className="flex space-x-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditingRow(editingRow === row.id ? null : row.id)
+                          }
+                          className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit size={12} />
+                        </button>
+                        {hedgeRows.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => deleteRow(row.id)}
+                            className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Summary Section */}
+          <div className="bg-gray-700 p-4 rounded-lg">
+            <h4 className="text-white font-medium mb-2">Hedge Summary</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-gray-400">Total Positions:</span>
+                <span className="text-white ml-2">{hedgeRows.length}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">Total Premium:</span>
+                <span className="text-white ml-2">
+                  {hedgeRows.reduce((sum, row) => sum + (row.premium * row.multiplier), 0).toFixed(2)}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-400">Net Exposure:</span>
+                <span className="text-white ml-2">
+                  {hedgeRows.reduce((sum, row) => {
+                    const multiplier = row.hedgeBuy === "BUY" ? 1 : -1;
+                    return sum + (row.strike * row.multiplier * multiplier);
+                  }, 0).toFixed(2)}
+                </span>
+              </div>
             </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Hedge Ratio
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.hedgeRatio}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  hedgeRatio: parseFloat(e.target.value) || 1,
-                })
-              }
-              placeholder="Enter hedge ratio (e.g., 0.5 for 50%)"
-            />
           </div>
 
-          <div className="flex items-center space-x-3">
-            <Shield className="text-orange-400" size={20} />
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={formData.autoHedge}
-                onChange={(e) =>
-                  setFormData({ ...formData, autoHedge: e.target.checked })
-                }
-              />
-              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600"></div>
-              <span className="ms-3 text-sm font-medium text-white">
-                Enable Auto Hedge
-              </span>
-            </label>
-          </div>
-
-          {formData.autoHedge && (
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Auto Hedge Trigger (MTM Loss)
-              </label>
-              <input
-                type="number"
-                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                value={formData.hedgeTrigger}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    hedgeTrigger: parseFloat(e.target.value) || 0,
-                  })
-                }
-                placeholder="Enter trigger amount"
-              />
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-3 mt-6">
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-6">
             <button
               type="button"
               onClick={onClose}

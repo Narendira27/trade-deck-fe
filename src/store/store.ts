@@ -43,6 +43,19 @@ interface optionLotSizeType {
   lotSize: number;
 }
 
+export interface TradeFilters {
+  showClosed: boolean;
+  indexName: string;
+  entrySide: string;
+  entryType: string;
+  expiry: string;
+  entryTriggered: string;
+  dateRange: {
+    from: string;
+    to: string;
+  };
+}
+
 interface TradeStoreState {
   trades: Trade[];
   indexData: indexData;
@@ -51,6 +64,7 @@ interface TradeStoreState {
   optionValues: optionValuesData[];
   optionLotSize: optionLotSizeType[];
   showDraggable: boolean;
+  filters: TradeFilters;
   setTrades: (data: Trade[]) => void;
   setIndexData: (data: indexData) => void;
   setDraggableData: (data: draggableData[]) => void;
@@ -63,6 +77,7 @@ interface TradeStoreState {
     updatedData: Partial<draggableData>
   ) => void;
   setOptionLotSize: (data: optionLotSizeType[]) => void;
+  setFilters: (filters: TradeFilters) => void;
 }
 
 const useStore = create<TradeStoreState>((set) => ({
@@ -76,6 +91,18 @@ const useStore = create<TradeStoreState>((set) => ({
   optionValues: [],
   optionLotSize: [],
   showDraggable: false,
+  filters: {
+    showClosed: false,
+    indexName: "",
+    entrySide: "",
+    entryType: "",
+    expiry: "",
+    entryTriggered: "",
+    dateRange: {
+      from: "",
+      to: "",
+    },
+  },
   setTrades: (data: Trade[]) => set({ trades: data }),
   setIndexData: (data: indexData) => set({ indexData: data }),
   setDraggableData: (data: draggableData[]) =>
@@ -123,6 +150,8 @@ const useStore = create<TradeStoreState>((set) => ({
   setOptionLotSize: (data: optionLotSizeType[]) => {
     set({ optionLotSize: data });
   },
+
+  setFilters: (filters: TradeFilters) => set({ filters }),
 }));
 
 export default useStore;

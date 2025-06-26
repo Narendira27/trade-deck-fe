@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { type Trade } from "../../types/trade";
 import TableRow from "./TableRow";
 import TableHeader from "./TableHeader";
@@ -23,7 +23,56 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
-  const { setTrades } = useStore();
+  const { setTrades, filters } = useStore();
+
+  // Filter trades based on current filters
+  const filteredTrades = useMemo(() => {
+    return trades.filter((trade) => {
+      // Show closed trades filter
+      if (!filters.showClosed && !trade.isActive) {
+        return false;
+      }
+
+      // Index filter
+      if (filters.indexName && trade.indexName !== filters.indexName) {
+        return false;
+      }
+
+      // Entry side filter
+      if (filters.entrySide && trade.entrySide !== filters.entrySide) {
+        return false;
+      }
+
+      // Entry type filter
+      if (filters.entryType && trade.entryType !== filters.entryType) {
+        return false;
+      }
+
+      // Entry triggered filter
+      if (filters.entryTriggered) {
+        const isTriggered = filters.entryTriggered === "true";
+        if (trade.entryTriggered !== isTriggered) {
+          return false;
+        }
+      }
+
+      // Date range filter
+      if (filters.dateRange.from || filters.dateRange.to) {
+        const tradeDate = new Date(trade.createdAt);
+        const fromDate = filters.dateRange.from ? new Date(filters.dateRange.from) : null;
+        const toDate = filters.dateRange.to ? new Date(filters.dateRange.to) : null;
+
+        if (fromDate && tradeDate < fromDate) {
+          return false;
+        }
+        if (toDate && tradeDate > toDate) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [trades, filters]);
 
   const handlePlaceOrder = (tradeId: string) => {
     setSelectedTradeId(tradeId);
@@ -103,7 +152,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
   }
 
   const handleClosePartialExecution = (id: string, percent: number) => {
-    const findObj = trades.find((each) => each.id === id);
+    const findObj = filteredTrades.find((each) => each.id === id);
     if (!findObj) {
       toast.error("Something Went Wrong");
       return;
@@ -143,6 +192,19 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Filter Summary */}
+      {(filters.indexName || filters.entrySide || filters.entryType || filters.entryTriggered || filters.dateRange.from || filters.dateRange.to || filters.showClosed) && (
+        <div className="px-4 py-2 bg-gray-800 border-b border-gray-700 text-xs text-gray-300">
+          <span className="font-medium">Active Filters: </span>
+          {filters.showClosed && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Show Closed</span>}
+          {filters.indexName && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Index: {filters.indexName}</span>}
+          {filters.entrySide && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Side: {filters.entrySide}</span>}
+          {filters.entryType && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Type: {filters.entryType}</span>}
+          {filters.entryTriggered && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Triggered: {filters.entryTriggered}</span>}
+          <span className="text-gray-400">({filteredTrades.length} of {trades.length} trades)</span>
+        </div>
+      )}
+
       <div className="flex-1 overflow-auto">
         {/* Desktop Table View */}
         <div className="hidden lg:block h-full">
@@ -150,8 +212,8 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
             <table className="w-full border-collapse">
               <TableHeader columns={columns} />
               <tbody>
-                {trades.length > 0 ? (
-                  trades.map((trade) => (
+                {filteredTrades.length > 0 ? (
+                  filteredTrades.map((trade) => (
                     <TableRow
                       key={trade.id}
                       trade={trade}
@@ -171,7 +233,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
                       colSpan={columns.filter((col) => col.visible).length + 1}
                       className="text-center py-8 text-gray-400"
                     >
-                      No trades to display
+                      {trades.length === 0 ? "No trades to display" : "No trades match the current filters"}
                     </td>
                   </tr>
                 )}
@@ -181,23 +243,25 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
         </div>
 
         {/* Mobile/Tablet Card View */}
-        <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 h-full overflow-auto">
-          {trades.length > 0 ? (
-            trades.map((trade) => (
-              <TradeCard
-                key={trade.id}
-                trade={trade}
-                onPlaceOrder={() => handlePlaceOrder(trade.id)}
-                onDeleteOrder={() => handleDeleteOrder(trade.id)}
-                onEdit={() => handleEdit(trade.id)}
-                onCancelOrder={() => handleCancelOrder(trade.id)}
-              />
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-400 col-span-full">
-              No trades to display
-            </div>
-          )}
+        <div className="lg:hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 h-full overflow-auto">
+            {filteredTrades.length > 0 ? (
+              filteredTrades.map((trade) => (
+                <TradeCard
+                  key={trade.id}
+                  trade={trade}
+                  onPlaceOrder={() => handlePlaceOrder(trade.id)}
+                  onDeleteOrder={() => handleDeleteOrder(trade.id)}
+                  onEdit={() => handleEdit(trade.id)}
+                  onCancelOrder={() => handleCancelOrder(trade.id)}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-400 col-span-full">
+                {trades.length === 0 ? "No trades to display" : "No trades match the current filters"}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
