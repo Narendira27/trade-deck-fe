@@ -17,7 +17,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ columns }) => {
           .map((column) => (
             <th
               key={column.id}
-              className="px-2 py-2 text-sm font-medium text-left text-gray-300 border-b border-gray-700"
+              className="px-2 py-2 text-xs font-medium text-left text-gray-300 border-b border-gray-700"
               style={{ width: column.width }}
             >
               {column.label}

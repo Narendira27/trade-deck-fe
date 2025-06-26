@@ -20,7 +20,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
     expiry: "",
     ltpRange: 0,
     pointOfAdjustment: 0,
-    side: "BUY",
+    entrySide: "SELL",
   });
 
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -105,6 +105,10 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
     if (formData.pointOfAdjustment <= 0) {
       return toast.warning("Enter valid Point of Adjustment");
     }
+    if (formData.entrySide !== "BUY" && formData.entrySide !== "SELL") {
+      return toast.warning("Select side");
+    }
+
     const addTradeRequest = axios.post(
       API_URL + "/user/tradeInfo",
       {
@@ -113,7 +117,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
         legCount: formData.legCount,
         ltpRange: formData.ltpRange,
         pointOfAdjustment: formData.pointOfAdjustment,
-        side: formData.side,
+        entrySide: formData.entrySide,
       },
       { headers: { Authorization: "Bearer " + auth } }
     );
@@ -127,7 +131,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
           expiry: "",
           ltpRange: 0,
           pointOfAdjustment: 0,
-          side: "BUY",
+          entrySide: "BUY",
         });
         const result = await getTradeData();
         if (result.status === "ok") {
@@ -204,13 +208,16 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
               </label>
               <select
                 className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.side}
+                value={formData.entrySide}
                 onChange={(e) =>
-                  setFormData({ ...formData, side: e.target.value as "BUY" | "SELL" })
+                  setFormData({
+                    ...formData,
+                    entrySide: e.target.value,
+                  })
                 }
               >
-                <option value="BUY">BUY</option>
                 <option value="SELL">SELL</option>
+                <option value="BUY">BUY</option>
               </select>
             </div>
 
@@ -224,7 +231,10 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
                 className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.legCount}
                 onChange={(e) =>
-                  setFormData({ ...formData, legCount: parseInt(e.target.value) })
+                  setFormData({
+                    ...formData,
+                    legCount: parseInt(e.target.value),
+                  })
                 }
               />
             </div>

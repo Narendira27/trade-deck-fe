@@ -16,12 +16,12 @@ interface HeaderProps {
   onDraggableColumnsChange: (columns: DraggableBoxColumn[]) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  columns, 
-  onColumnsChange, 
+const Header: React.FC<HeaderProps> = ({
+  columns,
+  onColumnsChange,
   onMenuToggle,
   draggableColumns,
-  onDraggableColumnsChange
+  onDraggableColumnsChange,
 }) => {
   const [isAddTradeModalOpen, setIsAddTradeModalOpen] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
@@ -39,8 +39,11 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center space-x-1 lg:space-x-3">
           {/* Desktop Controls */}
           <div className="hidden lg:flex items-center space-x-3">
-            <ColumnManager columns={columns} onColumnsChange={onColumnsChange} />
-            
+            <ColumnManager
+              columns={columns}
+              onColumnsChange={onColumnsChange}
+            />
+
             {showDraggable && (
               <DraggableBoxColumnManager
                 columns={draggableColumns}
@@ -56,14 +59,14 @@ const Header: React.FC<HeaderProps> = ({
               <span className="text-sm">Portfolio</span>
             </button>
 
-            <button
+            {/* <button
               onClick={() => setIsHedgeModalOpen(true)}
               className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
             >
               <TrendingUp size={16} />
               <span className="text-sm">Hedge</span>
             </button>
-            
+             */}
             <button
               onClick={() => setIsAddTradeModalOpen(true)}
               className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"

@@ -29,6 +29,7 @@ interface MyJwtPayload {
 
 const defaultColumns: Column[] = [
   { id: "index", label: "Index", visible: true, width: "120px" },
+  { id: "side", label: "Side", visible: true, width: "100px" },
   { id: "ltpSpot", label: "LTP Spot", visible: true, width: "100px" },
   { id: "legCount", label: "Leg Count", visible: true, width: "100px" },
   { id: "expiry", label: "Expiry", visible: true, width: "120px" },
@@ -70,10 +71,15 @@ const defaultColumns: Column[] = [
     visible: true,
     width: "140px",
   },
-  { id: "strategySl", label: "Strategy SL", visible: true, width: "120px" },
+  {
+    id: "strategySl",
+    label: "Strategy SL(in ₹)",
+    visible: true,
+    width: "120px",
+  },
   {
     id: "strategyTrailing",
-    label: "Strategy Trailing",
+    label: "Strategy Trailing(in ₹)",
     visible: true,
     width: "140px",
   },

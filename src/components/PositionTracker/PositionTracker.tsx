@@ -1,6 +1,10 @@
 import React, { useState } from "react";
-import { ArrowUpDown, ArrowUp, ArrowDown, Square, Shield, TrendingUp } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency, formatNumber } from "../../utils/formatters";
+import axios from "axios";
+import { API_URL } from "../../config/config";
+import { toast } from "sonner";
+import cookies from "js-cookie";
 
 interface Position {
   id: string;
@@ -126,19 +130,37 @@ const PositionTracker: React.FC = () => {
   const totalMtm = positions.reduce((sum, pos) => sum + pos.mtm, 0);
 
   const handleSquareOffAll = () => {
-    console.log("Square off all positions");
-    // Implement square off all logic
+    toast.warning("Do you want to Square off all active positions?", {
+      action: {
+        label: "Yes",
+        onClick: () => handleSquareOffAction(),
+      },
+    });
   };
 
-  const handlePortfolioStopLoss = () => {
-    console.log("Set portfolio stop loss");
-    // Implement portfolio stop loss logic
+  const handleSquareOffAction = async () => {
+    const auth = cookies.get("auth");
+    const deleteReq = axios.get(API_URL + "/user/squareOffAll", {
+      headers: { Authorization: "Bearer " + auth },
+    });
+    toast.promise(deleteReq, {
+      loading: "Closing all Open Positions ....",
+      success: async () => {
+        return "Closed Successfully!";
+      },
+      error: "Error While Closing Positions.",
+    });
   };
 
-  const handlePortfolioTrailing = () => {
-    console.log("Set portfolio trailing");
-    // Implement portfolio trailing logic
-  };
+  // const handlePortfolioStopLoss = () => {
+  //   console.log("Set portfolio stop loss");
+  //   // Implement portfolio stop loss logic
+  // };
+
+  // const handlePortfolioTrailing = () => {
+  //   console.log("Set portfolio trailing");
+  //   // Implement portfolio trailing logic
+  // };
 
   return (
     <div className="h-full flex flex-col bg-gray-900 border border-gray-700 rounded-lg">
@@ -245,23 +267,22 @@ const PositionTracker: React.FC = () => {
             onClick={handleSquareOffAll}
             className="flex items-center justify-center space-x-2 px-3 py-2 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
           >
-            <Square size={14} />
             <span>Square Off All</span>
           </button>
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={handlePortfolioStopLoss}
-              className="flex items-center justify-center space-x-1 px-2 py-2 bg-orange-500 text-white text-xs rounded hover:bg-orange-600 transition-colors"
+              // onClick={handlePortfolioStopLoss}
+              className="flex items-center justify-center space-x-1 px-2 py-2 text-orange-500 text-xs rounded transition-colors"
             >
-              <Shield size={12} />
-              <span>Portfolio SL</span>
+              <span>Portfolio SL :</span>
+              <span>Undefined</span>
             </button>
             <button
-              onClick={handlePortfolioTrailing}
-              className="flex items-center justify-center space-x-1 px-2 py-2 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+              // onClick={handlePortfolioTrailing}
+              className="flex items-center justify-center space-x-1 px-2 py-2 text-blue-500 text-xs rounded "
             >
-              <TrendingUp size={12} />
-              <span>Portfolio Trail</span>
+              <span>Portfolio Trail :</span>
+              <span>Undefined</span>
             </button>
           </div>
         </div>

@@ -170,6 +170,12 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const infoObj = getTradeInfo();
+
+    if (!infoObj) {
+      return toast.warning("cannot fetch trade info");
+    }
+
     if (!formData.entry && formData.orderType === "LIMIT") {
       return toast.warning("entry price is required");
     }
@@ -178,7 +184,6 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
       return toast.warning("qty is required");
     }
 
-    console.log(formData.orderType);
     if (formData.orderType.length < 0) {
       return toast.warning("order type is required");
     }
@@ -201,13 +206,37 @@ const PlaceOrderModal: React.FC<PlaceOrderModalProps> = ({
     if (formData.orderType === "LIMIT") {
       DATA.stopLossPremium = formData.sl;
       DATA.takeProfitPremium = formData.target;
-      DATA.stopLossPoints = formData.sl - formData.entry;
-      DATA.takeProfitPoints = formData.entry - formData.target;
+      if (infoObj.entrySide === "SELL") {
+        DATA.stopLossPoints = formData.sl - formData.entry;
+        DATA.takeProfitPoints = formData.entry - formData.target;
+      }
+      if (infoObj.entrySide === "BUY") {
+        DATA.stopLossPoints = formData.entry - formData.sl;
+        DATA.takeProfitPoints = formData.target - formData.entry;
+      }
     }
 
     if (formData.orderType === "MARKET") {
       if (formData.slPoints) DATA.stopLossPoints = formData.slPoints;
       if (formData.tpPoints) DATA.takeProfitPoints = formData.tpPoints;
+    }
+
+    if (infoObj?.entrySide === "SELL" && formData.orderType === "LIMIT") {
+      if (formData.sl <= formData.entry) {
+        return toast.error("sl price should be greater than the limit price");
+      }
+      if (formData.target >= formData.entry) {
+        return toast.error("tp price should be less than the limit price");
+      }
+    }
+
+    if (infoObj?.entrySide === "BUY" && formData.orderType === "LIMIT") {
+      if (formData.sl >= formData.entry) {
+        return toast.error("sl price should be less than the limit price");
+      }
+      if (formData.target <= formData.entry) {
+        return toast.error("tp price should be greater than the limit price");
+      }
     }
 
     const auth = cookies.get("auth");

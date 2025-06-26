@@ -12,6 +12,7 @@ interface TableRowProps {
   onDeleteOrder: () => void;
   onEdit: () => void;
   onCancelOrder: () => void;
+  onClosePartial: (percent: number) => void;
 }
 
 const TableRow: React.FC<TableRowProps> = ({
@@ -21,6 +22,7 @@ const TableRow: React.FC<TableRowProps> = ({
   onDeleteOrder,
   onEdit,
   onCancelOrder,
+  onClosePartial,
 }) => {
   const [getindexPrice, setGetindexPrice] = useState(0);
   const [lowestValue, setLowestValue] = useState(0);
@@ -54,6 +56,8 @@ const TableRow: React.FC<TableRowProps> = ({
     switch (columnId) {
       case "index":
         return trade.indexName;
+      case "side":
+        return trade.entrySide;
       case "ltpSpot":
         return formatNumber(getindexPrice);
       case "legCount":
@@ -99,17 +103,28 @@ const TableRow: React.FC<TableRowProps> = ({
       case "strategySl":
         return trade.strategySl ? formatNumber(trade.strategySl) : "-";
       case "strategyTrailing":
-        return trade.strategyTrailing ? formatNumber(trade.strategyTrailing) : "-";
+        return trade.strategyTrailing
+          ? formatNumber(trade.strategyTrailing)
+          : "-";
       case "exitPercentages":
         return (
           <div className="flex space-x-1">
-            <button className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600">
+            <button
+              onClick={() => onClosePartial(25)}
+              className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600"
+            >
               25%
             </button>
-            <button className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600">
+            <button
+              onClick={() => onClosePartial(50)}
+              className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600"
+            >
               50%
             </button>
-            <button className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600">
+            <button
+              onClick={() => onClosePartial(100)}
+              className="px-1 py-0.5 text-xs bg-gray-700 rounded hover:bg-gray-600"
+            >
               100%
             </button>
           </div>
@@ -120,7 +135,8 @@ const TableRow: React.FC<TableRowProps> = ({
   };
 
   const getCellClassName = (columnId: string) => {
-    const baseClass = "px-3 py-2 text-xs border-b border-gray-800";
+    const baseClass =
+      "px-3 py-2 text-xs leading-normal border-b border-gray-800";
 
     switch (columnId) {
       case "sl":
@@ -130,9 +146,9 @@ const TableRow: React.FC<TableRowProps> = ({
       case "mtm":
         return `${baseClass} text-white`;
       case "strategySl":
-        return `${baseClass} text-red-400`;
+        return `${baseClass} text-red-400 `;
       case "strategyTrailing":
-        return `${baseClass} text-green-400`;
+        return `${baseClass} text-green-400 `;
       default:
         return `${baseClass} text-white`;
     }

@@ -103,6 +103,14 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
     }
   }, [isOpen, tradeId, trades]);
 
+  const getTradeInfo = () => {
+    if (trades.length > 0 && trades && tradeId) {
+      const filterInTrade = trades.filter((each) => each.id === tradeId);
+      if (filterInTrade.length > 0) return filterInTrade[0];
+      throw new Error("Trade Not Found");
+    }
+  };
+
   // Reset initialization flag when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -112,8 +120,38 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (trades[0].entryType === "UNDEFINED") {
-      return toast.error("Cannot Edit Trade Before placing order!");
+    const info = getTradeInfo();
+    if (info) {
+      if (info.entryType === "UNDEFINED") {
+        return toast.error("Cannot Edit Trade Before placing order!");
+      }
+      if (info?.entrySide === "BUY") {
+        if (formData.stopLossPremium >= formData.entryPrice) {
+          return toast.error(
+            "Stop Loss should be less than entry price for BUY!"
+          );
+        }
+        if (formData.takeProfitPremium <= formData.entryPrice) {
+          return toast.error(
+            "Take Profit should be greater than entry price for BUY!"
+          );
+        }
+      }
+
+      if (info?.entrySide === "SELL") {
+        if (formData.stopLossPremium <= formData.entryPrice) {
+          return toast.error(
+            "Stop Loss should be greater than entry price for SELL!"
+          );
+        }
+        if (formData.takeProfitPremium >= formData.entryPrice) {
+          return toast.error(
+            "Take Profit should be less than entry price for SELL!"
+          );
+        }
+      }
+    } else {
+      toast.error("something went wrong");
     }
 
     const auth = cookies.get("auth");
@@ -128,8 +166,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
         takeProfitPoints: formData.takeProfitPoints,
         stopLossPoints: formData.stopLossPoints,
         stopLossPremium: formData.stopLossPremium,
-        strategySl: formData.strategySl,
-        strategyTrailing: formData.strategyTrailing,
+        // strategySl: formData.strategySl,
+        // strategyTrailing: formData.strategyTrailing,
       },
       {
         headers: { Authorization: "Bearer " + auth },
@@ -150,6 +188,107 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
   };
 
   if (!isOpen) return null;
+
+  const getValuesForLimitPrice = (input: string) => {
+    const info = getTradeInfo()?.entrySide;
+    if (info) {
+      if (info === "BUY") {
+        const sellPoints = parseFloat(input) + formData.takeProfitPoints;
+        const buyPoints = parseFloat(input) - formData.stopLossPoints;
+        return { sellPoints, buyPoints };
+      }
+
+      if (info === "SELL") {
+        const sellPoints = parseFloat(input) - formData.takeProfitPoints;
+        const buyPoints = parseFloat(input) + formData.stopLossPoints;
+        return { sellPoints, buyPoints };
+      }
+      toast.error("something went wrong info");
+      return { sellPoints: 0, buyPoints: 0 };
+    }
+    toast.error("something went wrong");
+    return { sellPoints: 0, buyPoints: 0 };
+  };
+
+  const getValuesForSlPremium = (input: string) => {
+    const info = getTradeInfo()?.entrySide;
+    if (info) {
+      if (info === "BUY") {
+        const sellPremium = formData.entryPrice - parseFloat(input);
+        return sellPremium;
+      }
+
+      if (info === "SELL") {
+        const sellPremium = parseFloat(input) - formData.entryPrice;
+
+        return sellPremium;
+      }
+      toast.error("something went wrong info");
+      return 0;
+    }
+    toast.error("something went wrong");
+    return 0;
+  };
+
+  const getValuesForSlPoints = (input: string) => {
+    const info = getTradeInfo()?.entrySide;
+    if (info) {
+      if (info === "BUY") {
+        const sellPoints = formData.entryPrice - parseFloat(input);
+        return sellPoints;
+      }
+
+      if (info === "SELL") {
+        const sellPoints = parseFloat(input) + formData.entryPrice;
+
+        return sellPoints;
+      }
+      toast.error("something went wrong info");
+      return 0;
+    }
+    toast.error("something went wrong");
+    return 0;
+  };
+
+  const getValuesForTpPremium = (input: string) => {
+    const info = getTradeInfo()?.entrySide;
+    if (info) {
+      if (info === "BUY") {
+        const sellPremium = parseFloat(input) - formData.entryPrice;
+        return sellPremium;
+      }
+
+      if (info === "SELL") {
+        const sellPremium = formData.entryPrice - parseFloat(input);
+
+        return sellPremium;
+      }
+      toast.error("something went wrong info");
+      return 0;
+    }
+    toast.error("something went wrong");
+    return 0;
+  };
+
+  const getValuesForTpPoints = (input: string) => {
+    const info = getTradeInfo()?.entrySide;
+    if (info) {
+      if (info === "BUY") {
+        const sellPoints = parseFloat(input) + formData.entryPrice;
+        return sellPoints;
+      }
+
+      if (info === "SELL") {
+        const sellPoints = formData.entryPrice - parseFloat(input);
+
+        return sellPoints;
+      }
+      toast.error("something went wrong info");
+      return 0;
+    }
+    toast.error("something went wrong");
+    return 0;
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -191,10 +330,10 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                 setFormData({
                   ...formData,
                   entryPrice: parseFloat(e.target.value) || 0,
-                  stopLossPremium:
-                    parseFloat(e.target.value) + formData.stopLossPoints,
-                  takeProfitPremium:
-                    parseFloat(e.target.value) - formData.takeProfitPoints,
+                  stopLossPremium: getValuesForLimitPrice(e.target.value)
+                    .sellPoints,
+                  takeProfitPremium: getValuesForLimitPrice(e.target.value)
+                    .buyPoints,
                 })
               }
             />
@@ -227,7 +366,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                     setFormData({
                       ...formData,
                       stopLossPoints: points,
-                      stopLossPremium: points + formData.entryPrice,
+                      stopLossPremium: getValuesForSlPoints(e.target.value),
                     });
                   }}
                 />
@@ -246,7 +385,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                     setFormData({
                       ...formData,
                       stopLossPremium: premium,
-                      stopLossPoints: premium - formData.entryPrice,
+                      stopLossPoints: getValuesForSlPremium(e.target.value),
                     });
                   }}
                 />
@@ -281,7 +420,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                     setFormData({
                       ...formData,
                       takeProfitPoints: points,
-                      takeProfitPremium: formData.entryPrice - points,
+                      takeProfitPremium: getValuesForTpPoints(e.target.value),
                     });
                   }}
                 />
@@ -300,7 +439,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                     setFormData({
                       ...formData,
                       takeProfitPremium: premium,
-                      takeProfitPoints: formData.entryPrice - premium,
+                      takeProfitPoints: getValuesForTpPremium(e.target.value),
                     });
                   }}
                 />
@@ -337,7 +476,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    pointOfAdjustmentUpperLimit: parseFloat(e.target.value) || 0,
+                    pointOfAdjustmentUpperLimit:
+                      parseFloat(e.target.value) || 0,
                   })
                 }
               />
@@ -353,7 +493,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    pointOfAdjustmentLowerLimit: parseFloat(e.target.value) || 0,
+                    pointOfAdjustmentLowerLimit:
+                      parseFloat(e.target.value) || 0,
                   })
                 }
               />
@@ -362,8 +503,10 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, tradeId }) => {
 
           {/* Strategy Controls */}
           <div className="border-t border-gray-600 pt-4">
-            <h4 className="text-md font-medium text-white mb-3">Strategy Controls</h4>
-            
+            <h4 className="text-md font-medium text-white mb-3">
+              Strategy Controls
+            </h4>
+
             <div>
               <label className="inline-flex items-center cursor-pointer">
                 <input

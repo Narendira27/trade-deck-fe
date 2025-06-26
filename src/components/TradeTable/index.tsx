@@ -92,6 +92,55 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
     });
   };
 
+  function canExitPosition(currentQty: number, userExit: number): boolean {
+    if (currentQty <= 0 || userExit <= 0 || userExit > 100) {
+      return false; // Invalid data
+    }
+
+    const lotsToClose = (currentQty * userExit) / 100;
+
+    return lotsToClose >= 1 && Number.isInteger(lotsToClose);
+  }
+
+  const handleClosePartialExecution = (id: string, percent: number) => {
+    const findObj = trades.find((each) => each.id === id);
+    if (!findObj) {
+      toast.error("Something Went Wrong");
+      return;
+    }
+    const canExit = canExitPosition(findObj.currentQty, percent);
+    if (canExit === false) {
+      toast.error(`Cannot exit ${percent}%. You can only exit whole lots.`);
+      return;
+    }
+
+    const auth = cookies.get("auth");
+    const closeReq = axios.get(API_URL + "/user/userExit", {
+      params: { id, exit: percent },
+      headers: { Authorization: "Bearer " + auth },
+    });
+
+    toast.promise(closeReq, {
+      loading: `Closing ${percent}%...`,
+      success: async () => {
+        return `${percent}% closed successfully!`;
+      },
+      error: "Partial close failed.",
+    });
+  };
+
+  const handleClosePartial = (id: string, percent: number) => {
+    toast.warning(
+      `Are you sure you want to close ${percent}% of this position?`,
+      {
+        action: {
+          label: "Yes, Close",
+          onClick: () => handleClosePartialExecution(id, percent),
+        },
+      }
+    );
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-auto">
@@ -111,6 +160,9 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
                       onDeleteOrder={() => handleDeleteOrder(trade.id)}
                       onEdit={() => handleEdit(trade.id)}
                       onCancelOrder={() => handleCancelOrder(trade.id)}
+                      onClosePartial={(percent) =>
+                        handleClosePartial(trade.id, percent)
+                      }
                     />
                   ))
                 ) : (

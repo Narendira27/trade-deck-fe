@@ -1,12 +1,14 @@
 export interface Trade {
   id: string;
   indexName: string;
+  entrySide: string;
   legCount: number;
   expiry: string;
   ltpRange: number;
   entryType: string;
   entryPrice: number;
   qty: number;
+  currentQty: number;
   stopLossPremium: number;
   takeProfitPremium: number;
   stopLossPoints: number;
@@ -35,8 +37,8 @@ export interface TradeFormData {
   legCount: number;
   expiry: string;
   ltpRange: number;
+  entrySide: string;
   pointOfAdjustment: number;
-  side: "BUY" | "SELL";
 }
 
 export interface OrderFormData {
