@@ -338,10 +338,10 @@ const ChartContainer: React.FC = () => {
                           <span className="text-xs text-gray-400">MTM:</span>
                           <span
                             className={`text-xs font-medium ${
-                              trade.mtm >= 0 ? "text-green-400" : "text-red-400"
+                              (trade.mtm ?? 0) >= 0 ? "text-green-400" : "text-red-400"
                             }`}
                           >
-                            ₹{trade.mtm.toFixed(2)}
+                            ₹{(trade.mtm ?? 0).toFixed(2)}
                           </span>
                         </div>
                       </div>
