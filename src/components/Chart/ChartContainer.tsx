@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Plus, X, Grid3X3, Grid2X2, LayoutGrid } from "lucide-react";
+import { Plus, X, Grid3X3, Grid2X2, LayoutGrid, Play } from "lucide-react";
 import TradingViewChart from "./TradingViewChart";
+import useStore from "../../store/store";
+import PlaceOrderModal from "../modals/PlaceOrderModal";
 
 interface ChartTab {
   id: string;
@@ -25,6 +27,10 @@ const ChartContainer: React.FC = () => {
   ]);
   const [activeTab, setActiveTab] = useState("1");
   const [layout, setLayout] = useState<LayoutType>("single");
+  const [selectedTradeId, setSelectedTradeId] = useState<string>("");
+  const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
+
+  const { trades } = useStore();
 
   const addNewTab = () => {
     const newTab: ChartTab = {
@@ -81,6 +87,16 @@ const ChartContainer: React.FC = () => {
         return "grid grid-cols-2 grid-rows-2 gap-1";
       default:
         return "grid grid-cols-1 gap-1";
+    }
+  };
+
+  const formatTradeOption = (trade: any) => {
+    return `${trade.indexName}-${trade.expiry}-${trade.ltpRange}`;
+  };
+
+  const handlePlaceOrder = () => {
+    if (selectedTradeId) {
+      setIsPlaceOrderModalOpen(true);
     }
   };
 
@@ -182,16 +198,27 @@ const ChartContainer: React.FC = () => {
         <div className="flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
           <div className="flex items-center space-x-4">
             <select
-              value={tabs.find((tab) => tab.id === activeTab)?.symbol || ""}
-              onChange={(e) => updateTab(activeTab, { symbol: e.target.value })}
+              value={selectedTradeId}
+              onChange={(e) => setSelectedTradeId(e.target.value)}
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="NIFTY">NIFTY</option>
-              <option value="BANKNIFTY">BANKNIFTY</option>
-              <option value="FINNIFTY">FINNIFTY</option>
-              <option value="MIDCPNIFTY">MIDCPNIFTY</option>
-              <option value="SENSEX">SENSEX</option>
+              <option value="">Select a trade</option>
+              {trades.map((trade) => (
+                <option key={trade.id} value={trade.id}>
+                  {formatTradeOption(trade)}
+                </option>
+              ))}
             </select>
+
+            {selectedTradeId && (
+              <button
+                onClick={handlePlaceOrder}
+                className="flex items-center space-x-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                <Play size={14} />
+                <span className="text-sm">Place Order</span>
+              </button>
+            )}
 
             <select
               value={tabs.find((tab) => tab.id === activeTab)?.timeframe || ""}
@@ -260,6 +287,12 @@ const ChartContainer: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <PlaceOrderModal
+        isOpen={isPlaceOrderModalOpen}
+        onClose={() => setIsPlaceOrderModalOpen(false)}
+        tradeId={selectedTradeId}
+      />
     </div>
   );
 };
