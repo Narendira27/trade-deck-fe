@@ -4,7 +4,6 @@ import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
 import PortfolioModal from "./modals/PortfolioModal";
-import HedgeModal from "./modals/HedgeModal";
 import FilterModal from "./modals/FilterModal";
 import useStore from "../store/store";
 import { type DraggableBoxColumn } from "./DraggableBox";
@@ -26,7 +25,6 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isAddTradeModalOpen, setIsAddTradeModalOpen] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
-  const [isHedgeModalOpen, setIsHedgeModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const { showDraggable } = useStore();
 
@@ -70,14 +68,6 @@ const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
-              onClick={() => setIsHedgeModalOpen(true)}
-              className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-            >
-              <TrendingUp size={16} />
-              <span className="text-sm">Hedge</span>
-            </button>
-
-            <button
               onClick={() => setIsAddTradeModalOpen(true)}
               className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
@@ -111,14 +101,6 @@ const Header: React.FC<HeaderProps> = ({
               <Shield size={14} />
               <span className="hidden sm:inline">Portfolio</span>
             </button>
-
-            <button
-              onClick={() => setIsHedgeModalOpen(true)}
-              className="flex items-center space-x-1 px-2 py-1.5 bg-purple-600 text-white text-xs rounded-md hover:bg-purple-700 transition-colors"
-            >
-              <TrendingUp size={14} />
-              <span className="hidden sm:inline">Hedge</span>
-            </button>
           </div>
 
           {/* Hamburger Menu Button */}
@@ -139,11 +121,6 @@ const Header: React.FC<HeaderProps> = ({
       <PortfolioModal
         isOpen={isPortfolioModalOpen}
         onClose={() => setIsPortfolioModalOpen(false)}
-      />
-
-      <HedgeModal
-        isOpen={isHedgeModalOpen}
-        onClose={() => setIsHedgeModalOpen(false)}
       />
 
       <FilterModal

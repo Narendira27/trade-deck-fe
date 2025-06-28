@@ -5,6 +5,7 @@ import TableHeader from "./TableHeader";
 import { type Column } from "./ColumnManager";
 import PlaceOrderModal from "../modals/PlaceOrderModal";
 import TradeCard from "./TradeCard";
+import HedgeModal from "../modals/HedgeModal";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_URL } from "../../config/config";
@@ -21,6 +22,7 @@ interface TradeTableProps {
 const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
   const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isHedgeModalOpen, setIsHedgeModalOpen] = useState(false);
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
   const { setTrades, filters } = useStore();
@@ -94,6 +96,11 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
   const handleEdit = (tradeId: string) => {
     setSelectedTradeId(tradeId);
     setIsEditModalOpen(true);
+  };
+
+  const handleHedge = (tradeId: string) => {
+    setSelectedTradeId(tradeId);
+    setIsHedgeModalOpen(true);
   };
 
   const handleDelete = (tradeId: string) => {
@@ -262,6 +269,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
                       onDeleteOrder={() => handleDeleteOrder(trade.id)}
                       onEdit={() => handleEdit(trade.id)}
                       onCancelOrder={() => handleCancelOrder(trade.id)}
+                      onHedge={() => handleHedge(trade.id)}
                       onClosePartial={(percent) =>
                         handleClosePartial(trade.id, percent)
                       }
@@ -296,6 +304,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
                   onDeleteOrder={() => handleDeleteOrder(trade.id)}
                   onEdit={() => handleEdit(trade.id)}
                   onCancelOrder={() => handleCancelOrder(trade.id)}
+                  onHedge={() => handleHedge(trade.id)}
                 />
               ))
             ) : (
@@ -319,6 +328,11 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         tradeId={selectedTradeId}
+      />
+
+      <HedgeModal
+        isOpen={isHedgeModalOpen}
+        onClose={() => setIsHedgeModalOpen(false)}
       />
     </div>
   );

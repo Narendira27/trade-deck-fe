@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Trash2, Play, X } from "lucide-react";
+import { Edit, Trash2, Play, X, Shield } from "lucide-react";
 import { type Trade } from "../../types/trade";
 import { type Column } from "./ColumnManager";
 import { formatNumber } from "../../utils/formatters";
@@ -13,6 +13,7 @@ interface TableRowProps {
   onEdit: () => void;
   onCancelOrder: () => void;
   onClosePartial: (percent: number) => void;
+  onHedge: () => void;
 }
 
 const TableRow: React.FC<TableRowProps> = ({
@@ -23,6 +24,7 @@ const TableRow: React.FC<TableRowProps> = ({
   onEdit,
   onCancelOrder,
   onClosePartial,
+  onHedge,
 }) => {
   const [getindexPrice, setGetindexPrice] = useState(0);
   const [lowestValue, setLowestValue] = useState(0);
@@ -177,6 +179,13 @@ const TableRow: React.FC<TableRowProps> = ({
                   <Edit size={12} />
                 </button>
                 <button
+                  onClick={onHedge}
+                  className="p-1 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+                  title="Hedge"
+                >
+                  <Shield size={12} />
+                </button>
+                <button
                   onClick={onDeleteOrder}
                   className="p-1 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
                   title="Delete"
@@ -203,15 +212,31 @@ const TableRow: React.FC<TableRowProps> = ({
                     >
                       <Edit size={12} />
                     </button>
+                    <button
+                      onClick={onHedge}
+                      className="p-1 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+                      title="Hedge"
+                    >
+                      <Shield size={12} />
+                    </button>
                   </>
                 ) : (
-                  <button
-                    onClick={onEdit}
-                    className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
-                    title="Edit"
-                  >
-                    <Edit size={12} />
-                  </button>
+                  <>
+                    <button
+                      onClick={onEdit}
+                      className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                      title="Edit"
+                    >
+                      <Edit size={12} />
+                    </button>
+                    <button
+                      onClick={onHedge}
+                      className="p-1 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+                      title="Hedge"
+                    >
+                      <Shield size={12} />
+                    </button>
+                  </>
                 )}
               </>
             )}

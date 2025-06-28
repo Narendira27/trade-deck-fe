@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight, Play, Edit, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Play, Edit, Trash2, X, Shield } from "lucide-react";
 import { type Trade } from "../../types/trade";
 import { formatNumber, formatCurrency } from "../../utils/formatters";
 
@@ -9,6 +9,7 @@ interface TradeCardProps {
   onDeleteOrder: () => void;
   onEdit: () => void;
   onCancelOrder: () => void;
+  onHedge: () => void;
 }
 
 const TradeCard: React.FC<TradeCardProps> = ({
@@ -17,6 +18,7 @@ const TradeCard: React.FC<TradeCardProps> = ({
   onDeleteOrder,
   onEdit,
   onCancelOrder,
+  onHedge,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -64,6 +66,13 @@ const TradeCard: React.FC<TradeCardProps> = ({
                   <Edit size={12} />
                 </button>
                 <button
+                  onClick={onHedge}
+                  className="p-1.5 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+                  title="Hedge"
+                >
+                  <Shield size={12} />
+                </button>
+                <button
                   onClick={onDeleteOrder}
                   className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
                   title="Delete"
@@ -88,6 +97,13 @@ const TradeCard: React.FC<TradeCardProps> = ({
                   title="Edit"
                 >
                   <Edit size={12} />
+                </button>
+                <button
+                  onClick={onHedge}
+                  className="p-1.5 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+                  title="Hedge"
+                >
+                  <Shield size={12} />
                 </button>
               </>
             )}

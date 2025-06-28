@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import { Plus, X, Grid3X3, Grid2X2, LayoutGrid } from "lucide-react";
+import { Plus, X, Grid3X3, Grid2X2, LayoutGrid, Shield } from "lucide-react";
 import TradingViewChart from "./TradingViewChart";
+import useStore from "../../store/store";
+import PlaceOrderModal from "../modals/PlaceOrderModal";
+import HedgeModal from "../modals/HedgeModal";
 
 interface ChartTab {
   id: string;
@@ -25,6 +28,11 @@ const ChartContainer: React.FC = () => {
   ]);
   const [activeTab, setActiveTab] = useState("1");
   const [layout, setLayout] = useState<LayoutType>("single");
+  const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
+  const [isHedgeModalOpen, setIsHedgeModalOpen] = useState(false);
+  const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
+
+  const { trades } = useStore();
 
   const addNewTab = () => {
     const newTab: ChartTab = {
@@ -82,6 +90,21 @@ const ChartContainer: React.FC = () => {
       default:
         return "grid grid-cols-1 gap-1";
     }
+  };
+
+  const handlePlaceOrder = (tradeId: string) => {
+    setSelectedTradeId(tradeId);
+    setIsPlaceOrderModalOpen(true);
+  };
+
+  const handleHedge = (tradeId: string) => {
+    setSelectedTradeId(tradeId);
+    setIsHedgeModalOpen(true);
+  };
+
+  const formatTradeOption = (trade: any) => {
+    const shortExpiry = trade.expiry.slice(-5); // Get last 5 characters for short expiry
+    return `${trade.indexName}-${shortExpiry}-${trade.ltpRange}`;
   };
 
   return (
@@ -241,25 +264,130 @@ const ChartContainer: React.FC = () => {
         </div>
       )}
 
-      {/* Chart Area */}
-      <div className="flex-1 min-h-0 relative">
-        <div className={`absolute inset-0 p-1 ${getLayoutClasses()}`}>
-          {getVisibleTabs().map((tab) => (
-            <div key={tab.id} className="relative">
-              {layout !== "single" && (
-                <div className="absolute top-2 left-2 z-10 bg-gray-800 px-2 py-1 rounded text-xs text-white">
-                  {tab.symbol}
-                </div>
-              )}
-              <TradingViewChart
-                symbol={tab.symbol}
-                timeframe={tab.timeframe}
-                chartType={tab.chartType}
-              />
-            </div>
-          ))}
+      {/* Main Content Area */}
+      <div className="flex-1 min-h-0 flex">
+        {/* Trade List Sidebar */}
+        <div className="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
+          <div className="p-3 border-b border-gray-700">
+            <h3 className="text-sm font-semibold text-white">Active Trades</h3>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {trades.length > 0 ? (
+              <div className="p-2 space-y-2">
+                {trades
+                  .filter((trade) => trade.alive)
+                  .map((trade) => (
+                    <div
+                      key={trade.id}
+                      className="bg-gray-700 rounded-lg p-3 hover:bg-gray-600 transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="text-sm font-medium text-white">
+                            {formatTradeOption(trade)}
+                          </h4>
+                          <p className="text-xs text-gray-400">
+                            {trade.entrySide} • {trade.entryType}
+                          </p>
+                        </div>
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => handlePlaceOrder(trade.id)}
+                            className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                            title="Place Order"
+                          >
+                            <Plus size={12} />
+                          </button>
+                          <button
+                            onClick={() => handleHedge(trade.id)}
+                            className="p-1 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+                            title="Hedge"
+                          >
+                            <Shield size={12} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-gray-400">Entry:</span>
+                          <span className="text-white ml-1">
+                            {trade.entryPrice || "-"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Qty:</span>
+                          <span className="text-white ml-1">
+                            {trade.qty || "-"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">SL:</span>
+                          <span className="text-red-400 ml-1">
+                            {trade.stopLossPremium || "-"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">TP:</span>
+                          <span className="text-green-400 ml-1">
+                            {trade.takeProfitPremium || "-"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-gray-600">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-gray-400">MTM:</span>
+                          <span
+                            className={`text-xs font-medium ${
+                              trade.mtm >= 0 ? "text-green-400" : "text-red-400"
+                            }`}
+                          >
+                            ₹{trade.mtm.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-gray-400 text-sm">
+                No active trades
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Chart Area */}
+        <div className="flex-1 relative">
+          <div className={`absolute inset-0 p-1 ${getLayoutClasses()}`}>
+            {getVisibleTabs().map((tab) => (
+              <div key={tab.id} className="relative">
+                {layout !== "single" && (
+                  <div className="absolute top-2 left-2 z-10 bg-gray-800 px-2 py-1 rounded text-xs text-white">
+                    {tab.symbol}
+                  </div>
+                )}
+                <TradingViewChart
+                  symbol={tab.symbol}
+                  timeframe={tab.timeframe}
+                  chartType={tab.chartType}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <PlaceOrderModal
+        isOpen={isPlaceOrderModalOpen}
+        onClose={() => setIsPlaceOrderModalOpen(false)}
+        tradeId={selectedTradeId}
+      />
+
+      <HedgeModal
+        isOpen={isHedgeModalOpen}
+        onClose={() => setIsHedgeModalOpen(false)}
+      />
     </div>
   );
 };
