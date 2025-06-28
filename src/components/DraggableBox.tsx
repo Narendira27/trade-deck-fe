@@ -138,7 +138,7 @@ const ExcelLikeBox = ({ columns }: { columns: DraggableBoxColumn[] }) => {
       case "result1":
         return (
           <td className="px-2 py-2 text-center text-wrap text-xs">
-            {data.lowestValue} - {data.myValue1}
+            {parseInt(data.lowestValue || 0) - parseInt(data.myValue1 || 0)}
           </td>
         );
       case "myValue2":
@@ -156,7 +156,7 @@ const ExcelLikeBox = ({ columns }: { columns: DraggableBoxColumn[] }) => {
       case "result2":
         return (
           <td className="px-2 py-2 text-center text-wrap text-xs">
-            {data.lowestValue} - {data.myValue2}
+            {parseInt(data.lowestValue || 0) - parseInt(data.myValue2 || 0)}
           </td>
         );
       case "action":

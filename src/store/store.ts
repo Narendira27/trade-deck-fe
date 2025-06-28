@@ -76,6 +76,7 @@ interface TradeStoreState {
     id: string,
     updatedData: Partial<draggableData>
   ) => void;
+  updateLowestValue: (id: string, lowestValue: string) => void;
   setOptionLotSize: (data: optionLotSizeType[]) => void;
   setFilters: (filters: TradeFilters) => void;
 }
@@ -147,6 +148,12 @@ const useStore = create<TradeStoreState>((set) => ({
       ),
     })),
 
+  updateLowestValue: (id, lowestValue) =>
+    set((state) => ({
+      draggableData: state.draggableData.map((item) =>
+        item.id === id ? { ...item, lowestValue } : item
+      ),
+    })),
   setOptionLotSize: (data: optionLotSizeType[]) => {
     set({ optionLotSize: data });
   },

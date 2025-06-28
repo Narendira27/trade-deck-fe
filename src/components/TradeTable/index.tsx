@@ -29,7 +29,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
   const filteredTrades = useMemo(() => {
     return trades.filter((trade) => {
       // Show closed trades filter
-      if (!filters.showClosed && !trade.isActive) {
+      if (!filters.showClosed && !trade.alive) {
         return false;
       }
 
@@ -59,14 +59,26 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
       // Date range filter
       if (filters.dateRange.from || filters.dateRange.to) {
         const tradeDate = new Date(trade.createdAt);
-        const fromDate = filters.dateRange.from ? new Date(filters.dateRange.from) : null;
-        const toDate = filters.dateRange.to ? new Date(filters.dateRange.to) : null;
 
-        if (fromDate && tradeDate < fromDate) {
-          return false;
+        const fromDate = filters.dateRange.from
+          ? new Date(filters.dateRange.from)
+          : null;
+        const toDate = filters.dateRange.to
+          ? new Date(filters.dateRange.to)
+          : null;
+
+        if (fromDate) {
+          fromDate.setHours(0, 0, 0, 0); // Start of day
+          if (tradeDate < fromDate) {
+            return false;
+          }
         }
-        if (toDate && tradeDate > toDate) {
-          return false;
+
+        if (toDate) {
+          toDate.setHours(23, 59, 59, 999); // End of day
+          if (tradeDate > toDate) {
+            return false;
+          }
         }
       }
 
@@ -193,15 +205,43 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
   return (
     <div className="h-full flex flex-col">
       {/* Filter Summary */}
-      {(filters.indexName || filters.entrySide || filters.entryType || filters.entryTriggered || filters.dateRange.from || filters.dateRange.to || filters.showClosed) && (
+      {(filters.indexName ||
+        filters.entrySide ||
+        filters.entryType ||
+        filters.entryTriggered ||
+        filters.dateRange.from ||
+        filters.dateRange.to ||
+        filters.showClosed) && (
         <div className="px-4 py-2 bg-gray-800 border-b border-gray-700 text-xs text-gray-300">
           <span className="font-medium">Active Filters: </span>
-          {filters.showClosed && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Show Closed</span>}
-          {filters.indexName && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Index: {filters.indexName}</span>}
-          {filters.entrySide && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Side: {filters.entrySide}</span>}
-          {filters.entryType && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Type: {filters.entryType}</span>}
-          {filters.entryTriggered && <span className="bg-blue-500 px-2 py-1 rounded mr-2">Triggered: {filters.entryTriggered}</span>}
-          <span className="text-gray-400">({filteredTrades.length} of {trades.length} trades)</span>
+          {filters.showClosed && (
+            <span className="bg-blue-500 px-2 py-1 rounded mr-2">
+              Show Closed
+            </span>
+          )}
+          {filters.indexName && (
+            <span className="bg-blue-500 px-2 py-1 rounded mr-2">
+              Index: {filters.indexName}
+            </span>
+          )}
+          {filters.entrySide && (
+            <span className="bg-blue-500 px-2 py-1 rounded mr-2">
+              Side: {filters.entrySide}
+            </span>
+          )}
+          {filters.entryType && (
+            <span className="bg-blue-500 px-2 py-1 rounded mr-2">
+              Type: {filters.entryType}
+            </span>
+          )}
+          {filters.entryTriggered && (
+            <span className="bg-blue-500 px-2 py-1 rounded mr-2">
+              Triggered: {filters.entryTriggered}
+            </span>
+          )}
+          <span className="text-gray-400">
+            ({filteredTrades.length} of {trades.length} trades)
+          </span>
         </div>
       )}
 
@@ -233,7 +273,9 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
                       colSpan={columns.filter((col) => col.visible).length + 1}
                       className="text-center py-8 text-gray-400"
                     >
-                      {trades.length === 0 ? "No trades to display" : "No trades match the current filters"}
+                      {trades.length === 0
+                        ? "No trades to display"
+                        : "No trades match the current filters"}
                     </td>
                   </tr>
                 )}
@@ -258,7 +300,9 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
               ))
             ) : (
               <div className="text-center py-8 text-gray-400 col-span-full">
-                {trades.length === 0 ? "No trades to display" : "No trades match the current filters"}
+                {trades.length === 0
+                  ? "No trades to display"
+                  : "No trades match the current filters"}
               </div>
             )}
           </div>

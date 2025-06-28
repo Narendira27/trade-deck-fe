@@ -107,6 +107,7 @@ const TableRow: React.FC<TableRowProps> = ({
           ? formatNumber(trade.strategyTrailing)
           : "-";
       case "exitPercentages":
+        if (!trade.alive) return "-";
         return (
           <div className="flex space-x-1">
             <button
@@ -157,51 +158,17 @@ const TableRow: React.FC<TableRowProps> = ({
   return (
     <tr className="hover:bg-gray-800/50 transition-colors">
       <td className="px-2 py-2 text-xs font-medium text-white border-b border-gray-800">
-        <div className="flex space-x-1">
-          {trade.entryType === "UNDEFINED" ? (
-            <>
-              <button
-                onClick={onPlaceOrder}
-                className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                title="Place Order"
-              >
-                <Play size={12} />
-              </button>
-              <button
-                onClick={onEdit}
-                className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
-                title="Edit"
-              >
-                <Edit size={12} />
-              </button>
-              <button
-                onClick={onDeleteOrder}
-                className="p-1 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
-                title="Delete"
-              >
-                <Trash2 size={12} />
-              </button>
-            </>
-          ) : (
-            <>
-              {trade.entryTriggered === false && trade.entryType === "LIMIT" ? (
-                <>
-                  <button
-                    onClick={onCancelOrder}
-                    className="p-1 bg-red-500/80 rounded hover:bg-red-400 transition-colors"
-                    title="Cancel Order"
-                  >
-                    <X size={12} />
-                  </button>
-                  <button
-                    onClick={onEdit}
-                    className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
-                    title="Edit"
-                  >
-                    <Edit size={12} />
-                  </button>
-                </>
-              ) : (
+        {trade.alive && (
+          <div className="flex space-x-1">
+            {trade.entryType === "UNDEFINED" ? (
+              <>
+                <button
+                  onClick={onPlaceOrder}
+                  className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  title="Place Order"
+                >
+                  <Play size={12} />
+                </button>
                 <button
                   onClick={onEdit}
                   className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
@@ -209,10 +176,47 @@ const TableRow: React.FC<TableRowProps> = ({
                 >
                   <Edit size={12} />
                 </button>
-              )}
-            </>
-          )}
-        </div>
+                <button
+                  onClick={onDeleteOrder}
+                  className="p-1 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </>
+            ) : (
+              <>
+                {trade.entryTriggered === false &&
+                trade.entryType === "LIMIT" ? (
+                  <>
+                    <button
+                      onClick={onCancelOrder}
+                      className="p-1 bg-red-500/80 rounded hover:bg-red-400 transition-colors"
+                      title="Cancel Order"
+                    >
+                      <X size={12} />
+                    </button>
+                    <button
+                      onClick={onEdit}
+                      className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                      title="Edit"
+                    >
+                      <Edit size={12} />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={onEdit}
+                    className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                    title="Edit"
+                  >
+                    <Edit size={12} />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </td>
       {columns
         .filter((col) => col.visible)

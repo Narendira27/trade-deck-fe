@@ -10,7 +10,6 @@ const GetValues = () => {
 
   const socketRef = useRef<Socket | null>(null);
 
-  // Establish socket connection
   useEffect(() => {
     const token = cookies.get("auth");
     if (!token) {
@@ -18,34 +17,50 @@ const GetValues = () => {
       return;
     }
 
-    socketRef.current = io(SOCKET_MAIN, {
-      auth: {
-        token: `Bearer ${token}`,
-      },
-      transports: ["websocket"],
-    });
+    const checkHealthAndConnect = async () => {
+      try {
+        const res = await fetch(`${SOCKET_MAIN}/health`);
+        if (!res.ok) throw new Error("Health check failed");
 
-    if (!socketRef.current) return;
+        const health = await res.json();
 
-    socketRef.current.on("connect", () => {
-      toast.info("Connected to Socket.IO server");
-    });
+        if (health.brokerWSConnected && health.redisConnected) {
+          // Proceed to connect to Socket.IO
+          socketRef.current = io(SOCKET_MAIN, {
+            auth: {
+              token: `Bearer ${token}`,
+            },
+            transports: ["websocket"],
+          });
 
-    socketRef.current.on("disconnect", () => {
-      toast.info("Disconnected from Socket.IO server");
-    });
+          socketRef.current.on("connect", () => {
+            toast.info("Connected to Socket.IO server");
+          });
 
-    socketRef.current.on("error", (err: Error) => {
-      toast.error("Socket error: " + err.message);
-    });
+          socketRef.current.on("disconnect", () => {
+            toast.info("Disconnected from Socket.IO server");
+          });
 
-    socketRef.current.on("optionPremium", (data) => {
-      setOptionValues(data.data);
-    });
+          socketRef.current.on("error", (err: Error) => {
+            toast.error("Socket error: " + err.message);
+          });
 
-    socketRef.current.on("lastPrice", (data) => {
-      setOptionValues(data.optionsData);
-    });
+          socketRef.current.on("optionPremium", (data) => {
+            setOptionValues(data.data);
+          });
+
+          socketRef.current.on("lastPrice", (data) => {
+            setOptionValues(data.optionsData);
+          });
+        } else {
+          toast.error("Socket server not ready: Broker or Redis disconnected");
+        }
+      } catch (err) {
+        toast.error("Health check failed: " + err);
+      }
+    };
+
+    checkHealthAndConnect();
 
     return () => {
       if (socketRef.current) {

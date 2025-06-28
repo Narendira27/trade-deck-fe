@@ -4,6 +4,7 @@ import cookies from "js-cookie";
 import { toast } from "sonner";
 import useStore from "../store/store";
 import { SOCKET_FE } from "../config/config";
+import { getLowestCombinedPremiumArray } from "../utils/getlowestValue";
 
 // Define types
 interface PriceUpdate {
@@ -18,24 +19,36 @@ interface Instrument {
   exchangeInstrumentID: number;
 }
 
-// interface optionSubscribeArr {
-//   id: string;
-//   indexName: string;
-//   expiry: string;
-//   ltpRange: string;
-// }
+interface optionSubscribeArr {
+  id: string;
+  index: string;
+  expiry: string;
+  ltpRange: string;
+}
+interface CombinedPremiumItem {
+  name: string;
+  combinedPremium: number;
+}
+
+interface SpreadPremiumItem {
+  name: string;
+  spreadPremium: number;
+}
+
+interface PremiumData {
+  id: number;
+  combinedPremiumArray: CombinedPremiumItem[];
+  spreadPremiumArray: SpreadPremiumItem[];
+}
 
 const MarketDataComponent = () => {
-  const {
-    // draggableData,
-    setIndexPrice,
-  } = useStore();
+  const { draggableData, setIndexPrice, updateLowestValue } = useStore();
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  // const [subscriptions, setSubscriptions] = useState<string[]>([]);
+
   const socketRef = useRef<Socket | null>(null);
 
-  // const optionSubscribedArr: optionSubscribeArr[] = [];
+  const optionSubscribedArrRef = useRef<optionSubscribeArr[]>([]);
 
   // Function to subscribe to instruments
   const subscribeToInstruments = (instruments: Instrument[]) => {
@@ -52,16 +65,26 @@ const MarketDataComponent = () => {
     });
   };
 
-  // const subscribeToOptionInfo = (data: {
-  //   data: { id: string; indexName: string; expiry: string; ltpRange: string };
-  // }) => {
-  //   if (!socketRef.current || !isConnected) {
-  //     toast.error("Socket not connected");
-  //     return;
-  //   }
+  const subscribeToOptionInfo = (data: {
+    id: string;
+    index: string;
+    expiry: string;
+    ltpRange: string;
+  }) => {
+    if (!socketRef.current || !isConnected) {
+      toast.error("Socket not connected");
+      return;
+    }
 
-  //   socketRef.current.emit("subscribe-options-data", { data });
-  // };
+    socketRef.current.emit("subscribe-options-data", {
+      data: {
+        id: data.id,
+        indexName: data.index,
+        expiry: data.expiry,
+        ltpRange: parseInt(data.ltpRange),
+      },
+    });
+  };
 
   // List of instruments to subscribe to
   const instrumentsToSubscribe: Instrument[] = [
@@ -81,40 +104,61 @@ const MarketDataComponent = () => {
       return;
     }
 
-    socketRef.current = io(SOCKET_FE, {
-      auth: {
-        token: `Bearer ${token}`,
-      },
-      transports: ["websocket"],
-    });
+    const checkHealthAndConnect = async () => {
+      try {
+        const res = await fetch(`${SOCKET_FE}/health`);
+        if (!res.ok) throw new Error("Health check failed");
 
-    if (!socketRef.current) return;
+        const health = await res.json();
 
-    socketRef.current.on("connect", () => {
-      setIsConnected(true);
-      toast.info("Connected to Socket.IO server");
-    });
+        if (health.brokerWSConnected && health.redisConnected) {
+          socketRef.current = io(SOCKET_FE, {
+            auth: {
+              token: `Bearer ${token}`,
+            },
+            transports: ["websocket"],
+          });
 
-    socketRef.current.on("disconnect", () => {
-      setIsConnected(false);
-      toast.info("Disconnected from Socket.IO server");
-    });
+          socketRef.current.on("connect", () => {
+            setIsConnected(true);
+            toast.info("Connected to Socket.IO server");
+          });
 
-    socketRef.current.on("error", (err: Error) => {
-      toast.error("Socket error: " + err.message);
-    });
+          socketRef.current.on("disconnect", () => {
+            setIsConnected(false);
+            toast.info("Disconnected from Socket.IO server");
+          });
 
-    socketRef.current.on("priceUpdate", (data: PriceUpdate) => {
-      const getName = indexName[data.id];
-      data.name = getName;
-      setIndexPrice(data);
-    });
+          socketRef.current.on("error", (err: Error) => {
+            toast.error("Socket error: " + err.message);
+          });
 
-    socketRef.current.on("subscribed", (subs: string[]) => {
-      // setSubscriptions(subs);
+          socketRef.current.on("optionPremium", (data: PremiumData[]) => {
+            const result = getLowestCombinedPremiumArray(data);
+            if (result.length < 0) return;
+            result.map((each) => {
+              updateLowestValue(String(each.id), String(each.lowestValue));
+            });
+          });
 
-      toast.info("Subscribed to: " + subs.join(", "));
-    });
+          socketRef.current.on("priceUpdate", (data: PriceUpdate) => {
+            const getName = indexName[data.id];
+            data.name = getName;
+            setIndexPrice(data);
+          });
+
+          socketRef.current.on("subscribed", (subs: string[]) => {
+            toast.info("Subscribed to: " + subs.join(", "));
+          });
+        } else {
+          toast.error("Socket server not ready: Broker or Redis disconnected");
+        }
+      } catch (err) {
+        toast.error("Health check failed: " + err);
+      }
+    };
+
+    checkHealthAndConnect();
 
     return () => {
       if (socketRef.current) {
@@ -130,20 +174,28 @@ const MarketDataComponent = () => {
     }
   }, [isConnected]);
 
-  // useEffect(() => {
-  //   if (!isConnected) return;
+  useEffect(() => {
+    if (draggableData.length > 0) {
+      if (!isConnected) return;
 
-  //   const notSubsArr = draggableData.map((data) => {
-  //     const index = optionSubscribedArr.findIndex(
-  //       (each) => each.id === data.id
-  //     );
-  //     if (index === -1) return data;
-  //   });
-  //   console.log(notSubsArr);
+      console.log(draggableData);
 
-  //   if (notSubsArr.length > 0 )
-  //     notSubsArr.forEach((data) => subscribeToOptionInfo(data));
-  // }, [draggableData]);
+      const notSubscribedArr = draggableData.filter((data) => {
+        return !optionSubscribedArrRef.current.some(
+          (each) => each.id === data.id
+        );
+      });
+
+      console.log("Not yet subscribed:", notSubscribedArr);
+
+      if (notSubscribedArr.length > 0) {
+        notSubscribedArr.forEach((data) => {
+          subscribeToOptionInfo(data);
+          optionSubscribedArrRef.current.push(data); // Track as subscribed
+        });
+      }
+    }
+  }, [draggableData, isConnected]);
 
   return <></>;
 };

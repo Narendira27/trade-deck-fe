@@ -98,7 +98,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      <div className="fixed inset-0  " onClick={onClose} />
       <div
         ref={modalRef}
         className={`bg-gray-800 border border-gray-400 rounded-lg p-4 sm:p-6 w-full max-w-md cursor-move select-none max-h-[90vh] overflow-y-auto relative z-10 ${
@@ -133,7 +133,10 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose }) => {
                 className="sr-only peer"
                 checked={localFilters.showClosed}
                 onChange={(e) =>
-                  setLocalFilters({ ...localFilters, showClosed: e.target.checked })
+                  setLocalFilters({
+                    ...localFilters,
+                    showClosed: e.target.checked,
+                  })
                 }
               />
               <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -210,7 +213,10 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose }) => {
               className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={localFilters.entryTriggered}
               onChange={(e) =>
-                setLocalFilters({ ...localFilters, entryTriggered: e.target.value })
+                setLocalFilters({
+                  ...localFilters,
+                  entryTriggered: e.target.value,
+                })
               }
             >
               <option value="">All</option>
@@ -232,7 +238,10 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose }) => {
                 onChange={(e) =>
                   setLocalFilters({
                     ...localFilters,
-                    dateRange: { ...localFilters.dateRange, from: e.target.value },
+                    dateRange: {
+                      ...localFilters.dateRange,
+                      from: e.target.value,
+                    },
                   })
                 }
               />
@@ -243,7 +252,10 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose }) => {
                 onChange={(e) =>
                   setLocalFilters({
                     ...localFilters,
-                    dateRange: { ...localFilters.dateRange, to: e.target.value },
+                    dateRange: {
+                      ...localFilters.dateRange,
+                      to: e.target.value,
+                    },
                   })
                 }
               />
