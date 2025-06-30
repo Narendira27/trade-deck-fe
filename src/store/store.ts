@@ -81,7 +81,7 @@ interface TradeStoreState {
   setFilters: (filters: TradeFilters) => void;
 }
 
-const useStore = create<TradeStoreState>((set) => ({
+const useStore = create<TradeStoreState>((set, get) => ({
   trades: [],
   indexData: {
     indices: [],
@@ -114,19 +114,21 @@ const useStore = create<TradeStoreState>((set) => ({
     set((state) => ({
       draggableData: state.draggableData.filter((item) => item.id !== id),
     })),
-  setIndexPrice: (data) =>
+  setIndexPrice: (data) => {
+    const state = get();
+    const existingIndex = state.indexPrice.findIndex(
+      (item) => item.id === data.id
+    );
+
+    // Only update if price actually changed
+    if (
+      existingIndex !== -1 &&
+      state.indexPrice[existingIndex].price === data.price
+    ) {
+      return;
+    }
+
     set((state) => {
-      const existingIndex = state.indexPrice.findIndex(
-        (item) => item.id === data.id
-      );
-
-      if (
-        existingIndex !== -1 &&
-        state.indexPrice[existingIndex].price === data.price
-      ) {
-        return {};
-      }
-
       if (existingIndex !== -1) {
         const updated = [...state.indexPrice];
         updated[existingIndex] = {
@@ -137,9 +139,14 @@ const useStore = create<TradeStoreState>((set) => ({
       } else {
         return { indexPrice: [...state.indexPrice, data] };
       }
-    }),
+    });
+  },
   setOptionValues: (data: optionValuesData[]) => {
-    set({ optionValues: data });
+    const state = get();
+    // Only update if data actually changed
+    if (JSON.stringify(state.optionValues) !== JSON.stringify(data)) {
+      set({ optionValues: data });
+    }
   },
   setShowDraggable: () => {
     set((state) => ({
