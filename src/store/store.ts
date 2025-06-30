@@ -119,8 +119,15 @@ const useStore = create<TradeStoreState>((set) => ({
       const existingIndex = state.indexPrice.findIndex(
         (item) => item.id === data.id
       );
+
+      if (
+        existingIndex !== -1 &&
+        state.indexPrice[existingIndex].price === data.price
+      ) {
+        return {};
+      }
+
       if (existingIndex !== -1) {
-        // Update existing item
         const updated = [...state.indexPrice];
         updated[existingIndex] = {
           ...updated[existingIndex],
@@ -128,7 +135,6 @@ const useStore = create<TradeStoreState>((set) => ({
         };
         return { indexPrice: updated };
       } else {
-        // Add new item
         return { indexPrice: [...state.indexPrice, data] };
       }
     }),

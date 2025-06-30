@@ -67,7 +67,7 @@ const GetValues = () => {
         socketRef.current.disconnect();
       }
     };
-  }, []);
+  }, [setOptionValues]);
 
   return <></>;
 };

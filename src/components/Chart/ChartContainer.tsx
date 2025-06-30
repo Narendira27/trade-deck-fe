@@ -1,42 +1,84 @@
-import React, { useState } from "react";
-import { Plus, X, Grid3X3, Grid2X2, LayoutGrid, Play } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, X, Grid3X3, Grid2X2, LayoutGrid } from "lucide-react";
 import TradingViewChart from "./TradingViewChart";
 import useStore from "../../store/store";
-import PlaceOrderModal from "../modals/PlaceOrderModal";
+import type { Trade } from "../../types/trade";
 
 interface ChartTab {
   id: string;
+  tradeId: string;
   symbol: string;
+  expiry: string;
+  range: number; // Changed to always be number
   timeframe: string;
-  chartType: "line" | "candlestick";
+  chartType: "candlestick";
 }
 
 type LayoutType = "single" | "2x2" | "3x1" | "2x2-grid";
 
 const ChartContainer: React.FC = () => {
-  const [tabs, setTabs] = useState<ChartTab[]>([
-    { id: "1", symbol: "NIFTY", timeframe: "5m", chartType: "candlestick" },
-    { id: "2", symbol: "BANKNIFTY", timeframe: "5m", chartType: "candlestick" },
-    { id: "3", symbol: "FINNIFTY", timeframe: "5m", chartType: "candlestick" },
-    {
-      id: "4",
-      symbol: "MIDCPNIFTY",
-      timeframe: "5m",
-      chartType: "candlestick",
-    },
-  ]);
+  const { trades } = useStore();
+
+  // Initialize tabs with the first trade if available
+  const [tabs, setTabs] = useState<ChartTab[]>(() => {
+    const filteredTrade = trades.filter((each) => each.alive === true);
+    if (filteredTrade.length > 0) {
+      const firstTrade = filteredTrade[0];
+      return [
+        {
+          id: "1",
+          tradeId: firstTrade.id,
+          symbol: firstTrade.indexName,
+          expiry: firstTrade.expiry,
+          range: firstTrade.ltpRange, // Assuming ltpRange is a number
+          timeframe: "1m",
+          chartType: "candlestick",
+        },
+      ];
+    }
+    return [
+      {
+        id: "1",
+        tradeId: "",
+        symbol: "select",
+        expiry: "",
+        range: 0, // Changed from "" to 0
+        timeframe: "1m",
+        chartType: "candlestick",
+      },
+    ];
+  });
+
   const [activeTab, setActiveTab] = useState("1");
   const [layout, setLayout] = useState<LayoutType>("single");
-  const [selectedTradeId, setSelectedTradeId] = useState<string>("");
-  const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
 
-  const { trades } = useStore();
+  // Update tabs when trades change (e.g., if trades are loaded async)
+  useEffect(() => {
+    const filteredTrade = trades.filter((each) => each.alive === true);
+    if (filteredTrade.length > 0 && tabs.length > 0 && tabs[0].tradeId === "") {
+      const firstTrade = filteredTrade[0];
+      setTabs([
+        {
+          id: "1",
+          tradeId: firstTrade.id,
+          symbol: firstTrade.indexName,
+          expiry: firstTrade.expiry,
+          range: firstTrade.ltpRange,
+          timeframe: "1m",
+          chartType: "candlestick",
+        },
+      ]);
+    }
+  }, [trades]);
 
   const addNewTab = () => {
     const newTab: ChartTab = {
       id: Date.now().toString(),
-      symbol: "BANKNIFTY",
-      timeframe: "5m",
+      tradeId: trades.length > 0 ? trades[0].id : "",
+      symbol: trades.length > 0 ? trades[0].indexName : "select",
+      expiry: trades.length > 0 ? trades[0].expiry : "",
+      range: trades.length > 0 ? trades[0].ltpRange : 0, // Changed from "" to 0
+      timeframe: "1m",
       chartType: "candlestick",
     };
     setTabs([...tabs, newTab]);
@@ -58,6 +100,18 @@ const ChartContainer: React.FC = () => {
     setTabs(
       tabs.map((tab) => (tab.id === tabId ? { ...tab, ...updates } : tab))
     );
+  };
+
+  const handleTradeChange = (tabId: string, tradeId: string) => {
+    const selectedTrade = trades.find((trade) => trade.id === tradeId);
+    if (selectedTrade) {
+      updateTab(tabId, {
+        tradeId: selectedTrade.id,
+        symbol: selectedTrade.indexName,
+        expiry: selectedTrade.expiry,
+        range: selectedTrade.ltpRange,
+      });
+    }
   };
 
   const getVisibleTabs = () => {
@@ -90,14 +144,13 @@ const ChartContainer: React.FC = () => {
     }
   };
 
-  const formatTradeOption = (trade: any) => {
+  const formatTradeOption = (trade: Trade) => {
     return `${trade.indexName}-${trade.expiry}-${trade.ltpRange}`;
   };
 
-  const handlePlaceOrder = () => {
-    if (selectedTradeId) {
-      setIsPlaceOrderModalOpen(true);
-    }
+  const getTabTitle = (tab: ChartTab) => {
+    if (!tab.symbol || tab.symbol === "select") return "Select Symbol";
+    return `${tab.symbol}-${tab.expiry}-${tab.range}`;
   };
 
   return (
@@ -117,7 +170,7 @@ const ChartContainer: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
               >
                 <span className="text-sm font-medium truncate">
-                  {tab.symbol} {tab.timeframe}
+                  {getTabTitle(tab)}
                 </span>
                 {tabs.length > 1 && (
                   <button
@@ -198,27 +251,18 @@ const ChartContainer: React.FC = () => {
         <div className="flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
           <div className="flex items-center space-x-4">
             <select
-              value={selectedTradeId}
-              onChange={(e) => setSelectedTradeId(e.target.value)}
+              value={tabs.find((tab) => tab.id === activeTab)?.tradeId || ""}
+              onChange={(e) => handleTradeChange(activeTab, e.target.value)}
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Select a trade</option>
-              {trades.map((trade) => (
-                <option key={trade.id} value={trade.id}>
-                  {formatTradeOption(trade)}
-                </option>
-              ))}
+              {trades.map((trade) =>
+                trade.alive ? (
+                  <option key={trade.id} value={trade.id}>
+                    {formatTradeOption(trade)}
+                  </option>
+                ) : null
+              )}
             </select>
-
-            {selectedTradeId && (
-              <button
-                onClick={handlePlaceOrder}
-                className="flex items-center space-x-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              >
-                <Play size={14} />
-                <span className="text-sm">Place Order</span>
-              </button>
-            )}
 
             <select
               value={tabs.find((tab) => tab.id === activeTab)?.timeframe || ""}
@@ -228,23 +272,9 @@ const ChartContainer: React.FC = () => {
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="1m">1m</option>
-              <option value="5m">5m</option>
-              <option value="15m">15m</option>
-              <option value="1h">1h</option>
-              <option value="1d">1D</option>
             </select>
 
             <div className="flex bg-gray-700 rounded">
-              <button
-                onClick={() => updateTab(activeTab, { chartType: "line" })}
-                className={`px-3 py-1 text-sm rounded-l ${
-                  tabs.find((tab) => tab.id === activeTab)?.chartType === "line"
-                    ? "bg-blue-500 text-white"
-                    : "text-gray-300 hover:text-white"
-                }`}
-              >
-                Line
-              </button>
               <button
                 onClick={() =>
                   updateTab(activeTab, { chartType: "candlestick" })
@@ -263,7 +293,6 @@ const ChartContainer: React.FC = () => {
 
           <div className="text-sm text-gray-400">
             Last: <span className="text-white font-medium">24,235.50</span>
-            <span className="text-green-400 ml-2">+125.30 (+0.52%)</span>
           </div>
         </div>
       )}
@@ -275,24 +304,19 @@ const ChartContainer: React.FC = () => {
             <div key={tab.id} className="relative">
               {layout !== "single" && (
                 <div className="absolute top-2 left-2 z-10 bg-gray-800 px-2 py-1 rounded text-xs text-white">
-                  {tab.symbol}
+                  {getTabTitle(tab)}
                 </div>
               )}
               <TradingViewChart
                 symbol={tab.symbol}
                 timeframe={tab.timeframe}
                 chartType={tab.chartType}
+                tradeId={tab.tradeId}
               />
             </div>
           ))}
         </div>
       </div>
-
-      <PlaceOrderModal
-        isOpen={isPlaceOrderModalOpen}
-        onClose={() => setIsPlaceOrderModalOpen(false)}
-        tradeId={selectedTradeId}
-      />
     </div>
   );
 };

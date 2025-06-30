@@ -165,7 +165,7 @@ const MarketDataComponent = () => {
         socketRef.current.disconnect();
       }
     };
-  }, []);
+  }, [setIndexPrice, updateLowestValue]);
 
   // Auto-subscribe once connected
   useEffect(() => {
