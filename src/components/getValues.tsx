@@ -14,7 +14,7 @@ const GetValues = () => {
   const throttledSetOptionValues = useRef(
     throttle((data: any) => {
       setOptionValues(data);
-    }, 300)
+    }, 3)
   ).current;
 
   const handleOptionPremium = useCallback(

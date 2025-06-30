@@ -65,13 +65,13 @@ const MarketDataComponent = () => {
   const throttledSetIndexPrice = useRef(
     throttle((data: PriceUpdate) => {
       setIndexPrice(data);
-    }, 300)
+    }, 3)
   ).current;
 
   const throttledUpdateLowestValue = useRef(
     throttle((id: string, lowestValue: string) => {
       updateLowestValue(id, lowestValue);
-    }, 300)
+    }, 3)
   ).current;
 
   const handlePriceUpdate = useCallback(
