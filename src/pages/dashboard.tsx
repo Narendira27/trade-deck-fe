@@ -15,10 +15,8 @@ import ResizablePanel from "../components/ResizablePanel";
 import ChartContainer from "../components/Chart/ChartContainer";
 import PositionTracker from "../components/PositionTracker/PositionTracker";
 import DraggableBoxManager from "../components/DraggableBoxManager";
-import DraggableBox, {
-  defaultDraggableColumns,
-  type DraggableBoxColumn,
-} from "../components/DraggableBox";
+import DraggableBox from "../components/DraggableBox";
+import { defaultDraggableColumns, type DraggableBoxColumn } from "../types/draggableBox";
 
 import { API_URL } from "../config/config";
 import useStore from "../store/store";

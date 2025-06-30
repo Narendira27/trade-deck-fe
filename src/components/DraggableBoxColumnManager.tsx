@@ -6,7 +6,7 @@ import {
   Draggable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { type DraggableBoxColumn } from "./DraggableBox";
+import { type DraggableBoxColumn } from "../types/draggableBox";
 
 interface DraggableBoxColumnManagerProps {
   columns: DraggableBoxColumn[];

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import cookies from "js-cookie";
 import { toast } from "sonner";
@@ -47,11 +47,27 @@ const MarketDataComponent = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
   const socketRef = useRef<Socket | null>(null);
-
   const optionSubscribedArrRef = useRef<optionSubscribeArr[]>([]);
 
+  // Memoize the callback to prevent recreation on every render
+  const handlePriceUpdate = useCallback((data: PriceUpdate) => {
+    const getName = indexName[data.id];
+    if (getName) {
+      setIndexPrice({ ...data, name: getName });
+    }
+  }, [setIndexPrice]);
+
+  const handleOptionPremium = useCallback((data: PremiumData[]) => {
+    const result = getLowestCombinedPremiumArray(data);
+    if (result.length > 0) {
+      result.forEach((each) => {
+        updateLowestValue(String(each.id), String(each.lowestValue));
+      });
+    }
+  }, [updateLowestValue]);
+
   // Function to subscribe to instruments
-  const subscribeToInstruments = (instruments: Instrument[]) => {
+  const subscribeToInstruments = useCallback((instruments: Instrument[]) => {
     if (!socketRef.current || !isConnected) {
       toast.error("Socket not connected");
       return;
@@ -63,9 +79,9 @@ const MarketDataComponent = () => {
         exchangeInstrumentID: instrument.exchangeInstrumentID,
       })),
     });
-  };
+  }, [isConnected]);
 
-  const subscribeToOptionInfo = (data: {
+  const subscribeToOptionInfo = useCallback((data: {
     id: string;
     index: string;
     expiry: string;
@@ -84,7 +100,7 @@ const MarketDataComponent = () => {
         ltpRange: parseInt(data.ltpRange),
       },
     });
-  };
+  }, [isConnected]);
 
   // List of instruments to subscribe to
   const instrumentsToSubscribe: Instrument[] = [
@@ -133,19 +149,8 @@ const MarketDataComponent = () => {
             toast.error("Socket error: " + err.message);
           });
 
-          socketRef.current.on("optionPremium", (data: PremiumData[]) => {
-            const result = getLowestCombinedPremiumArray(data);
-            if (result.length < 0) return;
-            result.map((each) => {
-              updateLowestValue(String(each.id), String(each.lowestValue));
-            });
-          });
-
-          socketRef.current.on("priceUpdate", (data: PriceUpdate) => {
-            const getName = indexName[data.id];
-            data.name = getName;
-            setIndexPrice(data);
-          });
+          socketRef.current.on("optionPremium", handleOptionPremium);
+          socketRef.current.on("priceUpdate", handlePriceUpdate);
 
           socketRef.current.on("subscribed", (subs: string[]) => {
             toast.info("Subscribed to: " + subs.join(", "));
@@ -162,31 +167,27 @@ const MarketDataComponent = () => {
 
     return () => {
       if (socketRef.current) {
+        socketRef.current.off("optionPremium", handleOptionPremium);
+        socketRef.current.off("priceUpdate", handlePriceUpdate);
         socketRef.current.disconnect();
       }
     };
-  }, [setIndexPrice, updateLowestValue]);
+  }, [handleOptionPremium, handlePriceUpdate]);
 
   // Auto-subscribe once connected
   useEffect(() => {
     if (isConnected) {
       subscribeToInstruments(instrumentsToSubscribe);
     }
-  }, [isConnected]);
+  }, [isConnected, subscribeToInstruments]);
 
   useEffect(() => {
-    if (draggableData.length > 0) {
-      if (!isConnected) return;
-
-      console.log(draggableData);
-
+    if (draggableData.length > 0 && isConnected) {
       const notSubscribedArr = draggableData.filter((data) => {
         return !optionSubscribedArrRef.current.some(
           (each) => each.id === data.id
         );
       });
-
-      console.log("Not yet subscribed:", notSubscribedArr);
 
       if (notSubscribedArr.length > 0) {
         notSubscribedArr.forEach((data) => {
@@ -195,7 +196,7 @@ const MarketDataComponent = () => {
         });
       }
     }
-  }, [draggableData, isConnected]);
+  }, [draggableData, isConnected, subscribeToOptionInfo]);
 
   return <></>;
 };

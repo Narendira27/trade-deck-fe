@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Edit, Trash2, Play, X, Shield } from "lucide-react";
 import { type Trade } from "../../types/trade";
 import { type Column } from "./ColumnManager";
@@ -31,28 +31,37 @@ const TableRow: React.FC<TableRowProps> = ({
 
   const { indexPrice, optionValues } = useStore();
 
-  useEffect(() => {
-    const priceData = indexPrice.find((each) => each.name === trade.indexName);
-    if (priceData) {
-      setGetindexPrice(priceData.price);
-    }
+  // Memoize the index price to prevent unnecessary updates
+  const currentIndexPrice = useMemo(() => {
+    return indexPrice.find((each) => each.name === trade.indexName);
   }, [indexPrice, trade.indexName]);
 
-  useEffect(() => {
-    if (optionValues) {
-      const findArr = optionValues.find((each) => each.id === trade.id);
-      if (findArr) {
-        const premiumCombinedArr = findArr.combinedPremiumArray;
+  // Memoize the option values to prevent unnecessary updates
+  const currentOptionValue = useMemo(() => {
+    if (!optionValues) return null;
+    return optionValues.find((each) => each.id === trade.id);
+  }, [optionValues, trade.id]);
 
-        if (premiumCombinedArr.length > 0) {
-          const minPremium = Math.min(
-            ...premiumCombinedArr.map((item) => item.combinedPremium)
-          );
+  useEffect(() => {
+    if (currentIndexPrice && currentIndexPrice.price !== getindexPrice) {
+      setGetindexPrice(currentIndexPrice.price);
+    }
+  }, [currentIndexPrice, getindexPrice]);
+
+  useEffect(() => {
+    if (currentOptionValue) {
+      const premiumCombinedArr = currentOptionValue.combinedPremiumArray;
+
+      if (premiumCombinedArr.length > 0) {
+        const minPremium = Math.min(
+          ...premiumCombinedArr.map((item) => item.combinedPremium)
+        );
+        if (minPremium !== lowestValue) {
           setLowestValue(minPremium);
         }
       }
     }
-  }, [optionValues, trade.id]);
+  }, [currentOptionValue, lowestValue]);
 
   const getCellValue = (columnId: string) => {
     switch (columnId) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import cookies from "js-cookie";
 import { toast } from "sonner";
@@ -7,8 +7,16 @@ import { SOCKET_MAIN } from "../config/config";
 
 const GetValues = () => {
   const { setOptionValues } = useStore();
-
   const socketRef = useRef<Socket | null>(null);
+
+  // Memoize the callback to prevent recreation on every render
+  const handleOptionPremium = useCallback((data: any) => {
+    setOptionValues(data.data);
+  }, [setOptionValues]);
+
+  const handleLastPrice = useCallback((data: any) => {
+    setOptionValues(data.optionsData);
+  }, [setOptionValues]);
 
   useEffect(() => {
     const token = cookies.get("auth");
@@ -45,13 +53,8 @@ const GetValues = () => {
             toast.error("Socket error: " + err.message);
           });
 
-          socketRef.current.on("optionPremium", (data) => {
-            setOptionValues(data.data);
-          });
-
-          socketRef.current.on("lastPrice", (data) => {
-            setOptionValues(data.optionsData);
-          });
+          socketRef.current.on("optionPremium", handleOptionPremium);
+          socketRef.current.on("lastPrice", handleLastPrice);
         } else {
           toast.error("Socket server not ready: Broker or Redis disconnected");
         }
@@ -64,10 +67,12 @@ const GetValues = () => {
 
     return () => {
       if (socketRef.current) {
+        socketRef.current.off("optionPremium", handleOptionPremium);
+        socketRef.current.off("lastPrice", handleLastPrice);
         socketRef.current.disconnect();
       }
     };
-  }, [setOptionValues]);
+  }, [handleOptionPremium, handleLastPrice]);
 
   return <></>;
 };

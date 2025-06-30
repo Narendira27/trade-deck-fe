@@ -6,7 +6,7 @@ import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
 import PortfolioModal from "./modals/PortfolioModal";
 import FilterModal from "./modals/FilterModal";
 import useStore from "../store/store";
-import { type DraggableBoxColumn } from "./DraggableBox";
+import { type DraggableBoxColumn } from "../types/draggableBox";
 
 interface HeaderProps {
   columns: Column[];
