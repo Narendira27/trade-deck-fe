@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import useStore from "../store/store";
 import { SOCKET_FE } from "../config/config";
 import { getLowestCombinedPremiumArray } from "../utils/getlowestValue";
+import throttle from "lodash/throttle";
 
-// Define types
 interface PriceUpdate {
   name: string;
   segment: number;
@@ -25,6 +25,7 @@ interface optionSubscribeArr {
   expiry: string;
   ltpRange: string;
 }
+
 interface CombinedPremiumItem {
   name: string;
   combinedPremium: number;
@@ -41,78 +42,105 @@ interface PremiumData {
   spreadPremiumArray: SpreadPremiumItem[];
 }
 
+const indexName: Record<number, string> = {
+  26000: "NIFTY",
+  26001: "BANKNIFTY",
+  26034: "FINNIFTY",
+  26005: "MIDCPNIFTY",
+  26065: "SENSEX",
+  26118: "BANKEX",
+};
+
 const MarketDataComponent = () => {
-  const { draggableData, setIndexPrice, updateLowestValue } = useStore();
+  // ✅ Use selectors for stable function references
+  const draggableData = useStore((state) => state.draggableData);
+  const setIndexPrice = useStore((state) => state.setIndexPrice);
+  const updateLowestValue = useStore((state) => state.updateLowestValue);
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
-
   const socketRef = useRef<Socket | null>(null);
   const optionSubscribedArrRef = useRef<optionSubscribeArr[]>([]);
+  const listenersAttached = useRef(false);
 
-  // Memoize the callback to prevent recreation on every render
-  const handlePriceUpdate = useCallback((data: PriceUpdate) => {
-    const getName = indexName[data.id];
-    if (getName) {
-      setIndexPrice({ ...data, name: getName });
-    }
-  }, [setIndexPrice]);
+  const throttledSetIndexPrice = useRef(
+    throttle((data: PriceUpdate) => {
+      setIndexPrice(data);
+    }, 300)
+  ).current;
 
-  const handleOptionPremium = useCallback((data: PremiumData[]) => {
-    const result = getLowestCombinedPremiumArray(data);
-    if (result.length > 0) {
-      result.forEach((each) => {
-        updateLowestValue(String(each.id), String(each.lowestValue));
+  const throttledUpdateLowestValue = useRef(
+    throttle((id: string, lowestValue: string) => {
+      updateLowestValue(id, lowestValue);
+    }, 300)
+  ).current;
+
+  const handlePriceUpdate = useCallback(
+    (data: PriceUpdate) => {
+      const getName = indexName[data.id];
+      if (getName) {
+        throttledSetIndexPrice({ ...data, name: getName });
+      }
+    },
+    [throttledSetIndexPrice]
+  );
+
+  const handleOptionPremium = useCallback(
+    (data: PremiumData[]) => {
+      const result = getLowestCombinedPremiumArray(data);
+      if (result.length > 0) {
+        result.forEach((each) => {
+          throttledUpdateLowestValue(String(each.id), String(each.lowestValue));
+        });
+      }
+    },
+    [throttledUpdateLowestValue]
+  );
+
+  const subscribeToInstruments = useCallback(
+    (instruments: Instrument[]) => {
+      if (!socketRef.current || !isConnected) {
+        toast.error("Socket not connected");
+        return;
+      }
+
+      socketRef.current.emit("subscribe", {
+        instruments: instruments.map((instrument) => ({
+          exchangeSegment: instrument.exchangeSegment,
+          exchangeInstrumentID: instrument.exchangeInstrumentID,
+        })),
       });
-    }
-  }, [updateLowestValue]);
+    },
+    [isConnected]
+  );
 
-  // Function to subscribe to instruments
-  const subscribeToInstruments = useCallback((instruments: Instrument[]) => {
-    if (!socketRef.current || !isConnected) {
-      toast.error("Socket not connected");
-      return;
-    }
+  const subscribeToOptionInfo = useCallback(
+    (data: optionSubscribeArr) => {
+      if (!socketRef.current || !isConnected) {
+        toast.error("Socket not connected");
+        return;
+      }
 
-    socketRef.current.emit("subscribe", {
-      instruments: instruments.map((instrument) => ({
-        exchangeSegment: instrument.exchangeSegment,
-        exchangeInstrumentID: instrument.exchangeInstrumentID,
-      })),
-    });
-  }, [isConnected]);
+      socketRef.current.emit("subscribe-options-data", {
+        data: {
+          id: data.id,
+          indexName: data.index,
+          expiry: data.expiry,
+          ltpRange: parseInt(data.ltpRange),
+        },
+      });
+    },
+    [isConnected]
+  );
 
-  const subscribeToOptionInfo = useCallback((data: {
-    id: string;
-    index: string;
-    expiry: string;
-    ltpRange: string;
-  }) => {
-    if (!socketRef.current || !isConnected) {
-      toast.error("Socket not connected");
-      return;
-    }
-
-    socketRef.current.emit("subscribe-options-data", {
-      data: {
-        id: data.id,
-        indexName: data.index,
-        expiry: data.expiry,
-        ltpRange: parseInt(data.ltpRange),
-      },
-    });
-  }, [isConnected]);
-
-  // List of instruments to subscribe to
   const instrumentsToSubscribe: Instrument[] = [
-    { exchangeSegment: 1, exchangeInstrumentID: 26000 }, // NIF
-    { exchangeSegment: 1, exchangeInstrumentID: 26001 }, // BANK
-    { exchangeSegment: 1, exchangeInstrumentID: 26034 }, // FIN
-    { exchangeSegment: 1, exchangeInstrumentID: 26005 }, // MIDCAP NIFTY
+    { exchangeSegment: 1, exchangeInstrumentID: 26000 },
+    { exchangeSegment: 1, exchangeInstrumentID: 26001 },
+    { exchangeSegment: 1, exchangeInstrumentID: 26034 },
+    { exchangeSegment: 1, exchangeInstrumentID: 26005 },
     { exchangeSegment: 11, exchangeInstrumentID: 26065 },
     { exchangeSegment: 11, exchangeInstrumentID: 26118 },
   ];
 
-  // Establish socket connection
   useEffect(() => {
     const token = cookies.get("auth");
     if (!token) {
@@ -149,8 +177,11 @@ const MarketDataComponent = () => {
             toast.error("Socket error: " + err.message);
           });
 
-          socketRef.current.on("optionPremium", handleOptionPremium);
-          socketRef.current.on("priceUpdate", handlePriceUpdate);
+          if (!listenersAttached.current) {
+            socketRef.current.on("optionPremium", handleOptionPremium);
+            socketRef.current.on("priceUpdate", handlePriceUpdate);
+            listenersAttached.current = true;
+          }
 
           socketRef.current.on("subscribed", (subs: string[]) => {
             toast.info("Subscribed to: " + subs.join(", "));
@@ -171,10 +202,10 @@ const MarketDataComponent = () => {
         socketRef.current.off("priceUpdate", handlePriceUpdate);
         socketRef.current.disconnect();
       }
+      listenersAttached.current = false;
     };
   }, [handleOptionPremium, handlePriceUpdate]);
 
-  // Auto-subscribe once connected
   useEffect(() => {
     if (isConnected) {
       subscribeToInstruments(instrumentsToSubscribe);
@@ -183,16 +214,15 @@ const MarketDataComponent = () => {
 
   useEffect(() => {
     if (draggableData.length > 0 && isConnected) {
-      const notSubscribedArr = draggableData.filter((data) => {
-        return !optionSubscribedArrRef.current.some(
-          (each) => each.id === data.id
-        );
-      });
+      const notSubscribedArr = draggableData.filter(
+        (data) =>
+          !optionSubscribedArrRef.current.some((each) => each.id === data.id)
+      );
 
       if (notSubscribedArr.length > 0) {
         notSubscribedArr.forEach((data) => {
           subscribeToOptionInfo(data);
-          optionSubscribedArrRef.current.push(data); // Track as subscribed
+          optionSubscribedArrRef.current.push(data);
         });
       }
     }
@@ -202,12 +232,3 @@ const MarketDataComponent = () => {
 };
 
 export default MarketDataComponent;
-
-const indexName: Record<number, string> = {
-  26000: "NIFTY",
-  26001: "BANKNIFTY",
-  26034: "FINNIFTY",
-  26005: "MIDCPNIFTY",
-  26065: "SENSEX",
-  26118: "BANKEX",
-};

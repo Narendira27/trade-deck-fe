@@ -4,19 +4,32 @@ import cookies from "js-cookie";
 import { toast } from "sonner";
 import useStore from "../store/store";
 import { SOCKET_MAIN } from "../config/config";
+import throttle from "lodash/throttle";
 
 const GetValues = () => {
-  const { setOptionValues } = useStore();
+  const setOptionValues = useStore((s) => s.setOptionValues);
   const socketRef = useRef<Socket | null>(null);
+  const listenersAttached = useRef(false);
 
-  // Memoize the callback to prevent recreation on every render
-  const handleOptionPremium = useCallback((data: any) => {
-    setOptionValues(data.data);
-  }, [setOptionValues]);
+  const throttledSetOptionValues = useRef(
+    throttle((data: any) => {
+      setOptionValues(data);
+    }, 300)
+  ).current;
 
-  const handleLastPrice = useCallback((data: any) => {
-    setOptionValues(data.optionsData);
-  }, [setOptionValues]);
+  const handleOptionPremium = useCallback(
+    (data: any) => {
+      throttledSetOptionValues(data.data);
+    },
+    [throttledSetOptionValues]
+  );
+
+  const handleLastPrice = useCallback(
+    (data: any) => {
+      throttledSetOptionValues(data.optionsData);
+    },
+    [throttledSetOptionValues]
+  );
 
   useEffect(() => {
     const token = cookies.get("auth");
@@ -33,7 +46,6 @@ const GetValues = () => {
         const health = await res.json();
 
         if (health.brokerWSConnected && health.redisConnected) {
-          // Proceed to connect to Socket.IO
           socketRef.current = io(SOCKET_MAIN, {
             auth: {
               token: `Bearer ${token}`,
@@ -53,8 +65,11 @@ const GetValues = () => {
             toast.error("Socket error: " + err.message);
           });
 
-          socketRef.current.on("optionPremium", handleOptionPremium);
-          socketRef.current.on("lastPrice", handleLastPrice);
+          if (!listenersAttached.current) {
+            socketRef.current.on("optionPremium", handleOptionPremium);
+            socketRef.current.on("lastPrice", handleLastPrice);
+            listenersAttached.current = true;
+          }
         } else {
           toast.error("Socket server not ready: Broker or Redis disconnected");
         }
@@ -71,6 +86,7 @@ const GetValues = () => {
         socketRef.current.off("lastPrice", handleLastPrice);
         socketRef.current.disconnect();
       }
+      listenersAttached.current = false;
     };
   }, [handleOptionPremium, handleLastPrice]);
 

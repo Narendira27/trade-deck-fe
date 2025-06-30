@@ -142,11 +142,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
     });
   },
   setOptionValues: (data: optionValuesData[]) => {
-    const state = get();
-    // Only update if data actually changed
-    if (JSON.stringify(state.optionValues) !== JSON.stringify(data)) {
-      set({ optionValues: data });
-    }
+    set({ optionValues: data });
   },
   setShowDraggable: () => {
     set((state) => ({
