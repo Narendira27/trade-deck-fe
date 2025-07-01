@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Edit, Trash2, Play, X, Shield } from "lucide-react";
 import { type Trade } from "../../types/trade";
 import { type Column } from "./ColumnManager";
-import { formatNumber } from "../../utils/formatters";
+import { formatCurrency, formatNumber } from "../../utils/formatters";
 import useStore from "../../store/store";
 
 interface TableRowProps {
@@ -28,8 +28,9 @@ const TableRow: React.FC<TableRowProps> = ({
 }) => {
   const [getindexPrice, setGetindexPrice] = useState(0);
   const [lowestValue, setLowestValue] = useState(0);
+  const [mtm, setMtm] = useState(0);
 
-  const { indexPrice, optionValues } = useStore();
+  const { indexPrice, optionValues, optionLotSize, optionPrice } = useStore();
 
   // Memoize the index price to prevent unnecessary updates
   const currentIndexPrice = useMemo(() => {
@@ -41,6 +42,46 @@ const TableRow: React.FC<TableRowProps> = ({
     if (!optionValues) return null;
     return optionValues.find((each) => each.id === trade.id);
   }, [optionValues, trade.id]);
+
+  const calculateMtm = useMemo(() => {
+    if (!trade) return 0;
+
+    const lotSizeObj = optionLotSize.find(
+      (lot) =>
+        lot.optionName.toLowerCase() ===
+        (trade.indexName + trade.expiry).toLowerCase()
+    );
+
+    const lotSize = lotSizeObj?.lotSize ?? 1;
+
+    const totalMtm = trade.liveTradePositions.reduce((acc, position) => {
+      const priceObj = optionPrice.find(
+        (price) => price.optionName === position.optionName
+      );
+
+      const currentPrice = priceObj?.price ?? 0;
+      const entryPrice = position.entryPrice ?? 0;
+      const quantity = parseInt(position.currentQty) ?? 1;
+
+      let mtm = 0;
+
+      if (trade.entrySide === "SELL") {
+        mtm = lotSize * (entryPrice - currentPrice) * quantity;
+      } else if (trade.entrySide === "BUY") {
+        mtm = lotSize * (currentPrice - entryPrice) * quantity;
+      }
+
+      return acc + mtm;
+    }, 0);
+
+    return totalMtm;
+  }, [trade, optionLotSize, optionPrice]);
+
+  useEffect(() => {
+    if (calculateMtm) {
+      setMtm(calculateMtm);
+    }
+  }, [calculateMtm]);
 
   useEffect(() => {
     if (currentIndexPrice && currentIndexPrice.price !== getindexPrice) {
@@ -85,7 +126,7 @@ const TableRow: React.FC<TableRowProps> = ({
       case "entrySpot":
         return formatNumber(trade.entrySpotPrice);
       case "mtm":
-        return 0;
+        return formatCurrency(mtm);
       case "pointOfAdjustment":
         return trade.pointOfAdjustment
           ? formatNumber(trade.pointOfAdjustment)
@@ -147,7 +188,9 @@ const TableRow: React.FC<TableRowProps> = ({
       case "target":
         return `${baseClass} text-green-400`;
       case "mtm":
-        return `${baseClass} text-white`;
+        return `${mtm} ${baseClass} ${
+          mtm > 0 ? "text-green-400" : mtm < 0 ? "text-red-400" : "text-white"
+        }`;
       case "strategySl":
         return `${baseClass} text-red-400 `;
       case "strategyTrailing":

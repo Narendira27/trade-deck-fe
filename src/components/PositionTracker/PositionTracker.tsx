@@ -6,7 +6,6 @@ import { API_URL } from "../../config/config";
 import { toast } from "sonner";
 import cookies from "js-cookie";
 import useStore from "../../store/store";
-import { get } from "lodash";
 
 interface Position {
   id: string;
@@ -14,6 +13,7 @@ interface Position {
   price: number;
   mtm: number;
   quantity: number;
+  entrySide: "SELL" | "BUY";
   type: "CE" | "PE";
 }
 
@@ -35,25 +35,55 @@ const PositionTracker: React.FC = () => {
   //   type: "CE",
   // }
 
-  const { trades, optionLotSize, optionPrice } = useStore();
+  const { trades, optionPrice, optionLotSize } = useStore();
 
   useEffect(() => {
-    const getPositions = trades.flatMap(
-      (each) => each.liveTradePositions.filter((pos) => !pos.closed) // !pos.closed
+    const getPositions = trades.flatMap((each) =>
+      each.liveTradePositions
+        .filter((pos) => !pos.closed)
+        .map((pos) => ({
+          ...pos,
+          entrySide: each.entrySide, // Include parent trade's entrySide
+        }))
     );
 
-    // console.log(optionPrice);
+    const modifyDetails = getPositions.reduce((acc, each) => {
+      const { optionName, id, currentQty } = each;
+      const parts = optionName.split(" ");
+      const baseOptionName = parts[0];
+      const type = parts[2] as "CE" | "PE";
+      const name = baseOptionName.toLowerCase() + parts[1];
 
-    const modifyDetails = getPositions.map((each) => ({
-      id: each.id,
-      optionName: each.optionName,
-      price: Math.random() * 100,
-      mtm: Math.random() * 500,
-      quantity: parseInt(each.currentQty),
-      type: each.optionName.split(" ")[2] as "CE" | "PE",
-    }));
+      const lotSizeObj = optionLotSize.find((lot) => lot.optionName === name);
+      const priceObj = optionPrice.find(
+        (price) => price.optionName === optionName
+      );
+
+      if (lotSizeObj && priceObj) {
+        const price = priceObj.price;
+        const lotSize = lotSizeObj.lotSize;
+        let mtm = 0;
+
+        if (each.entrySide === "SELL")
+          mtm = lotSize * (each.entryPrice - price) * parseInt(currentQty);
+        if (each.entrySide === "BUY")
+          mtm = lotSize * (price - each.entryPrice) * parseInt(currentQty);
+
+        acc.push({
+          id,
+          optionName,
+          price,
+          mtm,
+          quantity: parseInt(currentQty),
+          entrySide: each.entrySide as "SELL" | "BUY",
+          type,
+        });
+      }
+
+      return acc;
+    }, [] as Position[]);
     setPositions(modifyDetails);
-  }, [trades]);
+  }, [trades, optionPrice, optionLotSize]);
 
   const handleSort = (key: keyof Position) => {
     let direction: "asc" | "desc" = "asc";
