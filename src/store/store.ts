@@ -23,19 +23,9 @@ interface IndexPriceData {
   price: number;
 }
 
-interface CombinedPremiumArray {
-  name: string;
-  combinedPremium: number;
-}
-
-interface SpreadPremiumArray {
-  name: string;
-  combinedPremium: number;
-}
 interface optionValuesData {
   id: string;
-  combinedPremiumArray: CombinedPremiumArray[];
-  spreadPremiumArray: SpreadPremiumArray[];
+  lowestCombinedPremium: number;
 }
 
 interface optionLotSizeType {
@@ -56,11 +46,19 @@ export interface TradeFilters {
   };
 }
 
+interface OptionPrice {
+  segment: number;
+  id: number;
+  optionName: string;
+  price: number;
+}
+
 interface TradeStoreState {
   trades: Trade[];
   indexData: indexData;
   draggableData: draggableData[];
   indexPrice: IndexPriceData[];
+  optionPrice: OptionPrice[];
   optionValues: optionValuesData[];
   optionLotSize: optionLotSizeType[];
   showDraggable: boolean;
@@ -70,6 +68,7 @@ interface TradeStoreState {
   setDraggableData: (data: draggableData[]) => void;
   removeDraggableData: (id: string) => void;
   setIndexPrice: (data: IndexPriceData) => void;
+  setOptionPrice: (data: OptionPrice) => void;
   setOptionValues: (data: optionValuesData[]) => void;
   setShowDraggable: () => void;
   updateDraggableData: (
@@ -89,6 +88,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
   },
   draggableData: [],
   indexPrice: [],
+  optionPrice: [],
   optionValues: [],
   optionLotSize: [],
   showDraggable: false,
@@ -120,12 +120,11 @@ const useStore = create<TradeStoreState>((set, get) => ({
       (item) => item.id === data.id
     );
 
-    // Only update if price actually changed
     if (
       existingIndex !== -1 &&
       state.indexPrice[existingIndex].price === data.price
     ) {
-      return;
+      return; // No change, don't update
     }
 
     set((state) => {
@@ -141,7 +140,55 @@ const useStore = create<TradeStoreState>((set, get) => ({
       }
     });
   },
+
+  setOptionPrice: (data) => {
+    const state = get();
+    const existingIndex = state.optionPrice.findIndex(
+      (item) => item.id === data.id
+    );
+
+    if (
+      existingIndex !== -1 &&
+      state.optionPrice[existingIndex].price === data.price
+    ) {
+      return; // No change, don't update
+    }
+
+
+    set((state) => {
+      if (existingIndex !== -1) {
+        const updatedPrices = [...state.optionPrice];
+        updatedPrices[existingIndex] = {
+          ...updatedPrices[existingIndex],
+          price: data.price,
+        };
+        return { optionPrice: updatedPrices };
+      } else {
+        return { optionPrice: [...state.optionPrice, data] };
+      }
+    });
+  },
+
   setOptionValues: (data: optionValuesData[]) => {
+    const state = get();
+
+    // Compare existing and incoming data
+    const hasChanges =
+      data.length !== state.optionValues.length ||
+      data.some((newItem) => {
+        const existingItem = state.optionValues.find(
+          (item) => item.id === newItem.id
+        );
+        return (
+          !existingItem ||
+          existingItem.lowestCombinedPremium !== newItem.lowestCombinedPremium
+        );
+      });
+
+    if (!hasChanges) {
+      return; // No change, don't update
+    }
+
     set({ optionValues: data });
   },
   setShowDraggable: () => {

@@ -8,13 +8,21 @@ import throttle from "lodash/throttle";
 
 const GetValues = () => {
   const setOptionValues = useStore((s) => s.setOptionValues);
+  const setOptionPrice = useStore((s) => s.setOptionPrice);
+
   const socketRef = useRef<Socket | null>(null);
   const listenersAttached = useRef(false);
 
   const throttledSetOptionValues = useRef(
     throttle((data: any) => {
       setOptionValues(data);
-    }, 3)
+    }, 1)
+  ).current;
+
+  const throttledSetOptionPrice = useRef(
+    throttle((data: any) => {
+      setOptionPrice(data);
+    }, 1)
   ).current;
 
   const handleOptionPremium = useCallback(
@@ -27,8 +35,16 @@ const GetValues = () => {
   const handleLastPrice = useCallback(
     (data: any) => {
       throttledSetOptionValues(data.optionsData);
+      // throttledSetOptionPrice(data.optionPrice);
     },
-    [throttledSetOptionValues]
+    [throttledSetOptionValues, throttledSetOptionPrice]
+  );
+
+  const handleOptionPrice = useCallback(
+    (data: any) => {
+      throttledSetOptionPrice(data);
+    },
+    [throttledSetOptionPrice]
   );
 
   useEffect(() => {
@@ -66,8 +82,10 @@ const GetValues = () => {
           });
 
           if (!listenersAttached.current) {
-            socketRef.current.on("optionPremium", handleOptionPremium);
+            socketRef.current.on("optionPriceUpdate", handleOptionPrice);
             socketRef.current.on("lastPrice", handleLastPrice);
+            socketRef.current.on("feLowest", handleOptionPremium);
+
             listenersAttached.current = true;
           }
         } else {
@@ -88,7 +106,7 @@ const GetValues = () => {
       }
       listenersAttached.current = false;
     };
-  }, [handleOptionPremium, handleLastPrice]);
+  }, [handleOptionPremium, handleLastPrice, handleOptionPrice]);
 
   return <></>;
 };

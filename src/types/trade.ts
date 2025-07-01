@@ -30,6 +30,21 @@ export interface Trade {
   isActive: boolean;
   strategySl?: number;
   strategyTrailing?: number;
+  liveTradePositions: liveTradePositions[];
+}
+
+export interface liveTradePositions {
+  id: string;
+  optionName: string;
+  initialQty: string;
+  currentQty: string;
+  entryPrice: number;
+  closePrice: number;
+  exchangeId: string;
+  tradeDetailsId: string;
+  closed: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TradeFormData {

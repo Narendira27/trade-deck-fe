@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency, formatNumber } from "../../utils/formatters";
 import axios from "axios";
 import { API_URL } from "../../config/config";
 import { toast } from "sonner";
 import cookies from "js-cookie";
+import useStore from "../../store/store";
+import { get } from "lodash";
 
 interface Position {
   id: string;
@@ -22,64 +24,36 @@ const PositionTracker: React.FC = () => {
   } | null>(null);
 
   // Mock data - replace with real data from your store
-  const [positions] = useState<Position[]>([
-    {
-      id: "1",
-      optionName: "NIFTY 25000 CE",
-      price: 125.5,
-      mtm: 1250,
-      quantity: 50,
-      type: "CE",
-    },
-    {
-      id: "2",
-      optionName: "NIFTY 24800 PE",
-      price: 89.75,
-      mtm: -450,
-      quantity: 25,
-      type: "PE",
-    },
-    {
-      id: "3",
-      optionName: "BANKNIFTY 52000 CE",
-      price: 245.25,
-      mtm: 875,
-      quantity: 15,
-      type: "CE",
-    },
-    {
-      id: "4",
-      optionName: "BANKNIFTY 51500 PE",
-      price: 156.8,
-      mtm: -320,
-      quantity: 20,
-      type: "PE",
-    },
-    {
-      id: "5",
-      optionName: "FINNIFTY 23500 CE",
-      price: 78.9,
-      mtm: 560,
-      quantity: 40,
-      type: "CE",
-    },
-    {
-      id: "6",
-      optionName: "MIDCPNIFTY 12000 PE",
-      price: 45.3,
-      mtm: -180,
-      quantity: 30,
-      type: "PE",
-    },
-    {
-      id: "7",
-      optionName: "SENSEX 72000 CE",
-      price: 189.6,
-      mtm: 720,
-      quantity: 10,
-      type: "CE",
-    },
-  ]);
+  const [positions, setPositions] = useState<Position[]>([]);
+
+  // {
+  //   id: "5",
+  //   optionName: "FINNIFTY 23500 CE",
+  //   price: 78.9,
+  //   mtm: 560,
+  //   quantity: 40,
+  //   type: "CE",
+  // }
+
+  const { trades, optionLotSize, optionPrice } = useStore();
+
+  useEffect(() => {
+    const getPositions = trades.flatMap(
+      (each) => each.liveTradePositions.filter((pos) => !pos.closed) // !pos.closed
+    );
+
+    // console.log(optionPrice);
+
+    const modifyDetails = getPositions.map((each) => ({
+      id: each.id,
+      optionName: each.optionName,
+      price: Math.random() * 100,
+      mtm: Math.random() * 500,
+      quantity: parseInt(each.currentQty),
+      type: each.optionName.split(" ")[2] as "CE" | "PE",
+    }));
+    setPositions(modifyDetails);
+  }, [trades]);
 
   const handleSort = (key: keyof Position) => {
     let direction: "asc" | "desc" = "asc";
@@ -156,7 +130,9 @@ const PositionTracker: React.FC = () => {
     <div className="h-full flex flex-col bg-gray-900 border border-gray-700 rounded-lg">
       <div className="p-2 sm:p-3 border-b border-gray-700 flex-shrink-0">
         <div className="flex justify-between items-center">
-          <h3 className="text-sm sm:text-base font-semibold text-white">Live Positions</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-white">
+            Live Positions
+          </h3>
           <div className="text-right">
             <p className="text-xs text-gray-400">Total MTM</p>
             <p

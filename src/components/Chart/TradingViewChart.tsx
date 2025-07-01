@@ -232,9 +232,18 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
       initialDataRef.current[initialDataRef.current.length - 1].close;
 
     const updatedLines = {
-      limit: trade.entryPrice ?? lastPrice,
-      sl: trade.stopLossPremium ?? lastPrice - 5,
-      tp: trade.takeProfitPremium ?? lastPrice + 5,
+      limit:
+        trade.entryPrice && trade.entryPrice !== 0
+          ? trade.entryPrice
+          : lastPrice,
+      sl:
+        trade.stopLossPremium && trade.stopLossPremium !== 0
+          ? trade.stopLossPremium
+          : lastPrice - 5,
+      tp:
+        trade.takeProfitPremium && trade.takeProfitPremium !== 0
+          ? trade.takeProfitPremium
+          : lastPrice + 5,
     };
 
     createPriceLines(updatedLines);

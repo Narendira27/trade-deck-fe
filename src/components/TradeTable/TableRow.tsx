@@ -50,16 +50,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
   useEffect(() => {
     if (currentOptionValue) {
-      const premiumCombinedArr = currentOptionValue.combinedPremiumArray;
-
-      if (premiumCombinedArr.length > 0) {
-        const minPremium = Math.min(
-          ...premiumCombinedArr.map((item) => item.combinedPremium)
-        );
-        if (minPremium !== lowestValue) {
-          setLowestValue(minPremium);
-        }
-      }
+      setLowestValue(currentOptionValue.lowestCombinedPremium);
     }
   }, [currentOptionValue, lowestValue]);
 

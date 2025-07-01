@@ -333,6 +333,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
       <HedgeModal
         isOpen={isHedgeModalOpen}
         onClose={() => setIsHedgeModalOpen(false)}
+        tradeId={selectedTradeId || ""}
       />
     </div>
   );

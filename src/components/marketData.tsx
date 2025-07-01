@@ -65,13 +65,13 @@ const MarketDataComponent = () => {
   const throttledSetIndexPrice = useRef(
     throttle((data: PriceUpdate) => {
       setIndexPrice(data);
-    }, 3)
+    }, 1)
   ).current;
 
   const throttledUpdateLowestValue = useRef(
     throttle((id: string, lowestValue: string) => {
       updateLowestValue(id, lowestValue);
-    }, 3)
+    }, 1)
   ).current;
 
   const handlePriceUpdate = useCallback(
@@ -178,7 +178,7 @@ const MarketDataComponent = () => {
           });
 
           if (!listenersAttached.current) {
-            socketRef.current.on("optionPremium", handleOptionPremium);
+            // socketRef.current.on("optionPremium", handleOptionPremium);
             socketRef.current.on("priceUpdate", handlePriceUpdate);
             listenersAttached.current = true;
           }

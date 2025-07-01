@@ -1,29 +1,64 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X, GripHorizontal, Shield, Plus, Trash2, Edit } from "lucide-react";
+import { X, GripHorizontal, Shield } from "lucide-react";
+
+import useStore from "../../store/store";
 
 interface HedgeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  tradeId: string;
 }
 
 interface HedgeRow {
   id: string;
-  hedgeBuy: "BUY" | "SELL";
+  hedgeBuy: "CE" | "PE";
   expiry: string;
   strike: number;
   premium: number;
   multiplier: number;
 }
 
-const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
+const HedgeModal: React.FC<HedgeModalProps> = ({
+  isOpen,
+  onClose,
+  tradeId,
+}) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const [hedgeRows, setHedgeRows] = useState<HedgeRow[]>([]);
+  const [indexName, setIndexName] = useState("");
 
-  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const { trades, indexData } = useStore();
+
+  // console.log(tradeId);
+
+  useEffect(() => {
+    const currentTrade = trades.filter((each) => each.id === tradeId);
+    if (currentTrade.length > 0) {
+      setIndexName(currentTrade[0].indexName);
+    }
+  }, [trades, tradeId]);
+
+  const [hedgeRows, setHedgeRows] = useState<HedgeRow[]>([
+    {
+      id: "1",
+      hedgeBuy: "CE",
+      expiry: "",
+      strike: 0,
+      premium: 0,
+      multiplier: 1,
+    },
+    {
+      id: "2",
+      hedgeBuy: "PE",
+      expiry: "",
+      strike: 0,
+      premium: 0,
+      multiplier: 1,
+    },
+  ]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (modalRef.current) {
@@ -60,22 +95,6 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
-
-  const addNewRow = () => {
-    const newRow: HedgeRow = {
-      id: Date.now().toString(),
-      hedgeBuy: "BUY",
-      expiry: "",
-      strike: 0,
-      premium: 0,
-      multiplier: 1,
-    };
-    setHedgeRows([...hedgeRows, newRow]);
-  };
-
-  const deleteRow = (id: string) => {
-    setHedgeRows(hedgeRows.filter((row) => row.id !== id));
-  };
 
   const updateRow = (id: string, field: keyof HedgeRow, value: any) => {
     setHedgeRows(
@@ -127,14 +146,6 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
               <Shield className="text-orange-400" size={20} />
               <span className="text-white font-medium">Hedge Positions</span>
             </div>
-            <button
-              type="button"
-              onClick={addNewRow}
-              className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              <Plus size={16} />
-              <span className="hidden sm:inline">Add Row</span>
-            </button>
           </div>
 
           {/* Table Container with Horizontal Scroll */}
@@ -143,7 +154,7 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
               <thead className="bg-gray-700 sticky top-0">
                 <tr>
                   <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
-                    Hedge Buy/Sell
+                    Hedge Buy
                   </th>
                   <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
                     Expiry
@@ -152,13 +163,10 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
                     Strike
                   </th>
                   <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
-                    Premium
+                    Premium Value
                   </th>
                   <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
                     Multiplier
-                  </th>
-                  <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
-                    Actions
                   </th>
                 </tr>
               </thead>
@@ -169,31 +177,29 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
                     className="border-b border-gray-600 hover:bg-gray-750"
                   >
                     <td className="px-2 sm:px-4 py-2">
-                      <select
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={row.hedgeBuy}
-                        onChange={(e) =>
-                          updateRow(
-                            row.id,
-                            "hedgeBuy",
-                            e.target.value as "BUY" | "SELL"
-                          )
-                        }
-                      >
-                        <option value="BUY">BUY</option>
-                        <option value="SELL">SELL</option>
-                      </select>
+                      <p>{row.hedgeBuy}</p>
                     </td>
                     <td className="px-2 sm:px-4 py-2">
-                      <input
-                        type="text"
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={row.expiry}
-                        onChange={(e) =>
-                          updateRow(row.id, "expiry", e.target.value)
-                        }
-                        placeholder="Expiry"
-                      />
+                      <select
+                        className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        // value={formData.expiry}
+                        // onChange={(e) =>
+                        //   setFormData({ ...formData, expiry: e.target.value })
+                        // }
+                      >
+                        <option value="" disabled hidden>
+                          Select Expiry
+                        </option>
+                        {indexData.expiry[indexName.toLowerCase()]?.length >
+                          0 &&
+                          indexData.expiry[indexName.toLowerCase()].map(
+                            (each) => (
+                              <option key={each} value={each.toUpperCase()}>
+                                {each.toUpperCase()}
+                              </option>
+                            )
+                          )}
+                      </select>
                     </td>
                     <td className="px-2 sm:px-4 py-2">
                       <input
@@ -241,29 +247,6 @@ const HedgeModal: React.FC<HedgeModalProps> = ({ isOpen, onClose }) => {
                         }
                         placeholder="Multiplier"
                       />
-                    </td>
-                    <td className="px-2 sm:px-4 py-2">
-                      <div className="flex space-x-1">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setEditingRow(editingRow === row.id ? null : row.id)
-                          }
-                          className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit size={12} />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => deleteRow(row.id)}
-                          className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ))}
