@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Edit, Trash2, Play, X, Shield, Check, RotateCcw } from "lucide-react";
+import { Edit, Trash2, Play, X, Shield, Check } from "lucide-react";
 import { type Trade } from "../../types/trade";
 import { type Column } from "./ColumnManager";
 import { formatCurrency, formatNumber } from "../../utils/formatters";
