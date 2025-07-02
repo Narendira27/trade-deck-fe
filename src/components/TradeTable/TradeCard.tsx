@@ -5,18 +5,14 @@ import { formatNumber, formatCurrency } from "../../utils/formatters";
 
 interface TradeCardProps {
   trade: Trade;
-  onPlaceOrder: () => void;
   onDeleteOrder: () => void;
-  onEdit: () => void;
   onCancelOrder: () => void;
   onHedge: () => void;
 }
 
 const TradeCard: React.FC<TradeCardProps> = ({
   trade,
-  onPlaceOrder,
   onDeleteOrder,
-  onEdit,
   onCancelOrder,
   onHedge,
 }) => {
@@ -52,14 +48,12 @@ const TradeCard: React.FC<TradeCardProps> = ({
             {trade.entryType === "UNDEFINED" ? (
               <>
                 <button
-                  onClick={onPlaceOrder}
                   className="p-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                   title="Place Order"
                 >
                   <Play size={12} />
                 </button>
                 <button
-                  onClick={onEdit}
                   className="p-1.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
                   title="Edit"
                 >
@@ -92,7 +86,6 @@ const TradeCard: React.FC<TradeCardProps> = ({
                   </button>
                 )}
                 <button
-                  onClick={onEdit}
                   className="p-1.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
                   title="Edit"
                 >

@@ -116,13 +116,14 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
     if (!chartContainerRef.current) return;
 
     const container = chartContainerRef.current;
+    let chart: IChartApi | null = null;
 
     // 🔥 1. Set up IntersectionObserver to detect visibility
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           // 🔥 2. Only initialize chart when container is visible
-          const chart = createChart(container, {
+          chart = createChart(container, {
             width: container.clientWidth,
             height: container.clientHeight,
             layout: { background: { color: "#1f2937" }, textColor: "#d1d5db" },
@@ -188,9 +189,23 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
     return () => {
       observer.disconnect();
       resizeObserverRef.current?.disconnect();
-      chartRef.current?.remove(); // Safely remove chart if it exists
+      
+      // Clean up chart instance safely
+      if (chart) {
+        try {
+          chart.remove();
+        } catch (error) {
+          console.warn('Chart disposal error:', error);
+        }
+        chart = null;
+      }
+      
+      // Clear refs
+      chartRef.current = null;
+      seriesRef.current = null;
+      setChartReady(false);
     };
-  }, [chartContainerRef.current]);
+  }, []); // Empty dependency array to run only once
 
   useEffect(() => {
     if (!chartReady) return;
