@@ -27,14 +27,14 @@ const GetValues = () => {
 
   const handleOptionPremium = useCallback(
     (data: any) => {
-      throttledSetOptionValues(data.data);
+      throttledSetOptionValues(data.data || []);
     },
     [throttledSetOptionValues]
   );
 
   const handleLastPrice = useCallback(
     (data: any) => {
-      throttledSetOptionValues(data.optionsData);
+      throttledSetOptionValues(data.optionsData || []);
       // throttledSetOptionPrice(data.optionPrice);
     },
     [throttledSetOptionValues, throttledSetOptionPrice]
@@ -100,7 +100,7 @@ const GetValues = () => {
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.off("optionPremium", handleOptionPremium);
+        socketRef.current.off("feLowest", handleOptionPremium);
         socketRef.current.off("lastPrice", handleLastPrice);
         socketRef.current.disconnect();
       }
