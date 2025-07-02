@@ -101,16 +101,16 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
     });
   };
 
-  const resizeChart = () => {
-    if (chartRef.current && chartContainerRef.current) {
-      const rect = chartContainerRef.current.getBoundingClientRect();
-      chartRef.current.applyOptions({
-        width: rect.width,
-        height: rect.height,
-      });
-      chartRef.current.timeScale().fitContent();
-    }
-  };
+  // const resizeChart = () => {
+  //   if (chartRef.current && chartContainerRef.current) {
+  //     const rect = chartContainerRef.current.getBoundingClientRect();
+  //     chartRef.current.applyOptions({
+  //       width: rect.width,
+  //       height: rect.height,
+  //     });
+  //     chartRef.current.timeScale().fitContent();
+  //   }
+  // };
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -219,6 +219,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
       });
 
       if (isDraggingRef.current && draggingLineTypeRef.current) {
+        //  @ts-ignore
         const newPrice = seriesRef.current.coordinateToPrice(y);
         if (newPrice !== null && newPrice !== undefined) {
           priceLinesRef.current[draggingLineTypeRef.current]?.applyOptions({
