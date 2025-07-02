@@ -47,7 +47,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
 
   const generateMockData = () => {
     const data: CandlestickData[] = [];
-    let basePrice = 10;
+    let basePrice = 1600;
     const now = new Date();
     for (let i = 100; i >= 0; i--) {
       const time = new Date(now.getTime() - i * 5 * 60 * 10);
@@ -189,23 +189,23 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
     return () => {
       observer.disconnect();
       resizeObserverRef.current?.disconnect();
-      
+
       // Clean up chart instance safely
       if (chart) {
         try {
           chart.remove();
         } catch (error) {
-          console.warn('Chart disposal error:', error);
+          console.warn("Chart disposal error:", error);
         }
         chart = null;
       }
-      
+
       // Clear refs
       chartRef.current = null;
       seriesRef.current = null;
       setChartReady(false);
     };
-  }, []); // Empty dependency array to run only once
+  }, [chartContainerRef.current]); // Empty dependency array to run only once
 
   useEffect(() => {
     if (!chartReady) return;

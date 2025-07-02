@@ -56,7 +56,8 @@ const TableRow: React.FC<TableRowProps> = ({
   const [isPlaceOrderMode, setIsPlaceOrderMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const { indexPrice, optionValues, optionLotSize, optionPrice, setTrades } = useStore();
+  const { indexPrice, optionValues, optionLotSize, optionPrice, setTrades } =
+    useStore();
 
   // Place Order Form State
   const [orderFormData, setOrderFormData] = useState<OrderFormData>({
@@ -154,8 +155,7 @@ const TableRow: React.FC<TableRowProps> = ({
   const getLotSizeInfo = () => {
     const lotData = optionLotSize.find(
       (each) =>
-        each.optionName ===
-        `${trade?.indexName.toLowerCase()}${trade?.expiry}`
+        each.optionName === `${trade?.indexName.toLowerCase()}${trade?.expiry}`
     );
     return lotData?.lotSize;
   };
@@ -231,7 +231,8 @@ const TableRow: React.FC<TableRowProps> = ({
 
     if (orderFormData.orderType === "MARKET") {
       if (orderFormData.slPoints) DATA.stopLossPoints = orderFormData.slPoints;
-      if (orderFormData.tpPoints) DATA.takeProfitPoints = orderFormData.tpPoints;
+      if (orderFormData.tpPoints)
+        DATA.takeProfitPoints = orderFormData.tpPoints;
     }
 
     if (trade?.entrySide === "SELL" && orderFormData.orderType === "LIMIT") {
@@ -264,7 +265,7 @@ const TableRow: React.FC<TableRowProps> = ({
         headers: { Authorization: "Bearer " + auth },
       }
     );
-    
+
     toast.promise(reqPromise, {
       loading: "Placing Order...",
       success: async () => {
@@ -324,7 +325,7 @@ const TableRow: React.FC<TableRowProps> = ({
         headers: { Authorization: "Bearer " + auth },
       }
     );
-    
+
     toast.promise(reqPromise, {
       loading: "Updating Order...",
       success: async () => {
@@ -392,10 +393,15 @@ const TableRow: React.FC<TableRowProps> = ({
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
               placeholder="Entry"
             />
-          ) : "-";
+          ) : (
+            "-"
+          );
         case "qty":
           return (
             <div className="flex flex-col">
+              <span className="text-xs mb-1 text-gray-400">
+                Lot: {getLotSizeInfo()}
+              </span>
               <input
                 type="number"
                 value={orderFormData.qty}
@@ -408,64 +414,76 @@ const TableRow: React.FC<TableRowProps> = ({
                 className="w-16 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white mb-1"
                 placeholder="Qty"
               />
-              <span className="text-xs text-gray-400">Lot: {getLotSizeInfo()}</span>
             </div>
           );
         case "sl":
           return orderFormData.orderType === "LIMIT" ? (
-            <input
-              type="number"
-              value={orderFormData.sl}
-              onChange={(e) =>
-                setOrderFormData({
-                  ...orderFormData,
-                  sl: parseFloat(e.target.value) || 0,
-                })
-              }
-              className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-              placeholder="SL"
-            />
+            <div className="flex flex-col">
+              <span className="text-xs mb-1 text-gray-400">(In Premium)</span>
+              <input
+                type="number"
+                value={orderFormData.sl}
+                onChange={(e) =>
+                  setOrderFormData({
+                    ...orderFormData,
+                    sl: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                placeholder="SL"
+              />
+            </div>
           ) : (
-            <input
-              type="number"
-              value={orderFormData.slPoints}
-              onChange={(e) =>
-                setOrderFormData({
-                  ...orderFormData,
-                  slPoints: parseFloat(e.target.value) || 0,
-                })
-              }
-              className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-              placeholder="SL Points"
-            />
+            <div className="flex flex-col">
+              <span className="text-xs mb-1 text-gray-400">(In Points)</span>
+
+              <input
+                type="number"
+                value={orderFormData.slPoints}
+                onChange={(e) =>
+                  setOrderFormData({
+                    ...orderFormData,
+                    slPoints: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                placeholder="SL Points"
+              />
+            </div>
           );
         case "target":
           return orderFormData.orderType === "LIMIT" ? (
-            <input
-              type="number"
-              value={orderFormData.target}
-              onChange={(e) =>
-                setOrderFormData({
-                  ...orderFormData,
-                  target: parseFloat(e.target.value) || 0,
-                })
-              }
-              className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-              placeholder="Target"
-            />
+            <div className="flex flex-col">
+              <span className="text-xs mb-1 text-gray-400">(In Premium)</span>
+              <input
+                type="number"
+                value={orderFormData.target}
+                onChange={(e) =>
+                  setOrderFormData({
+                    ...orderFormData,
+                    target: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                placeholder="Target"
+              />
+            </div>
           ) : (
-            <input
-              type="number"
-              value={orderFormData.tpPoints}
-              onChange={(e) =>
-                setOrderFormData({
-                  ...orderFormData,
-                  tpPoints: parseFloat(e.target.value) || 0,
-                })
-              }
-              className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-              placeholder="TP Points"
-            />
+            <div className="flex flex-col">
+              <span className="text-xs mb-1 text-gray-400">(In Points)</span>
+              <input
+                type="number"
+                value={orderFormData.tpPoints}
+                onChange={(e) =>
+                  setOrderFormData({
+                    ...orderFormData,
+                    tpPoints: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                placeholder="TP Points"
+              />
+            </div>
           );
         case "orderType":
           return (
@@ -690,7 +708,9 @@ const TableRow: React.FC<TableRowProps> = ({
                 <input
                   type="checkbox"
                   checked={enableStrategyTrailing}
-                  onChange={() => setEnableStrategyTrailing(!enableStrategyTrailing)}
+                  onChange={() =>
+                    setEnableStrategyTrailing(!enableStrategyTrailing)
+                  }
                   className="mr-1"
                 />
                 Enable
@@ -806,9 +826,11 @@ const TableRow: React.FC<TableRowProps> = ({
   };
 
   return (
-    <tr className={`hover:bg-gray-800/50 transition-colors ${
-      (isPlaceOrderMode || isEditMode) ? "bg-gray-800/30" : ""
-    }`}>
+    <tr
+      className={`hover:bg-gray-800/50 transition-colors ${
+        isPlaceOrderMode || isEditMode ? "bg-gray-800/30" : ""
+      }`}
+    >
       <td className="px-2 py-2 text-xs font-medium text-white border-b border-gray-800">
         {trade.alive && (
           <div className="flex space-x-1">
