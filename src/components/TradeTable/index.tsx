@@ -3,7 +3,6 @@ import { type Trade } from "../../types/trade";
 import TableRow from "./TableRow";
 import TableHeader from "./TableHeader";
 import { type Column } from "./ColumnManager";
-import PlaceOrderModal from "../modals/PlaceOrderModal";
 import TradeCard from "./TradeCard";
 import HedgeModal from "../modals/HedgeModal";
 import { toast } from "sonner";
@@ -12,7 +11,6 @@ import { API_URL } from "../../config/config";
 import cookies from "js-cookie";
 import getTradeData from "../../utils/getTradeData";
 import useStore from "../../store/store";
-import EditModal from "../modals/EditModal";
 
 interface TradeTableProps {
   trades: Trade[];
@@ -20,8 +18,6 @@ interface TradeTableProps {
 }
 
 const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
-  const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isHedgeModalOpen, setIsHedgeModalOpen] = useState(false);
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
@@ -87,16 +83,6 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
       return true;
     });
   }, [trades, filters]);
-
-  const handlePlaceOrder = (tradeId: string) => {
-    setSelectedTradeId(tradeId);
-    setIsPlaceOrderModalOpen(true);
-  };
-
-  const handleEdit = (tradeId: string) => {
-    setSelectedTradeId(tradeId);
-    setIsEditModalOpen(true);
-  };
 
   const handleHedge = (tradeId: string) => {
     setSelectedTradeId(tradeId);
@@ -265,9 +251,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
                       key={trade.id}
                       trade={trade}
                       columns={columns}
-                      onPlaceOrder={() => handlePlaceOrder(trade.id)}
                       onDeleteOrder={() => handleDeleteOrder(trade.id)}
-                      onEdit={() => handleEdit(trade.id)}
                       onCancelOrder={() => handleCancelOrder(trade.id)}
                       onHedge={() => handleHedge(trade.id)}
                       onClosePartial={(percent) =>
@@ -300,9 +284,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
                 <TradeCard
                   key={trade.id}
                   trade={trade}
-                  onPlaceOrder={() => handlePlaceOrder(trade.id)}
                   onDeleteOrder={() => handleDeleteOrder(trade.id)}
-                  onEdit={() => handleEdit(trade.id)}
                   onCancelOrder={() => handleCancelOrder(trade.id)}
                   onHedge={() => handleHedge(trade.id)}
                 />
@@ -317,18 +299,6 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, columns }) => {
           </div>
         </div>
       </div>
-
-      <PlaceOrderModal
-        isOpen={isPlaceOrderModalOpen}
-        onClose={() => setIsPlaceOrderModalOpen(false)}
-        tradeId={selectedTradeId}
-      />
-
-      <EditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        tradeId={selectedTradeId}
-      />
 
       <HedgeModal
         isOpen={isHedgeModalOpen}
