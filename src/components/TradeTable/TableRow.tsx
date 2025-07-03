@@ -118,18 +118,25 @@ const TableRow: React.FC<TableRowProps> = ({
 
       const currentPrice = priceObj?.price ?? 0;
       const entryPrice = position.entryPrice ?? 0;
-      const quantity = parseInt(position.currentQty) ?? 1;
+      const quantity = parseInt(position.currentQty) ?? 0;
 
       let mtm = 0;
 
       if (trade.entrySide === "SELL") {
-        mtm = lotSize * (entryPrice - currentPrice) * quantity;
+        mtm = (entryPrice - currentPrice) * (lotSize * quantity);
       } else if (trade.entrySide === "BUY") {
-        mtm = lotSize * (currentPrice - entryPrice) * quantity;
+        console.log();
+        mtm = (currentPrice - entryPrice) * (lotSize * quantity);
       }
 
       return acc + mtm;
     }, 0);
+
+    const filterActiveTrades = trade.liveTradePositions.filter(
+      (each) => each.closed === false
+    );
+
+    if (filterActiveTrades.length === 0) return 0;
 
     return totalMtm;
   }, [trade, optionLotSize, optionPrice]);

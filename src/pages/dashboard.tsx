@@ -16,7 +16,10 @@ import ChartContainer from "../components/Chart/ChartContainer";
 import PositionTracker from "../components/PositionTracker/PositionTracker";
 import DraggableBoxManager from "../components/DraggableBoxManager";
 import DraggableBox from "../components/DraggableBox";
-import { defaultDraggableColumns, type DraggableBoxColumn } from "../types/draggableBox";
+import {
+  defaultDraggableColumns,
+  type DraggableBoxColumn,
+} from "../types/draggableBox";
 
 import { API_URL } from "../config/config";
 import useStore from "../store/store";
@@ -43,7 +46,7 @@ const defaultColumns: Column[] = [
     visible: true,
     width: "140px",
   },
-  { id: "mtm", label: "MTM", visible: true, width: "100px" },
+  { id: "mtm", label: "MTM", visible: true, width: "120px" },
   {
     id: "pointOfAdjustment",
     label: "Point of Adjustment",

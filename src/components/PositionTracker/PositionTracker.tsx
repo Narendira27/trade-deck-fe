@@ -65,9 +65,9 @@ const PositionTracker: React.FC = () => {
         let mtm = 0;
 
         if (each.entrySide === "SELL")
-          mtm = lotSize * (each.entryPrice - price) * parseInt(currentQty);
+          mtm = (each.entryPrice - price) * (parseInt(currentQty) * lotSize);
         if (each.entrySide === "BUY")
-          mtm = lotSize * (price - each.entryPrice) * parseInt(currentQty);
+          mtm = (price - each.entryPrice) * (parseInt(currentQty) * lotSize);
 
         acc.push({
           id,
