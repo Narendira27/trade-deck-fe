@@ -6,6 +6,7 @@ import {
   type ISeriesApi,
   type CandlestickData,
   type LineData,
+  type Time,
 } from "lightweight-charts";
 import useStore from "../../store/store";
 import { toast } from "sonner";
@@ -43,9 +44,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   const [cursor, setCursor] = useState("default");
+  const [priceDragEnabled, setPriceDragEnabled] = useState(false);
+
   const isDraggingRef = useRef(false);
   const draggingLineTypeRef = useRef<"limit" | "sl" | "tp" | null>(null);
   const initialDataRef = useRef<CandlestickData[] | LineData[] | null>(null);
+  const lastCandleTimeRef = useRef<number | null>(null);
 
   const [chartReady, setChartReady] = useState(false);
 
@@ -175,6 +179,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     });
     const candleData = data.data.data;
 
+    if (candleData.length === 0) return null;
+
     if (chartType === "line") {
       return candleData.map((candle: any) => ({
         time: candle.time,
@@ -222,35 +228,53 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
   useEffect(() => {
     if (!chartReady) return;
-    const getValue = optionValues.filter((t) => t.id === tradeId);
-    if (getValue.length <= 0) return;
 
-    const liveValue = getValue[0].lowestCombinedPremium;
+    const interval = setInterval(() => {
+      const getValue = optionValues.find((t) => t.id === tradeId);
+      if (!getValue) return;
 
-    if (liveValue === undefined || liveValue === null) return;
+      const liveValue = getValue.lowestCombinedPremium;
+      if (liveValue === undefined || liveValue === null) return;
 
-    const series = candleSeriesRef.current || lineSeriesRef.current;
-    if (!series) return;
+      const series = candleSeriesRef.current || lineSeriesRef.current;
+      if (!series) return;
 
-    const currentTime = Math.floor(Date.now() / 1000);
+      const currentTime = Math.floor(Date.now() / 1000);
+      const candleTime = currentTime - (currentTime % 60); // Start of current minute
 
-    if (chartType === "candlestick") {
-      (series as ISeriesApi<"Candlestick">).update({
-        // @ts-expect-error "error"
-        time: currentTime,
-        open: liveValue,
-        high: liveValue,
-        low: liveValue,
-        close: liveValue,
-      });
-    } else {
-      // @ts-expect-error "error"
-      (series as LineSeriesApi).update({
-        time: currentTime,
-        value: liveValue,
-      });
-    }
-  }, [optionValues, chartReady, chartType]);
+      if (chartType === "candlestick") {
+        // First candle or new candle
+        if (lastCandleTimeRef.current !== candleTime) {
+          (series as ISeriesApi<"Candlestick">).update({
+            time: candleTime as Time,
+            open: liveValue,
+            high: liveValue,
+            low: liveValue,
+            close: liveValue,
+          });
+          lastCandleTimeRef.current = candleTime;
+        } else {
+          // Update existing candle (adjust OHLC as needed)
+          const lastCandle = {
+            time: candleTime as Time,
+            open: liveValue,
+            high: liveValue,
+            low: liveValue,
+            close: liveValue,
+          };
+
+          (series as ISeriesApi<"Candlestick">).update(lastCandle);
+        }
+      } else {
+        (series as ISeriesApi<"Line">).update({
+          time: currentTime as Time,
+          value: liveValue,
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [chartReady, optionValues, tradeId, chartType]);
 
   useEffect(() => {
     // console.log("Symbol changed:", symbol);
@@ -293,8 +317,13 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
             handleScale: {
               axisPressedMouseMove: { time: false, price: false },
               mouseWheel: true,
+              pinch: true,
             },
-            handleScroll: { mouseWheel: true, horzTouchDrag: true },
+            handleScroll: {
+              mouseWheel: true,
+              horzTouchDrag: true,
+              vertTouchDrag: true, // Enable vertical touch drag
+            },
           });
 
           chartRef.current = chart;
@@ -577,6 +606,51 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     toast.success("Order placed successfully");
   };
 
+  const scrollDownside = () => {
+    if (!chartRef.current) return;
+
+    const priceScale = chartRef.current.priceScale("right");
+    const currentMargins = priceScale.options().scaleMargins;
+
+    if (!currentMargins) return;
+
+    const newTop = Math.min(currentMargins.top + 0.05, 0.8);
+    const newBottom = Math.max(currentMargins.bottom - 0.05, 0.1);
+
+    priceScale.applyOptions({
+      scaleMargins: {
+        top: newTop,
+        bottom: newBottom,
+      },
+    });
+  };
+
+  const scrollUpside = () => {
+    if (!chartRef.current) return;
+
+    const priceScale = chartRef.current.priceScale("right");
+    const currentMargins = priceScale.options().scaleMargins;
+
+    if (!currentMargins) return;
+
+    const newTop = Math.max(currentMargins.top - 0.05, 0.1);
+    const newBottom = Math.min(currentMargins.bottom + 0.05, 0.8);
+
+    priceScale.applyOptions({
+      scaleMargins: {
+        top: newTop,
+        bottom: newBottom,
+      },
+    });
+  };
+
+  const resetMargins = () => {
+    if (!chartRef.current) return;
+
+    chartRef.current.priceScale("right").applyOptions({
+      scaleMargins: { top: 0.2, bottom: 0.2 },
+    });
+  };
   if (!trade) return <div>Trade not found</div>;
 
   return (
@@ -585,6 +659,26 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       className="w-full h-full relative"
       style={{ cursor }}
     >
+      <div className="z-20 absolute top-10 right-20 flex space-x-2">
+        <button
+          onClick={scrollUpside}
+          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          ↑ Scroll Up
+        </button>
+        <button
+          onClick={scrollDownside}
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          ↓ Scroll Down
+        </button>
+        <button
+          onClick={resetMargins}
+          className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+        >
+          Reset
+        </button>
+      </div>
       {trade.entryType === "UNDEFINED" && (
         <div className="absolute top-10 left-2 bg-gray-700 border border-gray-600 p-2 rounded-xl z-20 text-white text-xs">
           <div className="mb-2">
