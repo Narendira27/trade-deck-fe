@@ -12,6 +12,7 @@ interface HedgeModalProps {
 interface HedgeRow {
   id: string;
   hedgeBuy: "CE" | "PE";
+  side: string;
   expiry: string;
   strike: number;
   premium: number;
@@ -45,6 +46,7 @@ const HedgeModal: React.FC<HedgeModalProps> = ({
     {
       id: "1",
       hedgeBuy: "CE",
+      side: "BUY",
       expiry: "",
       strike: 0,
       premium: 0,
@@ -53,6 +55,7 @@ const HedgeModal: React.FC<HedgeModalProps> = ({
     {
       id: "2",
       hedgeBuy: "PE",
+      side: "BUY",
       expiry: "",
       strike: 0,
       premium: 0,
@@ -104,7 +107,6 @@ const HedgeModal: React.FC<HedgeModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle hedge settings submission
     console.log("Hedge settings:", hedgeRows);
     onClose();
   };
@@ -157,6 +159,9 @@ const HedgeModal: React.FC<HedgeModalProps> = ({
                     Hedge Buy
                   </th>
                   <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
+                    Side
+                  </th>
+                  <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
                     Expiry
                   </th>
                   <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-gray-300">
@@ -182,10 +187,22 @@ const HedgeModal: React.FC<HedgeModalProps> = ({
                     <td className="px-2 sm:px-4 py-2">
                       <select
                         className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        // value={formData.expiry}
-                        // onChange={(e) =>
-                        //   setFormData({ ...formData, expiry: e.target.value })
-                        // }
+                        value={row.side}
+                        onChange={(e) =>
+                          updateRow(row.id, "side", e.target.value)
+                        }
+                      >
+                        <option value="BUY">Buy</option>
+                        <option value="SELL">Sell</option>
+                      </select>
+                    </td>
+                    <td className="px-2 sm:px-4 py-2">
+                      <select
+                        className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={row.expiry}
+                        onChange={(e) =>
+                          updateRow(row.id, "expiry", e.target.value)
+                        }
                       >
                         <option value="" disabled hidden>
                           Select Expiry
@@ -203,15 +220,11 @@ const HedgeModal: React.FC<HedgeModalProps> = ({
                     </td>
                     <td className="px-2 sm:px-4 py-2">
                       <input
-                        type="number"
+                        type="text"
                         className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={row.strike}
                         onChange={(e) =>
-                          updateRow(
-                            row.id,
-                            "strike",
-                            parseFloat(e.target.value) || 0
-                          )
+                          updateRow(row.id, "strike", e.target.value)
                         }
                         placeholder="Strike"
                       />

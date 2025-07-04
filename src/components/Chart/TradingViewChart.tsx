@@ -7,6 +7,10 @@ import {
   type CandlestickData,
 } from "lightweight-charts";
 import useStore from "../../store/store";
+import { toast } from "sonner";
+import { API_URL } from "../../config/config";
+import axios from "axios";
+import cookies from "js-cookie";
 
 interface TradingViewChartProps {
   symbol: string;
@@ -42,30 +46,58 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
   const [slPoints, setSlPoints] = useState(5);
   const [tpPoints, setTpPoints] = useState(5);
 
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const keys = ["limit", "sl", "tp"] as const;
   type LineType = (typeof keys)[number];
 
-  const generateMockData = () => {
-    const data: CandlestickData[] = [];
-    let basePrice = 1600;
-    const now = new Date();
-    for (let i = 100; i >= 0; i--) {
-      const time = new Date(now.getTime() - i * 5 * 60 * 10);
-      const open = basePrice + Math.random() * 10;
-      const high = open + Math.random() * 10;
-      const low = Math.max(0, open - Math.random() * 10);
-      const close = low + Math.random() * (high - low);
-      data.push({
-        // @ts-expect-error type
-        time: Math.floor(time.getTime() / 1000),
-        open,
-        high,
-        low,
-        close,
-      });
-      basePrice = close;
+  const debouncedUpdatePrice = (type: LineType, price: number) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
     }
-    return data;
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      updatePriceOnBackend(type, price);
+    }, 500); // 500ms debounce delay
+  };
+
+  const updatePriceOnBackend = async (type: LineType, price: number) => {
+    if (!trade) return;
+    console.log(type, price);
+
+    // try {
+    //   const res = await fetch(`/api/update-price`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       tradeId: trade.id,
+    //       priceType: type, // "limit", "sl", "tp"
+    //       price: price,
+    //     }),
+    //   });
+
+    //   if (res.ok) {
+    //     toast.success(`${type.toUpperCase()} price updated`);
+    //   } else {
+    //     toast.error(`Failed to update ${type.toUpperCase()} price`);
+    //   }
+    // } catch (error) {
+    //   console.error(error);
+    //   toast.error("Error updating price");
+    // }
+  };
+
+  const generateData = async () => {
+    const token = cookies.get("auth");
+    const data = await axios.get(API_URL + "/user/candle/", {
+      headers: { Authorization: "Bearer " + token },
+      params: {
+        indexName: "NIFTY",
+        expiryDate: "10JUL2025",
+        range: "100",
+      },
+    });
+    const candleData = data.data.data;
+    return candleData;
   };
 
   const removePriceLines = () => {
@@ -120,7 +152,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
 
     // 🔥 1. Set up IntersectionObserver to detect visibility
     const observer = new IntersectionObserver(
-      ([entry]) => {
+      async ([entry]) => {
         if (entry.isIntersecting) {
           // 🔥 2. Only initialize chart when container is visible
           chart = createChart(container, {
@@ -151,7 +183,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
             wickUpColor: "#10b981",
           });
 
-          const data = generateMockData();
+          const data = await generateData();
           initialDataRef.current = data;
           candleSeries.setData(data);
           chart.timeScale().fitContent();
@@ -276,6 +308,17 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
     };
 
     const handleMouseUp = () => {
+      if (isDraggingRef.current) {
+        const lineType = draggingLineTypeRef.current;
+
+        if (lineType) {
+          const updatedPrice = priceLinesRef.current[lineType]?.options().price;
+
+          if (updatedPrice !== undefined && updatedPrice !== null) {
+            debouncedUpdatePrice(lineType, updatedPrice);
+          }
+        }
+      }
       isDraggingRef.current = false;
       setCursor("default");
     };
@@ -305,11 +348,11 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
       sl:
         trade.stopLossPremium && trade.stopLossPremium !== 0
           ? trade.stopLossPremium
-          : lastPrice - 5,
+          : lastPrice,
       tp:
         trade.takeProfitPremium && trade.takeProfitPremium !== 0
           ? trade.takeProfitPremium
-          : lastPrice + 5,
+          : lastPrice,
     };
 
     createPriceLines(updatedLines);
@@ -319,6 +362,27 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
     const limitPrice = priceLinesRef.current.limit?.options().price;
     const slPrice = priceLinesRef.current.sl?.options().price;
     const tpPrice = priceLinesRef.current.tp?.options().price;
+
+    if (!limitPrice && orderType === "market") {
+      toast.warning("Entry price is required");
+      return;
+    }
+
+    if (!qty) {
+      toast.warning("Qty is required");
+      return;
+    }
+
+    if (!tpPrice) {
+      toast.warning("TP is required");
+      return;
+    }
+
+    if (!slPrice) {
+      toast.warning("SL is required");
+      return;
+    }
+
     console.log(limitPrice, slPrice, tpPrice);
   };
 
@@ -327,7 +391,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ tradeId }) => {
   return (
     <div ref={chartContainerRef} className="w-full h-full" style={{ cursor }}>
       {trade.entryType === "UNDEFINED" ? (
-        <div className="absolute  top-2 left-2 bg-gray-700 border  border-b-gray-700/2    p-2 rounded-xl  z-20 text-white text-xs">
+        <div className="absolute  top-10 left-2 bg-gray-700 border  border-b-gray-700/2    p-2 rounded-xl  z-20 text-white text-xs">
           <div className="mb-2">
             <label className="block mb-1">Qty:</label>
             <input

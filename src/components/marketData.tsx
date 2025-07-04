@@ -136,7 +136,7 @@ const MarketDataComponent = () => {
     { exchangeSegment: 1, exchangeInstrumentID: 26000 },
     { exchangeSegment: 1, exchangeInstrumentID: 26001 },
     { exchangeSegment: 1, exchangeInstrumentID: 26034 },
-    { exchangeSegment: 1, exchangeInstrumentID: 26005 },
+    { exchangeSegment: 1, exchangeInstrumentID: 26121 }, // midcap
     { exchangeSegment: 11, exchangeInstrumentID: 26065 },
     { exchangeSegment: 11, exchangeInstrumentID: 26118 },
   ];
