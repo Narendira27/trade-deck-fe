@@ -9,9 +9,9 @@ interface ChartTab {
   tradeId: string;
   symbol: string;
   expiry: string;
-  range: number; // Changed to always be number
+  range: number;
   timeframe: string;
-  chartType: "candlestick";
+  chartType: "candlestick" | "line";
 }
 
 type LayoutType = "single" | "2x2" | "3x1" | "2x2-grid";
@@ -30,7 +30,7 @@ const ChartContainer: React.FC = () => {
           tradeId: firstTrade.id,
           symbol: firstTrade.indexName,
           expiry: firstTrade.expiry,
-          range: firstTrade.ltpRange, // Assuming ltpRange is a number
+          range: firstTrade.ltpRange,
           timeframe: "1m",
           chartType: "candlestick",
         },
@@ -42,7 +42,7 @@ const ChartContainer: React.FC = () => {
         tradeId: "",
         symbol: "select",
         expiry: "",
-        range: 0, // Changed from "" to 0
+        range: 0,
         timeframe: "1m",
         chartType: "candlestick",
       },
@@ -52,7 +52,7 @@ const ChartContainer: React.FC = () => {
   const [activeTab, setActiveTab] = useState("1");
   const [layout, setLayout] = useState<LayoutType>("single");
 
-  // Update tabs when trades change (e.g., if trades are loaded async)
+  // Update tabs when trades change
   useEffect(() => {
     const filteredTrade = trades.filter((each) => each.alive === true);
     if (filteredTrade.length > 0 && tabs.length > 0 && tabs[0].tradeId === "") {
@@ -77,7 +77,7 @@ const ChartContainer: React.FC = () => {
       tradeId: trades.length > 0 ? trades[0].id : "",
       symbol: trades.length > 0 ? trades[0].indexName : "select",
       expiry: trades.length > 0 ? trades[0].expiry : "",
-      range: trades.length > 0 ? trades[0].ltpRange : 0, // Changed from "" to 0
+      range: trades.length > 0 ? trades[0].ltpRange : 0,
       timeframe: "1m",
       chartType: "candlestick",
     };
@@ -86,7 +86,7 @@ const ChartContainer: React.FC = () => {
   };
 
   const closeTab = (tabId: string) => {
-    if (tabs.length === 1) return; // Don't close the last tab
+    if (tabs.length === 1) return;
 
     const newTabs = tabs.filter((tab) => tab.id !== tabId);
     setTabs(newTabs);
@@ -272,6 +272,11 @@ const ChartContainer: React.FC = () => {
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="1m">1m</option>
+              <option value="5m">5m</option>
+              <option value="15m">15m</option>
+              <option value="1h">1h</option>
+              <option value="4h">4h</option>
+              <option value="1d">1d</option>
             </select>
 
             <div className="flex bg-gray-700 rounded">
@@ -279,14 +284,24 @@ const ChartContainer: React.FC = () => {
                 onClick={() =>
                   updateTab(activeTab, { chartType: "candlestick" })
                 }
-                className={`px-3 py-1 text-sm rounded-r ${
+                className={`px-3 py-1 text-sm rounded-l ${
                   tabs.find((tab) => tab.id === activeTab)?.chartType ===
                   "candlestick"
                     ? "bg-blue-500 text-white"
-                    : "text-gray-300 hover:text-white"
+                    : "text-gray-300 hover:text-white hover:bg-gray-600"
                 }`}
               >
                 Candles
+              </button>
+              <button
+                onClick={() => updateTab(activeTab, { chartType: "line" })}
+                className={`px-3 py-1 text-sm rounded-r ${
+                  tabs.find((tab) => tab.id === activeTab)?.chartType === "line"
+                    ? "bg-blue-500 text-white"
+                    : "text-gray-300 hover:text-white hover:bg-gray-600"
+                }`}
+              >
+                Line
               </button>
             </div>
           </div>
@@ -310,7 +325,7 @@ const ChartContainer: React.FC = () => {
               <TradingViewChart
                 symbol={tab.symbol}
                 timeframe={tab.timeframe}
-                chartType={tab.chartType}
+                chartType={tab.chartType} // Use the tab's chartType instead of hardcoded "line"
                 tradeId={tab.tradeId}
               />
             </div>
