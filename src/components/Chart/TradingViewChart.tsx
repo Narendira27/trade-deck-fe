@@ -44,12 +44,17 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   const [cursor, setCursor] = useState("default");
-  const [priceDragEnabled, setPriceDragEnabled] = useState(false);
 
   const isDraggingRef = useRef(false);
   const draggingLineTypeRef = useRef<"limit" | "sl" | "tp" | null>(null);
   const initialDataRef = useRef<CandlestickData[] | LineData[] | null>(null);
-  const lastCandleTimeRef = useRef<number | null>(null);
+  const lastCandleDataRef = useRef<{
+    time: Time;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+  } | null>(null);
 
   const [chartReady, setChartReady] = useState(false);
 
@@ -225,55 +230,59 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       });
     });
   };
-
   useEffect(() => {
     if (!chartReady) return;
 
-    const interval = setInterval(() => {
-      const getValue = optionValues.find((t) => t.id === tradeId);
-      if (!getValue) return;
+    const series = candleSeriesRef.current || lineSeriesRef.current;
+    if (!series) return;
 
-      const liveValue = getValue.lowestCombinedPremium;
-      if (liveValue === undefined || liveValue === null) return;
+    const liveValue = optionValues.find(
+      (t) => t.id === tradeId
+    )?.lowestCombinedPremium;
 
-      const series = candleSeriesRef.current || lineSeriesRef.current;
-      if (!series) return;
+    if (liveValue === undefined || liveValue === null) return;
 
-      const currentTime = Math.floor(Date.now() / 1000);
-      const candleTime = currentTime - (currentTime % 60); // Start of current minute
+    const istOffsetMinutes = 5.5 * 60; // IST is UTC+5:30
+    const currentTimeIST = Date.now() + istOffsetMinutes * 60 * 1000 + 50;
+    const currentTimeGMTSeconds = Math.floor(currentTimeIST / 1000);
+    const candleTime = currentTimeGMTSeconds - (currentTimeGMTSeconds % 60);
 
-      if (chartType === "candlestick") {
-        // First candle or new candle
-        if (lastCandleTimeRef.current !== candleTime) {
-          (series as ISeriesApi<"Candlestick">).update({
-            time: candleTime as Time,
-            open: liveValue,
-            high: liveValue,
-            low: liveValue,
-            close: liveValue,
-          });
-          lastCandleTimeRef.current = candleTime;
-        } else {
-          // Update existing candle (adjust OHLC as needed)
-          const lastCandle = {
-            time: candleTime as Time,
-            open: liveValue,
-            high: liveValue,
-            low: liveValue,
-            close: liveValue,
-          };
-
-          (series as ISeriesApi<"Candlestick">).update(lastCandle);
-        }
+    if (chartType === "candlestick") {
+      if (
+        !lastCandleDataRef.current ||
+        lastCandleDataRef.current.time !== candleTime
+      ) {
+        // New candle
+        lastCandleDataRef.current = {
+          time: candleTime as Time,
+          open: liveValue,
+          high: liveValue,
+          low: liveValue,
+          close: liveValue,
+        };
       } else {
-        (series as ISeriesApi<"Line">).update({
-          time: currentTime as Time,
-          value: liveValue,
-        });
+        // Update existing candle
+        lastCandleDataRef.current.high = Math.max(
+          lastCandleDataRef.current.high,
+          liveValue
+        );
+        lastCandleDataRef.current.low = Math.min(
+          lastCandleDataRef.current.low,
+          liveValue
+        );
+        lastCandleDataRef.current.close = liveValue;
       }
-    }, 1000);
 
-    return () => clearInterval(interval);
+      // console.log("initalData", initialDataRef.current[267].time);
+      // console.log(lastCandleDataRef.current.time);
+
+      (series as ISeriesApi<"Candlestick">).update(lastCandleDataRef.current);
+    } else {
+      (series as ISeriesApi<"Line">).update({
+        time: currentTimeGMTSeconds as Time,
+        value: liveValue,
+      });
+    }
   }, [chartReady, optionValues, tradeId, chartType]);
 
   useEffect(() => {
@@ -552,6 +561,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           entryType: "MARKET",
           stopLossPoints: slPoints,
           takeProfitPoints: tpPoints,
+          qty,
         },
         {
           headers: { Authorization: "Bearer " + token },
