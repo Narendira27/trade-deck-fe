@@ -511,7 +511,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, [trade, orderType, chartReady, chartType]);
 
   useEffect(() => {
-    if (!initialDataRef.current || !trade) return;
+    if (!initialDataRef.current || !trade || initialDataRef.current.length === 0) return;
 
     const lastPrice =
       chartType === "candlestick"
@@ -753,7 +753,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           <button
             onClick={placeOrder}
             className="mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 font-medium w-full"
-          >
+            >
             Place Order
           </button>
         </div>
