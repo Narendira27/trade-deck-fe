@@ -172,27 +172,33 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   };
 
   const generateData = async () => {
-    if (!trade) return;
-    const token = cookies.get("auth");
-    const data = await axios.get(API_URL + "/user/candle/", {
-      headers: { Authorization: "Bearer " + token },
-      params: {
-        indexName: trade.indexName,
-        expiryDate: trade.expiry,
-        range: trade.ltpRange,
-      },
-    });
-    const candleData = data.data.data;
+    if (!trade) return [];
+    
+    try {
+      const token = cookies.get("auth");
+      const data = await axios.get(API_URL + "/user/candle/", {
+        headers: { Authorization: "Bearer " + token },
+        params: {
+          indexName: trade.indexName,
+          expiryDate: trade.expiry,
+          range: trade.ltpRange,
+        },
+      });
+      const candleData = data.data.data;
 
-    if (candleData.length === 0) return null;
+      if (!candleData || candleData.length === 0) return [];
 
-    if (chartType === "line") {
-      return candleData.map((candle: any) => ({
-        time: candle.time,
-        value: candle.close,
-      }));
+      if (chartType === "line") {
+        return candleData.map((candle: any) => ({
+          time: candle.time,
+          value: candle.close,
+        }));
+      }
+      return candleData;
+    } catch (error) {
+      console.error("Error fetching chart data:", error);
+      return [];
     }
-    return candleData;
   };
 
   const removePriceLines = () => {
