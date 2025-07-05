@@ -332,6 +332,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
             },
           });
 
+          // Add null check for chart instance
+          if (!chart) {
+            console.error("Failed to create chart instance");
+            return;
+          }
+
           chartRef.current = chart;
 
           const rawData = await generateData();
