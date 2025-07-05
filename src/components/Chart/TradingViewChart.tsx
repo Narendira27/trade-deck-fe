@@ -33,7 +33,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   // @ts-expect-error "error"
-
   const lineSeriesRef = useRef<LineSeriesApi | null>(null);
   const priceLinesRef = useRef<
     Record<
@@ -55,6 +54,9 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     low: number;
     close: number;
   } | null>(null);
+
+  // Cache for chart data to prevent unnecessary API calls
+  const chartDataCacheRef = useRef<Map<string, CandlestickData[] | LineData[]>>(new Map());
 
   const [chartReady, setChartReady] = useState(false);
 
@@ -174,6 +176,15 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const generateData = async () => {
     if (!trade) return [];
     
+    // Create cache key based on trade parameters
+    const cacheKey = `${trade.indexName}-${trade.expiry}-${trade.ltpRange}`;
+    
+    // Check if data is already cached
+    if (chartDataCacheRef.current.has(cacheKey)) {
+      const cachedData = chartDataCacheRef.current.get(cacheKey)!;
+      return cachedData;
+    }
+    
     try {
       const token = cookies.get("auth");
       const data = await axios.get(API_URL + "/user/candle/", {
@@ -188,13 +199,21 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
       if (!candleData || candleData.length === 0) return [];
 
+      let processedData: CandlestickData[] | LineData[];
+      
       if (chartType === "line") {
-        return candleData.map((candle: any) => ({
+        processedData = candleData.map((candle: any) => ({
           time: candle.time,
           value: candle.close,
         }));
+      } else {
+        processedData = candleData;
       }
-      return candleData;
+      
+      // Cache the raw candlestick data (not the processed data)
+      chartDataCacheRef.current.set(cacheKey, candleData);
+      
+      return processedData;
     } catch (error) {
       console.error("Error fetching chart data:", error);
       return [];
@@ -236,6 +255,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       });
     });
   };
+
   useEffect(() => {
     if (!chartReady) return;
 
@@ -279,9 +299,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         lastCandleDataRef.current.close = liveValue;
       }
 
-      // console.log("initalData", initialDataRef.current[267].time);
-      // console.log(lastCandleDataRef.current.time);
-
       (series as ISeriesApi<"Candlestick">).update(lastCandleDataRef.current);
     } else {
       (series as ISeriesApi<"Line">).update({
@@ -291,24 +308,102 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     }
   }, [chartReady, optionValues, tradeId, chartType]);
 
+  // Separate effect for handling chart type changes without refetching data
   useEffect(() => {
-    // console.log("Symbol changed:", symbol);
+    if (!chartRef.current || !initialDataRef.current) return;
 
-    if (!chartRef.current) return;
+    // Remove existing series
+    if (candleSeriesRef.current) {
+      chartRef.current.removeSeries(candleSeriesRef.current);
+      candleSeriesRef.current = null;
+    }
+    if (lineSeriesRef.current) {
+      chartRef.current.removeSeries(lineSeriesRef.current);
+      lineSeriesRef.current = null;
+    }
 
-    generateData().then((data) => {
+    // Get cached data and transform it for the current chart type
+    const cacheKey = trade ? `${trade.indexName}-${trade.expiry}-${trade.ltpRange}` : null;
+    const cachedRawData = cacheKey ? chartDataCacheRef.current.get(cacheKey) : null;
+    
+    if (cachedRawData) {
+      let transformedData: CandlestickData[] | LineData[];
+      
+      if (chartType === "candlestick") {
+        transformedData = cachedRawData as CandlestickData[];
+        const candleSeries = chartRef.current.addCandlestickSeries({
+          upColor: "#10b981",
+          downColor: "#ef4444",
+          borderDownColor: "#ef4444",
+          borderUpColor: "#10b981",
+          wickDownColor: "#ef4444",
+          wickUpColor: "#10b981",
+        });
+        candleSeries.setData(transformedData);
+        candleSeriesRef.current = candleSeries;
+      } else {
+        transformedData = (cachedRawData as CandlestickData[]).map((candle: any) => ({
+          time: candle.time,
+          value: candle.close,
+        }));
+        const lineSeries = chartRef.current.addLineSeries({
+          color: "#3b82f6",
+          lineWidth: 2,
+        });
+        lineSeries.setData(transformedData);
+        lineSeriesRef.current = lineSeries;
+      }
+      
+      initialDataRef.current = transformedData;
+      chartRef.current.timeScale().fitContent();
+    }
+  }, [chartType, trade?.id]);
+
+  // Effect for initial data loading (only when trade changes)
+  useEffect(() => {
+    if (!trade) return;
+
+    const loadInitialData = async () => {
+      const data = await generateData();
       initialDataRef.current = data;
 
-      if (chartType === "candlestick" && candleSeriesRef.current) {
-        candleSeriesRef.current.setData(data as CandlestickData[]);
-      } else if (lineSeriesRef.current) {
-        lineSeriesRef.current.setData(data as LineData[]);
-      }
-      // @ts-expect-error "error"
+      if (chartRef.current) {
+        // Remove existing series
+        if (candleSeriesRef.current) {
+          chartRef.current.removeSeries(candleSeriesRef.current);
+          candleSeriesRef.current = null;
+        }
+        if (lineSeriesRef.current) {
+          chartRef.current.removeSeries(lineSeriesRef.current);
+          lineSeriesRef.current = null;
+        }
 
-      chartRef.current.timeScale().fitContent();
-    });
-  }, [symbol]);
+        if (chartType === "candlestick") {
+          const candleSeries = chartRef.current.addCandlestickSeries({
+            upColor: "#10b981",
+            downColor: "#ef4444",
+            borderDownColor: "#ef4444",
+            borderUpColor: "#10b981",
+            wickDownColor: "#ef4444",
+            wickUpColor: "#10b981",
+          });
+          candleSeries.setData(data as CandlestickData[]);
+          candleSeriesRef.current = candleSeries;
+        } else {
+          const lineSeries = chartRef.current.addLineSeries({
+            color: "#3b82f6",
+            lineWidth: 2,
+          });
+          lineSeries.setData(data as LineData[]);
+          lineSeriesRef.current = lineSeries;
+        }
+
+        chartRef.current.timeScale().fitContent();
+      }
+    };
+
+    loadInitialData();
+  }, [trade?.id]); // Only depend on trade ID, not symbol or chartType
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -337,7 +432,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
             handleScroll: {
               mouseWheel: true,
               horzTouchDrag: true,
-              vertTouchDrag: true, // Enable vertical touch drag
+              vertTouchDrag: true,
             },
           });
 
@@ -412,7 +507,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       lineSeriesRef.current = null;
       setChartReady(false);
     };
-  }, [chartContainerRef.current, chartType]);
+  }, [chartContainerRef.current]);
 
   useEffect(() => {
     if (!chartReady) return;
@@ -753,7 +848,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           <button
             onClick={placeOrder}
             className="mt-1 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 font-medium w-full"
-            >
+          >
             Place Order
           </button>
         </div>
