@@ -30,7 +30,9 @@ const ChartContainer: React.FC = () => {
 
   // Chart data state - no more caching, fresh data every time
   const [chartData, setChartData] = useState<ChartData>({});
-  const [isLoading, setIsLoading] = useState<{ [tradeId: string]: boolean }>({});
+  const [isLoading, setIsLoading] = useState<{ [tradeId: string]: boolean }>(
+    {}
+  );
 
   // Initialize tabs with the first trade if available
   const [tabs, setTabs] = useState<ChartTab[]>(() => {
@@ -66,13 +68,15 @@ const ChartContainer: React.FC = () => {
   const [layout, setLayout] = useState<LayoutType>("single");
 
   // Function to fetch candle data for a specific trade
-  const fetchCandleData = async (tradeId: string): Promise<CandlestickData[]> => {
+  const fetchCandleData = async (
+    tradeId: string
+  ): Promise<CandlestickData[]> => {
     const trade = trades.find((t) => t.id === tradeId);
     if (!trade) return [];
 
     try {
-      setIsLoading(prev => ({ ...prev, [tradeId]: true }));
-      
+      setIsLoading((prev) => ({ ...prev, [tradeId]: true }));
+
       const token = cookies.get("auth");
       const response = await axios.get(API_URL + "/user/candle/", {
         headers: { Authorization: "Bearer " + token },
@@ -92,18 +96,18 @@ const ChartContainer: React.FC = () => {
       toast.error("Failed to fetch chart data");
       return [];
     } finally {
-      setIsLoading(prev => ({ ...prev, [tradeId]: false }));
+      setIsLoading((prev) => ({ ...prev, [tradeId]: false }));
     }
   };
 
   // Function to update chart data for a specific trade
   const updateChartData = async (tradeId: string) => {
     if (!tradeId) return;
-    
+
     const data = await fetchCandleData(tradeId);
-    setChartData(prev => ({
+    setChartData((prev) => ({
       ...prev,
-      [tradeId]: data
+      [tradeId]: data,
     }));
   };
 
@@ -132,10 +136,12 @@ const ChartContainer: React.FC = () => {
     const interval = setInterval(() => {
       // Get all unique trade IDs from visible tabs
       const visibleTabs = getVisibleTabs();
-      const uniqueTradeIds = [...new Set(visibleTabs.map(tab => tab.tradeId).filter(id => id))];
-      
+      const uniqueTradeIds = [
+        ...new Set(visibleTabs.map((tab) => tab.tradeId).filter((id) => id)),
+      ];
+
       // Fetch fresh data for all visible trades
-      uniqueTradeIds.forEach(tradeId => {
+      uniqueTradeIds.forEach((tradeId) => {
         updateChartData(tradeId);
       });
     }, 5 * 60 * 1000); // 5 minutes
@@ -146,9 +152,11 @@ const ChartContainer: React.FC = () => {
   // Initial data fetch when tabs change
   useEffect(() => {
     const visibleTabs = getVisibleTabs();
-    const uniqueTradeIds = [...new Set(visibleTabs.map(tab => tab.tradeId).filter(id => id))];
-    
-    uniqueTradeIds.forEach(tradeId => {
+    const uniqueTradeIds = [
+      ...new Set(visibleTabs.map((tab) => tab.tradeId).filter((id) => id)),
+    ];
+
+    uniqueTradeIds.forEach((tradeId) => {
       if (!chartData[tradeId]) {
         updateChartData(tradeId);
       }
@@ -156,18 +164,20 @@ const ChartContainer: React.FC = () => {
   }, [tabs, layout]);
 
   const addNewTab = () => {
+    const filteredTrade = trades.filter((each) => each.alive === true);
+
     const newTab: ChartTab = {
       id: Date.now().toString(),
-      tradeId: trades.length > 0 ? trades[0].id : "",
-      symbol: trades.length > 0 ? trades[0].indexName : "select",
-      expiry: trades.length > 0 ? trades[0].expiry : "",
-      range: trades.length > 0 ? trades[0].ltpRange : 0,
+      tradeId: filteredTrade.length > 0 ? filteredTrade[0].id : "",
+      symbol: filteredTrade.length > 0 ? filteredTrade[0].indexName : "select",
+      expiry: filteredTrade.length > 0 ? filteredTrade[0].expiry : "",
+      range: filteredTrade.length > 0 ? filteredTrade[0].ltpRange : 0,
       timeframe: "1m",
       chartType: "candlestick",
     };
     setTabs([...tabs, newTab]);
     setActiveTab(newTab.id);
-    
+
     // Fetch data for the new tab if it has a valid trade
     if (newTab.tradeId) {
       updateChartData(newTab.tradeId);
@@ -200,7 +210,7 @@ const ChartContainer: React.FC = () => {
         expiry: selectedTrade.expiry,
         range: selectedTrade.ltpRange,
       });
-      
+
       // Fetch data for the newly selected trade
       updateChartData(selectedTrade.id);
     }
@@ -408,9 +418,17 @@ const ChartContainer: React.FC = () => {
                 }
               }}
               className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-              disabled={isLoading[tabs.find((tab) => tab.id === activeTab)?.tradeId || ""]}
+              disabled={
+                isLoading[
+                  tabs.find((tab) => tab.id === activeTab)?.tradeId || ""
+                ]
+              }
             >
-              {isLoading[tabs.find((tab) => tab.id === activeTab)?.tradeId || ""] ? "Refreshing..." : "Refresh"}
+              {isLoading[
+                tabs.find((tab) => tab.id === activeTab)?.tradeId || ""
+              ]
+                ? "Refreshing..."
+                : "Refresh"}
             </button>
           </div>
 
