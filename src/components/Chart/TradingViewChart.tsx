@@ -25,6 +25,7 @@ interface TradingViewChartProps {
 }
 
 const TradingViewChart: React.FC<TradingViewChartProps> = ({
+  symbol,
   tradeId,
   chartType = "candlestick",
   chartData,
@@ -172,9 +173,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     }
   };
 
-  const transformDataForChartType = (
-    rawData: CandlestickData[]
-  ): CandlestickData[] | LineData[] => {
+  const transformDataForChartType = (rawData: CandlestickData[]): CandlestickData[] | LineData[] => {
     if (chartType === "line") {
       return rawData.map((candle: any) => ({
         time: candle.time,
@@ -210,7 +209,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
     keys.forEach((key) => {
       const price = prices[key];
-      if (typeof price !== "number" || isNaN(price)) {
+      if (typeof price !== 'number' || isNaN(price)) {
         console.warn(`Invalid price for ${key}:`, price);
         return;
       }
@@ -298,7 +297,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
             timeScale: { timeVisible: true },
             crosshair: { mode: 1 },
             handleScale: {
-              axisPressedMouseMove: { time: true, price: false },
+              axisPressedMouseMove: { time: false, price: false },
               mouseWheel: true,
               pinch: true,
             },
@@ -503,16 +502,16 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
     // Get the last price with proper fallback handling
     let lastPrice = 0; // Default fallback value
-
+    
     if (chartData.length > 0) {
       const lastDataPoint = chartData[chartData.length - 1];
-
+      
       if (chartType === "candlestick") {
         const candleData = lastDataPoint as CandlestickData;
-        lastPrice = typeof candleData.close === "number" ? candleData.close : 0;
+        lastPrice = typeof candleData.close === 'number' ? candleData.close : 0;
       } else {
         const lineData = lastDataPoint as LineData;
-        lastPrice = typeof lineData.value === "number" ? lineData.value : 0;
+        lastPrice = typeof lineData.value === 'number' ? lineData.value : 0;
       }
     }
 
@@ -548,8 +547,11 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     let slPrice = priceLinesRef.current.sl?.options().price;
     let tpPrice = priceLinesRef.current.tp?.options().price;
 
-    console.log(priceLinesRef.current);
-    if ((!limitPrice || !slPrice || !tpPrice) && orderType === "limit") return;
+    if (!limitPrice || !slPrice || !tpPrice) return;
+
+    limitPrice = parseFloat(limitPrice.toFixed(2));
+    slPrice = parseFloat(slPrice.toFixed(2));
+    tpPrice = parseFloat(tpPrice.toFixed(2));
 
     if (orderType === "market") {
       await axios.put(
@@ -567,10 +569,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       );
     }
 
-    if (orderType === "limit" && limitPrice && slPrice && tpPrice) {
-      limitPrice = parseFloat(limitPrice.toFixed(2));
-      slPrice = parseFloat(slPrice.toFixed(2));
-      tpPrice = parseFloat(tpPrice.toFixed(2));
+    if (orderType === "limit") {
       let getTpPoints;
       let getSlPoints;
       if (trade.entrySide === "SELL") {
@@ -661,13 +660,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       scaleMargins: { top: 0.2, bottom: 0.2 },
     });
   };
-
-  if (!trade)
-    return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        Trade not found
-      </div>
-    );
+  
+  if (!trade) return <div className="flex items-center justify-center h-full text-gray-400">Trade not found</div>;
 
   if (isLoading && !chartData.length) {
     return (
@@ -705,19 +699,19 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       <div className="z-20 absolute top-10 right-20 flex space-x-2">
         <button
           onClick={scrollUpside}
-          className="px-1 py-1 text-xs cursor-pointer bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
         >
-          ↑
+          ↑ Scroll Up
         </button>
         <button
           onClick={scrollDownside}
-          className="px-1 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          ↓
+          ↓ Scroll Down
         </button>
         <button
           onClick={resetMargins}
-          className="text-xs px-1 py-1 cursor-pointer bg-yellow-600 text-white rounded hover:bg-yellow-700"
+          className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
         >
           Reset
         </button>

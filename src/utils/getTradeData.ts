@@ -8,12 +8,7 @@ const getTradeData = async () => {
     const getTradeData = await axios.get(API_URL + "/user/tradeInfo", {
       headers: { Authorization: "Bearer " + auth },
     });
-
-    // Ensure the returned data is always an array
-    const tradeInfo = getTradeData.data.data;
-    const validTradeInfo = Array.isArray(tradeInfo) ? tradeInfo : [];
-
-    return { status: "ok", tradeInfo: validTradeInfo };
+    return { status: "ok", tradeInfo: getTradeData.data.data };
   } catch {
     return { status: "failed" };
   }
