@@ -3,6 +3,11 @@ import { Plus, X, Grid3X3, Grid2X2, LayoutGrid } from "lucide-react";
 import TradingViewChart from "./TradingViewChart";
 import useStore from "../../store/store";
 import type { Trade } from "../../types/trade";
+import { API_URL } from "../../config/config";
+import axios from "axios";
+import cookies from "js-cookie";
+import { toast } from "sonner";
+import type { CandlestickData } from "lightweight-charts";
 
 interface ChartTab {
   id: string;
@@ -16,8 +21,16 @@ interface ChartTab {
 
 type LayoutType = "single" | "2x2" | "3x1" | "2x2-grid";
 
+interface ChartData {
+  [tradeId: string]: CandlestickData[];
+}
+
 const ChartContainer: React.FC = () => {
   const { trades } = useStore();
+
+  // Chart data state - no more caching, fresh data every time
+  const [chartData, setChartData] = useState<ChartData>({});
+  const [isLoading, setIsLoading] = useState<{ [tradeId: string]: boolean }>({});
 
   // Initialize tabs with the first trade if available
   const [tabs, setTabs] = useState<ChartTab[]>(() => {
@@ -52,24 +65,95 @@ const ChartContainer: React.FC = () => {
   const [activeTab, setActiveTab] = useState("1");
   const [layout, setLayout] = useState<LayoutType>("single");
 
+  // Function to fetch candle data for a specific trade
+  const fetchCandleData = async (tradeId: string): Promise<CandlestickData[]> => {
+    const trade = trades.find((t) => t.id === tradeId);
+    if (!trade) return [];
+
+    try {
+      setIsLoading(prev => ({ ...prev, [tradeId]: true }));
+      
+      const token = cookies.get("auth");
+      const response = await axios.get(API_URL + "/user/candle/", {
+        headers: { Authorization: "Bearer " + token },
+        params: {
+          indexName: trade.indexName,
+          expiryDate: trade.expiry,
+          range: trade.ltpRange,
+        },
+      });
+
+      const candleData = response.data.data;
+      if (!candleData || candleData.length === 0) return [];
+
+      return candleData;
+    } catch (error) {
+      console.error("Error fetching chart data:", error);
+      toast.error("Failed to fetch chart data");
+      return [];
+    } finally {
+      setIsLoading(prev => ({ ...prev, [tradeId]: false }));
+    }
+  };
+
+  // Function to update chart data for a specific trade
+  const updateChartData = async (tradeId: string) => {
+    if (!tradeId) return;
+    
+    const data = await fetchCandleData(tradeId);
+    setChartData(prev => ({
+      ...prev,
+      [tradeId]: data
+    }));
+  };
+
   // Update tabs when trades change
   useEffect(() => {
     const filteredTrade = trades.filter((each) => each.alive === true);
     if (filteredTrade.length > 0 && tabs.length > 0 && tabs[0].tradeId === "") {
       const firstTrade = filteredTrade[0];
-      setTabs([
-        {
-          id: "1",
-          tradeId: firstTrade.id,
-          symbol: firstTrade.indexName,
-          expiry: firstTrade.expiry,
-          range: firstTrade.ltpRange,
-          timeframe: "1m",
-          chartType: "candlestick",
-        },
-      ]);
+      const newTab = {
+        id: "1",
+        tradeId: firstTrade.id,
+        symbol: firstTrade.indexName,
+        expiry: firstTrade.expiry,
+        range: firstTrade.ltpRange,
+        timeframe: "1m",
+        chartType: "candlestick" as const,
+      };
+      setTabs([newTab]);
+      // Fetch data for the new trade
+      updateChartData(firstTrade.id);
     }
   }, [trades]);
+
+  // Periodic data refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Get all unique trade IDs from visible tabs
+      const visibleTabs = getVisibleTabs();
+      const uniqueTradeIds = [...new Set(visibleTabs.map(tab => tab.tradeId).filter(id => id))];
+      
+      // Fetch fresh data for all visible trades
+      uniqueTradeIds.forEach(tradeId => {
+        updateChartData(tradeId);
+      });
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [tabs, layout]);
+
+  // Initial data fetch when tabs change
+  useEffect(() => {
+    const visibleTabs = getVisibleTabs();
+    const uniqueTradeIds = [...new Set(visibleTabs.map(tab => tab.tradeId).filter(id => id))];
+    
+    uniqueTradeIds.forEach(tradeId => {
+      if (!chartData[tradeId]) {
+        updateChartData(tradeId);
+      }
+    });
+  }, [tabs, layout]);
 
   const addNewTab = () => {
     const newTab: ChartTab = {
@@ -83,6 +167,11 @@ const ChartContainer: React.FC = () => {
     };
     setTabs([...tabs, newTab]);
     setActiveTab(newTab.id);
+    
+    // Fetch data for the new tab if it has a valid trade
+    if (newTab.tradeId) {
+      updateChartData(newTab.tradeId);
+    }
   };
 
   const closeTab = (tabId: string) => {
@@ -111,6 +200,9 @@ const ChartContainer: React.FC = () => {
         expiry: selectedTrade.expiry,
         range: selectedTrade.ltpRange,
       });
+      
+      // Fetch data for the newly selected trade
+      updateChartData(selectedTrade.id);
     }
   };
 
@@ -172,6 +264,9 @@ const ChartContainer: React.FC = () => {
                 <span className="text-sm font-medium truncate">
                   {getTabTitle(tab)}
                 </span>
+                {isLoading[tab.tradeId] && (
+                  <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                )}
                 {tabs.length > 1 && (
                   <button
                     onClick={(e) => {
@@ -304,6 +399,19 @@ const ChartContainer: React.FC = () => {
                 Line
               </button>
             </div>
+
+            <button
+              onClick={() => {
+                const currentTab = tabs.find((tab) => tab.id === activeTab);
+                if (currentTab?.tradeId) {
+                  updateChartData(currentTab.tradeId);
+                }
+              }}
+              className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+              disabled={isLoading[tabs.find((tab) => tab.id === activeTab)?.tradeId || ""]}
+            >
+              {isLoading[tabs.find((tab) => tab.id === activeTab)?.tradeId || ""] ? "Refreshing..." : "Refresh"}
+            </button>
           </div>
 
           <div className="text-sm text-gray-400">
@@ -318,15 +426,21 @@ const ChartContainer: React.FC = () => {
           {getVisibleTabs().map((tab) => (
             <div key={tab.id} className="relative">
               {layout !== "single" && (
-                <div className="absolute top-2 left-2 z-10 bg-gray-800 px-2 py-1 rounded text-xs text-white">
-                  {getTabTitle(tab)}
+                <div className="absolute top-2 left-2 z-10 bg-gray-800 px-2 py-1 rounded text-xs text-white flex items-center space-x-2">
+                  <span>{getTabTitle(tab)}</span>
+                  {isLoading[tab.tradeId] && (
+                    <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  )}
                 </div>
               )}
               <TradingViewChart
                 symbol={tab.symbol}
                 timeframe={tab.timeframe}
-                chartType={tab.chartType} // Use the tab's chartType instead of hardcoded "line"
+                chartType={tab.chartType}
                 tradeId={tab.tradeId}
+                chartData={chartData[tab.tradeId] || []}
+                isLoading={isLoading[tab.tradeId] || false}
+                onRefreshData={() => updateChartData(tab.tradeId)}
               />
             </div>
           ))}
