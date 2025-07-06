@@ -33,6 +33,7 @@ const ChartContainer: React.FC = () => {
   const [isLoading, setIsLoading] = useState<{ [tradeId: string]: boolean }>(
     {}
   );
+  const [chartReady, setChartReady] = useState(false);
 
   // Initialize tabs with the first trade if available
   const [tabs, setTabs] = useState<ChartTab[]>(() => {
@@ -131,8 +132,35 @@ const ChartContainer: React.FC = () => {
     }
   }, [trades]);
 
+  // Chart readiness check
+  useEffect(() => {
+    const checkChartReadiness = () => {
+      const visibleTabs = getVisibleTabs();
+      const hasValidTabs =
+        visibleTabs.length > 0 && visibleTabs.some((tab) => tab.tradeId);
+
+      if (hasValidTabs) {
+        const hasDataForVisibleTabs = visibleTabs.every(
+          (tab) =>
+            !tab.tradeId || chartData[tab.tradeId] || !isLoading[tab.tradeId]
+        );
+
+        if (hasDataForVisibleTabs) {
+          setChartReady(true);
+        }
+      } else if (trades.length === 0) {
+        // If no trades, consider charts ready (will show empty state)
+        setChartReady(true);
+      }
+    };
+
+    checkChartReadiness();
+  }, [chartData, isLoading, tabs, layout, trades]);
+
   // Periodic data refresh every 5 minutes
   useEffect(() => {
+    if (!chartReady) return;
+
     const interval = setInterval(() => {
       // Get all unique trade IDs from visible tabs
       const visibleTabs = getVisibleTabs();
@@ -147,7 +175,7 @@ const ChartContainer: React.FC = () => {
     }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
-  }, [tabs, layout]);
+  }, [chartReady, tabs, layout]);
 
   // Initial data fetch when tabs change
   useEffect(() => {
@@ -254,6 +282,25 @@ const ChartContainer: React.FC = () => {
     if (!tab.symbol || tab.symbol === "select") return "Select Symbol";
     return `${tab.symbol}-${tab.expiry}-${tab.range}`;
   };
+
+  // Show loading state if charts aren't ready
+  if (!chartReady) {
+    return (
+      <div className="h-full flex flex-col bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <p className="text-gray-400 text-sm">Preparing charts...</p>
+            <p className="text-gray-500 text-xs mt-1">
+              Loading market data and chart components
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">

@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -30,35 +31,39 @@ const Login: React.FC = () => {
     });
   }, [navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const auth = cookies.get("auth");
-    const loginRequest = axios.post(
-      API_URL + "/auth/login",
-      { password, otp: parseInt(otp) || parseInt("123456") },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + auth,
-        },
-      }
-    );
-    toast.promise(loginRequest, {
-      loading: "Logging in, please wait...",
-      success: (data) => {
-        const in10Hours = new Date(new Date().getTime() + 10 * 60 * 60 * 1000);
-        cookies.set("auth", data.data.token, { expires: in10Hours });
-        if (data.data.updatePassword === false) {
-          navigate("/");
-          return "Login successful!";
+    setIsLoading(true);
+
+    try {
+      const auth = cookies.get("auth");
+      const response = await axios.post(
+        API_URL + "/auth/login",
+        { password, otp: parseInt(otp) || parseInt("123456") },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + auth,
+          },
         }
+      );
+
+      const in10Hours = new Date(new Date().getTime() + 10 * 60 * 60 * 1000);
+      cookies.set("auth", response.data.token, { expires: in10Hours });
+
+      toast.success("Login successful! Setting up your dashboard...");
+
+      // Navigate based on user status
+      if (response.data.updatePassword === false) {
+        navigate("/");
+      } else {
         navigate("/onboarding");
-        return "Welcome aboard!";
-      },
-      error: () => {
-        return "Incorrect password or OTP";
-      },
-    });
+      }
+    } catch (error: any) {
+      toast.error("Incorrect password or OTP");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,7 +107,8 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-md bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoading}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-md bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Enter your password"
                 />
               </div>
@@ -126,7 +132,8 @@ const Login: React.FC = () => {
                   onChange={handleOtpChange}
                   maxLength={6}
                   pattern="\d{6}"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-md bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoading}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-md bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Enter 6-digit OTP"
                 />
               </div>
@@ -135,9 +142,17 @@ const Login: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            disabled={isLoading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign in
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Signing in...</span>
+              </div>
+            ) : (
+              "Sign in"
+            )}
           </button>
         </form>
       </div>

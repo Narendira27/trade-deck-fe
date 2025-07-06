@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import Header from "../components/Header";
 import SideNav from "../components/SideNav";
 import TradeTable from "../components/TradeTable";
+import LoadingScreen from "../components/LoadingScreen";
 import { jwtDecode } from "jwt-decode";
 import { type Column } from "../components/TradeTable/ColumnManager";
 import MarketDataComponent from "../components/marketData";
@@ -20,6 +21,7 @@ import {
   defaultDraggableColumns,
   type DraggableBoxColumn,
 } from "../types/draggableBox";
+import { useDataLoader } from "../hooks/useDataLoader";
 
 import { API_URL } from "../config/config";
 import useStore from "../store/store";
@@ -94,31 +96,52 @@ function Dashboard() {
     DraggableBoxColumn[]
   >(defaultDraggableColumns);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
+  const [isDashboardReady, setIsDashboardReady] = useState(false);
+  const [shouldShowLoading, setShouldShowLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
   const navigate = useNavigate();
+  const { loadingState, loadAllData, resetRequestStates } = useDataLoader();
 
-  const getTradeData = useCallback(() => {
+  // Periodic trade data updates (only after dashboard is ready)
+  const updateTradeData = useCallback(() => {
+    if (!isDashboardReady) return;
+
     const auth = cookies.get("auth");
-    const verifyToken = axios.get(API_URL + "/user/tradeInfo", {
-      headers: { Authorization: "Bearer " + auth },
-    });
+    if (!auth) return;
 
-    toast.promise(verifyToken, {
-      loading: "Checking session & fetching latest trades...",
-      success: (data) => {
-        setTrades(data.data.data);
-        return "Trades updated successfully!";
-      },
-      error: () => {
-        navigate("/login");
-        return "Session expired / Server Down . Please log in again.";
-      },
-    });
-  }, [navigate, setTrades]);
+    // Silent update without toast notifications
+    axios
+      .get(API_URL + "/user/tradeInfo", {
+        headers: { Authorization: "Bearer " + auth },
+      })
+      .then((data) => {
+        const tradesData = data.data.data;
+        const validTradesData = Array.isArray(tradesData) ? tradesData : [];
+        setTrades(validTradesData);
+      })
+      .catch((error) => {
+        console.warn("Failed to update trade data:", error);
+        // Don't show error toast for periodic updates
+      });
+  }, [isDashboardReady, setTrades]);
 
+  // Initial authentication check and data loading
   useEffect(() => {
-    const auth = cookies.get("auth");
+    // Prevent multiple initializations
+    if (hasInitialized) return;
 
-    if (auth) {
+    const initializeDashboard = async () => {
+      setHasInitialized(true);
+
+      // First, check if we have a token
+      const auth = cookies.get("auth");
+      if (!auth) {
+        navigate("/login");
+        return;
+      }
+
+      // Check JWT payload for onboarding status
       try {
         const decoded = jwtDecode<MyJwtPayload>(auth);
         if (decoded.updatePassword === true) {
@@ -127,43 +150,105 @@ function Dashboard() {
         }
       } catch {
         navigate("/login");
+        return;
       }
-    }
 
-    getTradeData();
-  }, [navigate, getTradeData]);
+      // Reset any previous request states and load data
+      resetRequestStates();
+      const success = await loadAllData();
 
+      if (!success || loadingState.authenticationFailed) {
+        // If critical data loading fails or auth fails, redirect to login
+        cookies.remove("auth");
+        navigate("/login");
+      }
+    };
+
+    initializeDashboard();
+  }, [
+    navigate,
+    loadAllData,
+    resetRequestStates,
+    hasInitialized,
+    loadingState.authenticationFailed,
+  ]);
+
+  // Handle authentication failures
   useEffect(() => {
-    const interval = setInterval(() => {
-      const auth = cookies.get("auth");
+    if (loadingState.authenticationFailed) {
+      // Clear any stored auth data and redirect
+      cookies.remove("auth");
+      navigate("/login");
+    }
+  }, [loadingState.authenticationFailed, navigate]);
+
+  // Periodic data updates (only after initial loading is complete)
+  useEffect(() => {
+    if (!isDashboardReady) return;
+
+    // Update trade data every 5 seconds
+    const tradeInterval = setInterval(updateTradeData, 5000);
+
+    // Load lot size data once after dashboard is ready (if not already loaded)
+    const auth = cookies.get("auth");
+    if (auth) {
       axios
-        .get(API_URL + "/user/tradeInfo", {
+        .get(API_URL + "/user/lotSize", {
           headers: { Authorization: "Bearer " + auth },
         })
         .then((data) => {
-          setTrades(data.data.data);
+          const lotSizeData = data.data.data;
+          const validLotSizeData = Array.isArray(lotSizeData)
+            ? lotSizeData
+            : [];
+          setOptionLotSize(validLotSizeData);
         })
-        .catch(() => {
-          toast.error("Cannot update the Trade Data, Refresh the page");
+        .catch((error) => {
+          console.warn("Failed to load lot size data:", error);
         });
-    }, 5 * 1000);
-
-    const auth = cookies.get("auth");
-    axios
-      .get(API_URL + "/user/lotSize", {
-        headers: { Authorization: "Bearer " + auth },
-      })
-      .then((data) => {
-        setOptionLotSize(data.data.data);
-      })
-      .catch(() => {
-        toast.error("Cannot get Option Lot Size, Refresh the page");
-      });
+    }
 
     return () => {
-      clearInterval(interval);
+      clearInterval(tradeInterval);
     };
-  }, [getTradeData, setTrades, setOptionLotSize]);
+  }, [isDashboardReady, updateTradeData, setOptionLotSize]);
+
+  const handleLoadingComplete = () => {
+    // Additional validation before allowing dashboard interaction
+    const criticalDataReady =
+      loadingState.chartDataReady &&
+      loadingState.progress === 100 &&
+      !loadingState.error &&
+      !loadingState.authenticationFailed;
+
+    if (criticalDataReady) {
+      setIsDashboardReady(true);
+      setShouldShowLoading(false);
+      toast.success("Dashboard ready! All systems operational.");
+    } else if (loadingState.authenticationFailed) {
+      // Don't show dashboard if authentication failed
+      cookies.remove("auth");
+      navigate("/login");
+    } else {
+      // If critical data isn't ready, show warning but still allow access
+      setIsDashboardReady(true);
+      setShouldShowLoading(false);
+      toast.warning(
+        "Dashboard loaded with limited functionality. Some features may not work properly."
+      );
+    }
+  };
+
+  // Show loading screen during initial load or if dashboard isn't ready
+  if (shouldShowLoading || loadingState.isLoading || !isDashboardReady) {
+    return (
+      <LoadingScreen
+        isVisible={true}
+        onLoadingComplete={handleLoadingComplete}
+        loadingState={loadingState}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
@@ -230,8 +315,13 @@ function Dashboard() {
           <DraggableBoxManager />
           <DraggableBox columns={draggableColumns} />
 
-          <MarketDataComponent />
-          <GetValues />
+          {/* Only render market data components after dashboard is ready */}
+          {isDashboardReady && (
+            <>
+              <MarketDataComponent />
+              <GetValues />
+            </>
+          )}
         </main>
 
         <SideNav
