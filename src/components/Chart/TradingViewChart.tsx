@@ -208,12 +208,18 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     }
 
     keys.forEach((key) => {
+      const price = prices[key];
+      if (typeof price !== 'number' || isNaN(price)) {
+        console.warn(`Invalid price for ${key}:`, price);
+        return;
+      }
+
       priceLinesRef.current[key] = series.createPriceLine({
-        price: prices[key],
+        price: price,
         color: key === "sl" ? "#ef5350" : key === "tp" ? "#26a69a" : "#2962FF",
         lineWidth: 2,
         axisLabelVisible: true,
-        title: `${key.toUpperCase()} (${prices[key].toFixed(2)})`,
+        title: `${key.toUpperCase()} (${price.toFixed(2)})`,
         lineStyle: 0,
       });
     });
@@ -494,10 +500,20 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   useEffect(() => {
     if (!chartData.length || !trade || chartData.length === 0) return;
 
-    const lastPrice =
-      chartType === "candlestick"
-        ? (chartData as CandlestickData[])[chartData.length - 1].close
-        : (chartData as LineData[])[chartData.length - 1].value;
+    // Get the last price with proper fallback handling
+    let lastPrice = 0; // Default fallback value
+    
+    if (chartData.length > 0) {
+      const lastDataPoint = chartData[chartData.length - 1];
+      
+      if (chartType === "candlestick") {
+        const candleData = lastDataPoint as CandlestickData;
+        lastPrice = typeof candleData.close === 'number' ? candleData.close : 0;
+      } else {
+        const lineData = lastDataPoint as LineData;
+        lastPrice = typeof lineData.value === 'number' ? lineData.value : 0;
+      }
+    }
 
     const updatedLines = {
       limit:
