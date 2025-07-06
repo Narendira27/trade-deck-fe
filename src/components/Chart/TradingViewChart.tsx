@@ -19,12 +19,18 @@ interface TradingViewChartProps {
   timeframe: string;
   chartType: "line" | "candlestick";
   tradeId: string;
+  chartData: CandlestickData[];
+  isLoading: boolean;
+  onRefreshData: () => void;
 }
 
 const TradingViewChart: React.FC<TradingViewChartProps> = ({
   symbol,
   tradeId,
   chartType = "candlestick",
+  chartData,
+  isLoading,
+  onRefreshData,
 }) => {
   const { trades, optionValues } = useStore();
   const trade = trades.find((t) => t.id === tradeId);
@@ -41,14 +47,10 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   >({});
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  // Cache for chart data keyed by trade ID
-  const chartDataCacheRef = useRef<Map<string, CandlestickData[]>>(new Map());
-
   const [cursor, setCursor] = useState("default");
 
   const isDraggingRef = useRef(false);
   const draggingLineTypeRef = useRef<"limit" | "sl" | "tp" | null>(null);
-  const initialDataRef = useRef<CandlestickData[] | LineData[] | null>(null);
   const lastCandleDataRef = useRef<{
     time: Time;
     open: number;
@@ -168,38 +170,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     } catch (error) {
       console.error(error);
       toast.error("Error updating price");
-    }
-  };
-
-  const generateData = async (): Promise<CandlestickData[]> => {
-    if (!trade) return [];
-    
-    // Check cache first using trade ID
-    if (chartDataCacheRef.current.has(tradeId)) {
-      return chartDataCacheRef.current.get(tradeId)!;
-    }
-    
-    try {
-      const token = cookies.get("auth");
-      const data = await axios.get(API_URL + "/user/candle/", {
-        headers: { Authorization: "Bearer " + token },
-        params: {
-          indexName: trade.indexName,
-          expiryDate: trade.expiry,
-          range: trade.ltpRange,
-        },
-      });
-      const candleData = data.data.data;
-
-      if (!candleData || candleData.length === 0) return [];
-
-      // Cache the raw candlestick data using trade ID
-      chartDataCacheRef.current.set(tradeId, candleData);
-      
-      return candleData;
-    } catch (error) {
-      console.error("Error fetching chart data:", error);
-      return [];
     }
   };
 
@@ -332,39 +302,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
             },
           });
 
-          // Add null check for chart instance
           if (!chart) {
             console.error("Failed to create chart instance");
             return;
           }
 
           chartRef.current = chart;
-
-          const rawData = await generateData();
-          const transformedData = transformDataForChartType(rawData);
-          initialDataRef.current = transformedData;
-
-          if (chartType === "candlestick") {
-            const candleSeries = chart.addCandlestickSeries({
-              upColor: "#10b981",
-              downColor: "#ef4444",
-              borderDownColor: "#ef4444",
-              borderUpColor: "#10b981",
-              wickDownColor: "#ef4444",
-              wickUpColor: "#10b981",
-            });
-            candleSeries.setData(transformedData as CandlestickData[]);
-            candleSeriesRef.current = candleSeries;
-          } else {
-            const lineSeries = chart.addLineSeries({
-              color: "#3b82f6",
-              lineWidth: 2,
-            });
-            lineSeries.setData(transformedData as LineData[]);
-            lineSeriesRef.current = lineSeries;
-          }
-
-          chart.timeScale().fitContent();
           setChartReady(true);
 
           const resizeChart = () => {
@@ -412,13 +355,9 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     };
   }, [chartContainerRef.current]);
 
-  // Handle chart type changes without refetching data
+  // Update chart when data or chart type changes
   useEffect(() => {
-    if (!chartRef.current || !chartReady) return;
-
-    // Get cached data for current trade
-    const cachedData = chartDataCacheRef.current.get(tradeId);
-    if (!cachedData) return;
+    if (!chartRef.current || !chartReady || !chartData.length) return;
 
     // Remove existing series
     if (candleSeriesRef.current) {
@@ -431,8 +370,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     }
 
     // Transform data and create new series
-    const transformedData = transformDataForChartType(cachedData);
-    initialDataRef.current = transformedData;
+    const transformedData = transformDataForChartType(chartData);
 
     if (chartType === "candlestick") {
       const candleSeries = chartRef.current.addCandlestickSeries({
@@ -455,55 +393,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     }
 
     chartRef.current.timeScale().fitContent();
-  }, [chartType, chartReady, tradeId]);
-
-  // Load data when trade changes
-  useEffect(() => {
-    if (!trade || !chartReady) return;
-
-    const loadTradeData = async () => {
-      const rawData = await generateData();
-      const transformedData = transformDataForChartType(rawData);
-      initialDataRef.current = transformedData;
-
-      if (!chartRef.current) return;
-
-      // Remove existing series
-      if (candleSeriesRef.current) {
-        chartRef.current.removeSeries(candleSeriesRef.current);
-        candleSeriesRef.current = null;
-      }
-      if (lineSeriesRef.current) {
-        chartRef.current.removeSeries(lineSeriesRef.current);
-        lineSeriesRef.current = null;
-      }
-
-      // Create new series with fresh data
-      if (chartType === "candlestick") {
-        const candleSeries = chartRef.current.addCandlestickSeries({
-          upColor: "#10b981",
-          downColor: "#ef4444",
-          borderDownColor: "#ef4444",
-          borderUpColor: "#10b981",
-          wickDownColor: "#ef4444",
-          wickUpColor: "#10b981",
-        });
-        candleSeries.setData(transformedData as CandlestickData[]);
-        candleSeriesRef.current = candleSeries;
-      } else {
-        const lineSeries = chartRef.current.addLineSeries({
-          color: "#3b82f6",
-          lineWidth: 2,
-        });
-        lineSeries.setData(transformedData as LineData[]);
-        lineSeriesRef.current = lineSeries;
-      }
-
-      chartRef.current.timeScale().fitContent();
-    };
-
-    loadTradeData();
-  }, [trade?.id, chartReady]);
+  }, [chartData, chartType, chartReady]);
 
   useEffect(() => {
     if (!chartReady) return;
@@ -602,16 +492,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, [trade, orderType, chartReady, chartType]);
 
   useEffect(() => {
-    if (!initialDataRef.current || !trade || initialDataRef.current.length === 0) return;
+    if (!chartData.length || !trade || chartData.length === 0) return;
 
     const lastPrice =
       chartType === "candlestick"
-        ? (initialDataRef.current as CandlestickData[])[
-            initialDataRef.current.length - 1
-          ].close
-        : (initialDataRef.current as LineData[])[
-            initialDataRef.current.length - 1
-          ].value;
+        ? (chartData as CandlestickData[])[chartData.length - 1].close
+        : (chartData as LineData[])[chartData.length - 1].value;
 
     const updatedLines = {
       limit:
@@ -629,7 +515,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     };
 
     createPriceLines(updatedLines);
-  }, [trade, orderType, chartType]);
+  }, [trade, orderType, chartType, chartData]);
 
   const placeOrder = async () => {
     if (!trade) return;
@@ -759,7 +645,34 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     });
   };
   
-  if (!trade) return <div>Trade not found</div>;
+  if (!trade) return <div className="flex items-center justify-center h-full text-gray-400">Trade not found</div>;
+
+  if (isLoading && !chartData.length) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <span>Loading chart data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!chartData.length) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <div className="text-center">
+          <p>No chart data available</p>
+          <button
+            onClick={onRefreshData}
+            className="mt-2 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
