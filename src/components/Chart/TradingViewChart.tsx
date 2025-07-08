@@ -176,8 +176,9 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const transformDataForChartType = (
     rawData: CandlestickData[]
   ): CandlestickData[] | LineData[] => {
+    const newData = removeIfNotEndingWith59(rawData);
     if (chartType === "line") {
-      return rawData.map((candle: any) => ({
+      return newData.map((candle) => ({
         time: candle.time,
         value: candle.close,
       }));
@@ -234,16 +235,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     const series = candleSeriesRef.current || lineSeriesRef.current;
     if (!series) return;
 
-    const liveValue = optionValues.find(
-      (t) => t.id === tradeId
-    )?.lowestCombinedPremium;
+    const option = optionValues.find((t) => t.id === tradeId);
+    if (!option?.lowestCombinedPremium) return;
 
-    if (liveValue === undefined || liveValue === null) return;
+    const liveValue = option.lowestCombinedPremium;
 
-    const istOffsetMinutes = 5.5 * 60;
-    const currentTimeIST = Date.now() + istOffsetMinutes * 60 * 1000 + 50;
-    const currentTimeGMTSeconds = Math.floor(currentTimeIST / 1000);
-    const candleTime = currentTimeGMTSeconds - (currentTimeGMTSeconds % 60);
+    const candleTime = getISTAlignedTimeInSeconds();
 
     if (chartType === "candlestick") {
       if (
@@ -268,11 +265,10 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         );
         lastCandleDataRef.current.close = liveValue;
       }
-
       (series as ISeriesApi<"Candlestick">).update(lastCandleDataRef.current);
     } else {
       (series as ISeriesApi<"Line">).update({
-        time: currentTimeGMTSeconds as Time,
+        time: candleTime as Time,
         value: liveValue,
       });
     }
@@ -378,6 +374,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     }
 
     // Transform data and create new series
+
     const transformedData = transformDataForChartType(chartData);
 
     if (chartType === "candlestick") {
@@ -790,6 +787,34 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       )}
     </div>
   );
+};
+
+function removeIfNotEndingWith59(
+  chartData: CandlestickData<Time>[]
+): CandlestickData<Time>[] {
+  if (chartData.length === 0) return chartData;
+
+  const last = chartData[chartData.length - 1];
+
+  // Safely assert time is a number
+  const timestamp = typeof last.time === "number" ? last.time : undefined;
+
+  if (timestamp !== undefined) {
+    const lastSeconds = timestamp % 60;
+
+    if (lastSeconds !== 59) {
+      chartData.pop(); // Remove last item
+    }
+  }
+
+  return chartData;
+}
+
+const getISTAlignedTimeInSeconds = () => {
+  const istOffsetMinutes = 5.5 * 60;
+  const currentTimeIST = Date.now() + istOffsetMinutes * 60 * 1000 + 50;
+  const currentTimeGMTSeconds = Math.floor(currentTimeIST / 1000);
+  return currentTimeGMTSeconds - (currentTimeGMTSeconds % 60);
 };
 
 export default TradingViewChart;
