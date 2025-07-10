@@ -77,7 +77,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
     debounceTimeoutRef.current = setTimeout(() => {
       updatePriceOnBackend(type, price);
-    }, 500);
+    }, 50);
   };
 
   const updatePriceOnBackend = async (type: LineType, price: number) => {
@@ -509,26 +509,41 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         const candleData = lastDataPoint as CandlestickData;
         lastPrice = typeof candleData.close === "number" ? candleData.close : 0;
       } else {
-        // @ts-expect-error "fix"
-
-        const lineData = lastDataPoint as LineData;
-        lastPrice = typeof lineData.value === "number" ? lineData.value : 0;
+        const lineData = lastDataPoint;
+        lastPrice = typeof lineData.close === "number" ? lineData.close : 0;
       }
     }
+
+    const getUpdatedPriceLastPrice = () => {
+      if (trade.entrySide === "BUY") {
+        return {
+          limit: lastPrice,
+          sl: lastPrice - 20,
+          tp: lastPrice + 20,
+        };
+      }
+      if (trade.entrySide === "SELL") {
+        return {
+          limit: lastPrice,
+          sl: lastPrice + 20,
+          tp: lastPrice - 20,
+        };
+      }
+    };
 
     const updatedLines = {
       limit:
         trade.entryPrice && trade.entryPrice !== 0
           ? trade.entryPrice
-          : lastPrice,
+          : getUpdatedPriceLastPrice()?.limit || lastPrice,
       sl:
         trade.stopLossPremium && trade.stopLossPremium !== 0
           ? trade.stopLossPremium
-          : lastPrice,
+          : getUpdatedPriceLastPrice()?.sl || lastPrice,
       tp:
         trade.takeProfitPremium && trade.takeProfitPremium !== 0
           ? trade.takeProfitPremium
-          : lastPrice,
+          : getUpdatedPriceLastPrice()?.tp || lastPrice,
     };
 
     createPriceLines(updatedLines);
