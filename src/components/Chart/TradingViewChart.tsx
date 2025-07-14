@@ -574,6 +574,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           stopLossPoints: slPoints,
           takeProfitPoints: tpPoints,
           qty,
+          currentQty: qty,
         },
         {
           headers: { Authorization: "Bearer " + token },
@@ -615,6 +616,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         API_URL + "/user/tradeInfo",
         {
           entryType: "LIMIT",
+          qty,
+          currentQty: qty,
           entryPrice: limitPrice,
           stopLossPremium: slPrice,
           takeProfitPremium: tpPrice,
