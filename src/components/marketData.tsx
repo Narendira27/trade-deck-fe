@@ -4,7 +4,6 @@ import cookies from "js-cookie";
 import { toast } from "sonner";
 import useStore from "../store/store";
 import { SOCKET_FE } from "../config/config";
-import { getLowestCombinedPremiumArray } from "../utils/getlowestValue";
 import throttle from "lodash/throttle";
 
 interface PriceUpdate {
@@ -26,20 +25,9 @@ interface optionSubscribeArr {
   ltpRange: string;
 }
 
-interface CombinedPremiumItem {
-  name: string;
-  combinedPremium: number;
-}
-
-interface SpreadPremiumItem {
-  name: string;
-  spreadPremium: number;
-}
-
-interface PremiumData {
+interface LowestValueData {
   id: number;
-  combinedPremiumArray: CombinedPremiumItem[];
-  spreadPremiumArray: SpreadPremiumItem[];
+  lowestCombinedPremium: number;
 }
 
 const indexName: Record<number, string> = {
@@ -64,6 +52,7 @@ const MarketDataComponent = () => {
 
   const throttledSetIndexPrice = useRef(
     throttle((data: PriceUpdate) => {
+      // console.log(data);
       setIndexPrice(data);
     }, 1)
   ).current;
@@ -85,13 +74,16 @@ const MarketDataComponent = () => {
   );
 
   const handleOptionPremium = useCallback(
-    (data: PremiumData[]) => {
-      const result = getLowestCombinedPremiumArray(data);
-      if (result.length > 0) {
-        result.forEach((each) => {
-          throttledUpdateLowestValue(String(each.id), String(each.lowestValue));
-        });
-      }
+    (data: { data: LowestValueData[] }) => {
+      if (data.data.length === 0) return;
+      const result = data.data;
+
+      result.forEach((each) => {
+        throttledUpdateLowestValue(
+          String(each.id),
+          String(each.lowestCombinedPremium)
+        );
+      });
     },
     [throttledUpdateLowestValue]
   );
@@ -178,8 +170,9 @@ const MarketDataComponent = () => {
           });
 
           if (!listenersAttached.current) {
-            // socketRef.current.on("optionPremium", handleOptionPremium);
+            socketRef.current.on("feLowest", handleOptionPremium);
             socketRef.current.on("priceUpdate", handlePriceUpdate);
+            socketRef.current.on("lastPrice", (data) => console.log(data));
             listenersAttached.current = true;
           }
 

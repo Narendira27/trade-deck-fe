@@ -36,6 +36,7 @@ const defaultColumns: Column[] = [
   { id: "expiry", label: "Expiry", visible: true, width: "120px" },
   { id: "ltpRange", label: "LTP Range", visible: true, width: "100px" },
   { id: "lowestValue", label: "Lowest Value", visible: true, width: "120px" },
+  { id: "orderType", label: "Order Type", visible: true, width: "120px" },
   { id: "entry", label: "Entry", visible: true, width: "100px" },
   { id: "qty", label: "Quantity", visible: true, width: "100px" },
   { id: "sl", label: "Stop Loss", visible: true, width: "100px" },
@@ -65,7 +66,7 @@ const defaultColumns: Column[] = [
     visible: true,
     width: "180px",
   },
-  { id: "orderType", label: "Order Type", visible: true, width: "120px" },
+
   {
     id: "entryTriggered",
     label: "Entry Triggered",

@@ -102,6 +102,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
   const calculateMtm = useMemo(() => {
     if (!trade) return 0;
+    if (optionLotSize.length <= 0) return;
 
     const lotSizeObj = optionLotSize.find(
       (lot) =>
@@ -746,7 +747,7 @@ const TableRow: React.FC<TableRowProps> = ({
       case "entry":
         return trade.entryPrice ? formatNumber(trade.entryPrice) : "-";
       case "qty":
-        return trade.qty || "-";
+        return trade.currentQty || "-";
       case "sl":
         return trade.stopLossPremium
           ? formatNumber(trade.stopLossPremium)
