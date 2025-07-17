@@ -821,7 +821,9 @@ function removeIfNotEndingWith59(
     const lastSeconds = timestamp % 60;
 
     if (lastSeconds !== 59) {
+      chartData.pop();
       chartData.pop(); // Remove last item
+      console.log("removed");
     }
   }
 

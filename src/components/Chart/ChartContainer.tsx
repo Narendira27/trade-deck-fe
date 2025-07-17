@@ -247,7 +247,7 @@ const ChartContainer: React.FC = () => {
   };
 
   const formatTradeOption = (trade: Trade) => {
-    return `${trade.indexName}-${trade.expiry}-${trade.ltpRange}`;
+    return `${trade.indexName}-${trade.expiry}-${trade.ltpRange}-${trade.entrySide}`;
   };
 
   const getTabTitle = (tab: ChartTab) => {
@@ -377,11 +377,6 @@ const ChartContainer: React.FC = () => {
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="1m">1m</option>
-              <option value="5m">5m</option>
-              <option value="15m">15m</option>
-              <option value="1h">1h</option>
-              <option value="4h">4h</option>
-              <option value="1d">1d</option>
             </select>
 
             <div className="flex bg-gray-700 rounded">
