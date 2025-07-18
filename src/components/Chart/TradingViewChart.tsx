@@ -290,7 +290,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
             layout: { background: { color: "#1f2937" }, textColor: "#d1d5db" },
             grid: {
               vertLines: { visible: false, color: "#374151" },
-              horzLines: { visible: true, color: "#374151" },
+              horzLines: { visible: false, color: "#374151" },
             },
             timeScale: { timeVisible: true },
             crosshair: { mode: 1 },

@@ -10,6 +10,15 @@ import axios from "axios";
 import { toast } from "sonner";
 import getTradeData from "../../utils/getTradeData";
 
+const indexName: Record<string, number> = {
+  NIFTY: 26000,
+  BANKNIFTY: 26001,
+  FINNIFTY: 26034,
+  MIDCPNIFTY: 26121,
+  SENSEX: 26065,
+  BANKEX: 26118,
+};
+
 interface TableRowProps {
   trade: Trade;
   columns: Column[];
@@ -91,7 +100,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
   // Memoize the index price to prevent unnecessary updates
   const currentIndexPrice = useMemo(() => {
-    return indexPrice.find((each) => each.name === trade.indexName);
+    return indexPrice.find((each) => each.id === indexName[trade.indexName]);
   }, [indexPrice, trade.indexName]);
 
   // Memoize the option values to prevent unnecessary updates

@@ -34,7 +34,7 @@ const indexName: Record<number, string> = {
   26000: "NIFTY",
   26001: "BANKNIFTY",
   26034: "FINNIFTY",
-  26005: "MIDCPNIFTY",
+  26121: "MIDCPNIFTY",
   26065: "SENSEX",
   26118: "BANKEX",
 };
