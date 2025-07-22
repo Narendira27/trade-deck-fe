@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BarChart2, Plus, Menu, Shield, Filter } from "lucide-react";
+import { BarChart2, Plus, Menu, Shield, Filter, TrendingUp } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
@@ -26,6 +26,8 @@ const Header: React.FC<HeaderProps> = ({
   const [isAddTradeModalOpen, setIsAddTradeModalOpen] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [portfolioSL, setPortfolioSL] = useState(0);
+  const [portfolioTrail, setPortfolioTrail] = useState(0);
   const { showDraggable } = useStore();
 
   return (
@@ -60,6 +62,31 @@ const Header: React.FC<HeaderProps> = ({
               <Filter size={16} />
               <span className="text-sm">Filter</span>
             </button>
+
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 px-2 py-1 bg-red-600/20 rounded-md">
+                <Shield size={14} className="text-red-400" />
+                <span className="text-xs text-red-400">SL:</span>
+                <input
+                  type="number"
+                  value={portfolioSL}
+                  onChange={(e) => setPortfolioSL(Number(e.target.value))}
+                  className="w-16 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                  placeholder="0"
+                />
+              </div>
+              <div className="flex items-center space-x-1 px-2 py-1 bg-blue-600/20 rounded-md">
+                <TrendingUp size={14} className="text-blue-400" />
+                <span className="text-xs text-blue-400">Trail:</span>
+                <input
+                  type="number"
+                  value={portfolioTrail}
+                  onChange={(e) => setPortfolioTrail(Number(e.target.value))}
+                  className="w-16 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                  placeholder="0"
+                />
+              </div>
+            </div>
 
             <button
               onClick={() => setIsPortfolioModalOpen(true)}

@@ -97,6 +97,8 @@ const TableRow: React.FC<TableRowProps> = ({
   const [enablePremiumTp, setEnablePremiumTP] = useState(false);
   const [enableStrategySl, setEnableStrategySl] = useState(false);
   const [enableStrategyTrailing, setEnableStrategyTrailing] = useState(false);
+  const [isEditingNarration, setIsEditingNarration] = useState(false);
+  const [narration, setNarration] = useState(trade.narration || "");
 
   // Memoize the index price to prevent unnecessary updates
   const currentIndexPrice = useMemo(() => {
@@ -389,6 +391,30 @@ const TableRow: React.FC<TableRowProps> = ({
         return "Updated SL and TP";
       },
       error: "Cannot update SL & TP",
+    });
+  };
+
+  const updateNarration = async () => {
+    const auth = cookies.get("auth");
+    const reqPromise = axios.put(
+      API_URL + "/user/tradeInfo?id=" + trade.id,
+      { narration: narration },
+      {
+        headers: { Authorization: "Bearer " + auth },
+      }
+    );
+
+    toast.promise(reqPromise, {
+      loading: "Updating narration...",
+      success: async () => {
+        const result = await getTradeData();
+        if (result.status === "ok") {
+          setTrades(result.tradeInfo);
+        }
+        setIsEditingNarration(false);
+        return "Narration updated successfully";
+      },
+      error: "Cannot update narration",
     });
   };
 
@@ -765,6 +791,45 @@ const TableRow: React.FC<TableRowProps> = ({
         return trade.takeProfitPremium
           ? formatNumber(trade.takeProfitPremium)
           : "-";
+      case "narration":
+        return isEditingNarration ? (
+          <div className="flex items-center space-x-1">
+            <input
+              type="text"
+              value={narration}
+              onChange={(e) => setNarration(e.target.value)}
+              className="w-32 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+              placeholder="Enter narration"
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  updateNarration();
+                }
+              }}
+            />
+            <button
+              onClick={updateNarration}
+              className="px-1 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              ✓
+            </button>
+            <button
+              onClick={() => {
+                setIsEditingNarration(false);
+                setNarration(trade.narration || "");
+              }}
+              className="px-1 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <div
+            className="cursor-pointer hover:bg-gray-700 px-1 py-1 rounded"
+            onClick={() => setIsEditingNarration(true)}
+          >
+            {trade.narration || "Click to add"}
+          </div>
+        );
       case "entrySpot":
         return formatNumber(trade.entrySpotPrice);
       case "mtm":

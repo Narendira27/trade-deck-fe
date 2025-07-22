@@ -65,7 +65,7 @@ const DraggableBoxColumnManager: React.FC<DraggableBoxColumnManagerProps> = ({
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-96 flex flex-col">
+          <div className="absolute right-0 top-full mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[60] max-h-96 flex flex-col">
             <div className="p-4 border-b border-gray-700">
               <h3 className="text-lg font-semibold text-white">
                 Manage Draggable Box Columns

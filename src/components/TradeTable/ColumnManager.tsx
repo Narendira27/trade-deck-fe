@@ -14,6 +14,28 @@ export interface Column {
   width?: string;
 }
 
+export const defaultColumns: Column[] = [
+  { id: "index", label: "Index", visible: true, width: "120px" },
+  { id: "side", label: "Side", visible: true, width: "100px" },
+  { id: "ltpSpot", label: "LTP Spot", visible: true, width: "100px" },
+  { id: "legCount", label: "Leg Count", visible: true, width: "100px" },
+  { id: "expiry", label: "Expiry", visible: true, width: "120px" },
+  { id: "ltpRange", label: "LTP Range", visible: true, width: "100px" },
+  { id: "lowestValue", label: "Lowest Value", visible: true, width: "120px" },
+  { id: "orderType", label: "Order Type", visible: true, width: "120px" },
+  { id: "entry", label: "Entry", visible: true, width: "100px" },
+  { id: "qty", label: "Quantity", visible: true, width: "100px" },
+  { id: "sl", label: "Stop Loss", visible: true, width: "100px" },
+  { id: "target", label: "Target", visible: true, width: "100px" },
+  { id: "narration", label: "Narration", visible: true, width: "150px" },
+  {
+    id: "entrySpot",
+    label: "Entry Spot Price",
+    visible: true,
+    width: "140px",
+  },
+];
+
 interface ColumnManagerProps {
   columns: Column[];
   onColumnsChange: (columns: Column[]) => void;
@@ -71,7 +93,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-96 flex flex-col">
+          <div className="absolute right-0 top-full mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[60] max-h-96 flex flex-col">
             <div className="p-4 border-b border-gray-700">
               <h3 className="text-lg font-semibold text-white">
                 Manage Columns
