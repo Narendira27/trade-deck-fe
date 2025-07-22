@@ -99,11 +99,14 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
   const handleKeyCardClick = (keyNum: number) => {
     const keyId = `key-${keyNum}`;
     setSelectedKeyId(keyId);
+    
+    // Find the key by keyName instead of array position
+    const foundKey = savedKeys.find(key => key.keyName === keyId);
     const getKeyType = keyNum === 1 ? "interactive" : "marketdata";
-    const getId = keyNum - 1;
+    
     setFormData({
-      apiKey: savedKeys[getId].apiKey,
-      secretKey: savedKeys[getId].apiSecret,
+      apiKey: foundKey ? foundKey.apiKey : "",
+      secretKey: foundKey ? foundKey.apiSecret : "",
       keyType: getKeyType,
     });
   };
@@ -124,7 +127,7 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
             <div className="grid grid-cols-3 gap-4 mb-8">
               {[1, 2, 3].map((keyNum) => {
                 const keyId = `key-${keyNum}`;
-                const key = savedKeys.find((k) => k.keyName === keyId);
+                const foundKey = savedKeys.find((k) => k.keyName === keyId);
                 const isSelected = selectedKeyId === keyId;
 
                 return (
@@ -138,7 +141,7 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
                     <p className="text-white text-lg mb-2">
                       {keyNum === 1 ? "Interactive Key" : "MarketData Key"}
                     </p>
-                    {key ? (
+                    {foundKey ? (
                       <p className="text-sm text-gray-400">key configured</p>
                     ) : (
                       <p className="text-sm text-gray-400">No key configured</p>
