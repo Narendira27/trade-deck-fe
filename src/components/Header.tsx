@@ -40,55 +40,51 @@ const Header: React.FC<HeaderProps> = ({
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [portfolioSL, setPortfolioSL] = useState(0);
   const [portfolioTrail, setPortfolioTrail] = useState(0);
-  const [portfolioSLEnabled, setPortfolioSLEnabled] = useState(false);
-  const [portfolioTrailEnabled, setPortfolioTrailEnabled] = useState(false);
+  const [portfolioEnabled, setPortfolioEnabled] = useState(false);
   const { showDraggable } = useStore();
 
-  const updatePortfolioSettings = async (type: 'sl' | 'trail', enabled: boolean, value?: number) => {
+  const updatePortfolioSettings = async (enabled?: boolean, slValue?: number, trailValue?: number) => {
     const auth = cookies.get("auth");
     const data: any = {};
     
-    if (type === 'sl') {
+    if (enabled !== undefined) {
       data.portfolioSLEnabled = enabled;
-      if (value !== undefined) data.portfolioSL = value;
-    } else {
       data.portfolioTrailEnabled = enabled;
-      if (value !== undefined) data.portfolioTrail = value;
     }
+    if (slValue !== undefined) data.portfolioSL = slValue;
+    if (trailValue !== undefined) data.portfolioTrail = trailValue;
 
     try {
       await axios.put(`${API_URL}/user/portfolio-settings`, data, {
         headers: { Authorization: `Bearer ${auth}` }
       });
-      toast.success(`Portfolio ${type.toUpperCase()} ${enabled ? 'enabled' : 'disabled'}`);
+      if (enabled !== undefined) {
+        toast.success(`Portfolio controls ${enabled ? 'enabled' : 'disabled'}`);
+      } else {
+        toast.success('Portfolio settings updated');
+      }
     } catch (error) {
-      toast.error(`Failed to update portfolio ${type.toUpperCase()}`);
+      toast.error('Failed to update portfolio settings');
     }
   };
 
-  const handleSLToggle = () => {
-    const newEnabled = !portfolioSLEnabled;
-    setPortfolioSLEnabled(newEnabled);
-    updatePortfolioSettings('sl', newEnabled);
-  };
-
-  const handleTrailToggle = () => {
-    const newEnabled = !portfolioTrailEnabled;
-    setPortfolioTrailEnabled(newEnabled);
-    updatePortfolioSettings('trail', newEnabled);
+  const handlePortfolioToggle = () => {
+    const newEnabled = !portfolioEnabled;
+    setPortfolioEnabled(newEnabled);
+    updatePortfolioSettings(newEnabled);
   };
 
   const handleSLChange = (value: number) => {
     setPortfolioSL(value);
-    if (portfolioSLEnabled) {
-      updatePortfolioSettings('sl', true, value);
+    if (portfolioEnabled) {
+      updatePortfolioSettings(undefined, value);
     }
   };
 
   const handleTrailChange = (value: number) => {
     setPortfolioTrail(value);
-    if (portfolioTrailEnabled) {
-      updatePortfolioSettings('trail', true, value);
+    if (portfolioEnabled) {
+      updatePortfolioSettings(undefined, undefined, value);
     }
   };
 
@@ -106,27 +102,27 @@ const Header: React.FC<HeaderProps> = ({
           {/* Desktop Controls */}
           <div className="hidden lg:flex items-center space-x-3">
             <div className="flex items-center space-x-2">
+              <button
+                onClick={handlePortfolioToggle}
+                className={`p-1 rounded ${
+                  portfolioEnabled ? 'text-green-400 hover:text-green-300' : 'text-gray-400 hover:text-gray-300'
+                }`}
+                title={`${portfolioEnabled ? 'Disable' : 'Enable'} Portfolio Controls`}
+              >
+                <Power size={16} />
+              </button>
               <div className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
-                portfolioSLEnabled ? 'bg-red-600/20' : 'bg-gray-600/20'
+                portfolioEnabled ? 'bg-red-600/20' : 'bg-gray-600/20'
               }`}>
-                <button
-                  onClick={handleSLToggle}
-                  className={`p-1 rounded ${
-                    portfolioSLEnabled ? 'text-red-400 hover:text-red-300' : 'text-gray-400 hover:text-gray-300'
-                  }`}
-                  title={`${portfolioSLEnabled ? 'Disable' : 'Enable'} Portfolio SL`}
-                >
-                  <Power size={12} />
-                </button>
                 <Shield size={14} className="text-red-400" />
                 <span className="text-xs text-red-400">SL:</span>
                 <input
                   type="number"
                   value={portfolioSL}
                   onChange={(e) => handleSLChange(Number(e.target.value))}
-                  disabled={!portfolioSLEnabled}
+                  disabled={!portfolioEnabled}
                   className={`w-16 px-1 py-0.5 text-xs border border-gray-600 rounded ${
-                    portfolioSLEnabled 
+                    portfolioEnabled 
                       ? 'bg-gray-700 text-white' 
                       : 'bg-gray-800 text-gray-500 cursor-not-allowed'
                   }`}
@@ -134,26 +130,17 @@ const Header: React.FC<HeaderProps> = ({
                 />
               </div>
               <div className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
-                portfolioTrailEnabled ? 'bg-blue-600/20' : 'bg-gray-600/20'
+                portfolioEnabled ? 'bg-blue-600/20' : 'bg-gray-600/20'
               }`}>
-                <button
-                  onClick={handleTrailToggle}
-                  className={`p-1 rounded ${
-                    portfolioTrailEnabled ? 'text-blue-400 hover:text-blue-300' : 'text-gray-400 hover:text-gray-300'
-                  }`}
-                  title={`${portfolioTrailEnabled ? 'Disable' : 'Enable'} Portfolio Trail`}
-                >
-                  <Power size={12} />
-                </button>
                 <TrendingUp size={14} className="text-blue-400" />
                 <span className="text-xs text-blue-400">Trail:</span>
                 <input
                   type="number"
                   value={portfolioTrail}
                   onChange={(e) => handleTrailChange(Number(e.target.value))}
-                  disabled={!portfolioTrailEnabled}
+                  disabled={!portfolioEnabled}
                   className={`w-16 px-1 py-0.5 text-xs border border-gray-600 rounded ${
-                    portfolioTrailEnabled 
+                    portfolioEnabled 
                       ? 'bg-gray-700 text-white' 
                       : 'bg-gray-800 text-gray-500 cursor-not-allowed'
                   }`}
