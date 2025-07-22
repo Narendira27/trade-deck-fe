@@ -97,6 +97,8 @@ const TableRow: React.FC<TableRowProps> = ({
   const [enablePremiumTp, setEnablePremiumTP] = useState(false);
   const [enableStrategySl, setEnableStrategySl] = useState(false);
   const [enableStrategyTrailing, setEnableStrategyTrailing] = useState(false);
+  const [isEditingNarration, setIsEditingNarration] = useState(false);
+  const [narration, setNarration] = useState(trade.narration || "");
 
   // Memoize the index price to prevent unnecessary updates
   const currentIndexPrice = useMemo(() => {
@@ -389,6 +391,30 @@ const TableRow: React.FC<TableRowProps> = ({
         return "Updated SL and TP";
       },
       error: "Cannot update SL & TP",
+    });
+  };
+
+  const updateNarration = async () => {
+    const auth = cookies.get("auth");
+    const reqPromise = axios.put(
+      API_URL + "/user/tradeInfo?id=" + trade.id,
+      { narration: narration },
+      {
+        headers: { Authorization: "Bearer " + auth },
+      }
+    );
+
+    toast.promise(reqPromise, {
+      loading: "Updating narration...",
+      success: async () => {
+        const result = await getTradeData();
+        if (result.status === "ok") {
+          setTrades(result.tradeInfo);
+        }
+        setIsEditingNarration(false);
+        return "Narration updated successfully";
+      },
+      error: "Cannot update narration",
     });
   };
 
