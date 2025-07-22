@@ -6,6 +6,6 @@
 export const SOCKET_MAIN = "http://localhost:3001";
 export const SOCKET_FE = "http://localhost:3002";
 
-export const API_URL = "https://persons-elliott-alien-gabriel.trycloudflare.com/";
+export const API_URL = "https://persons-elliott-alien-gabriel.trycloudflare.com";
 // export const SOCKET_MAIN = "https://barrel-custom-swap-broke.trycloudflare.com";
 // export const SOCKET_FE = "https://upc-rotary-conditioning-blah.trycloudflare.com";
