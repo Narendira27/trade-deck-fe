@@ -30,10 +30,12 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="bg-gray-900 text-white py-2 px-2 sm:py-3 sm:px-4 flex items-center justify-between border-b border-gray-800 min-h-[60px]">
+      <header className="bg-gray-900  text-white py-2 px-2 sm:py-3 sm:px-4 flex items-center justify-between border-b border-gray-800 min-h-[60px]">
         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
           <BarChart2 className="text-blue-500 flex-shrink-0" size={20} />
-          <h1 className="text-base sm:text-lg lg:text-xl font-semibold truncate">TradeDeck</h1>
+          <h1 className="text-base sm:text-lg lg:text-xl font-semibold truncate">
+            TradeDeck
+          </h1>
         </div>
 
         <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
