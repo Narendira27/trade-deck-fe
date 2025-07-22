@@ -84,7 +84,6 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({
         className="hidden lg:flex items-center space-x-2 px-2 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
       >
         <Settings size={16} />
-        <span className="text-sm">Columns</span>
       </button>
 
       {isOpen && (

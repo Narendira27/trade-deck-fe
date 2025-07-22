@@ -247,7 +247,7 @@ const ChartContainer: React.FC = () => {
   };
 
   const formatTradeOption = (trade: Trade) => {
-    return `${trade.indexName}-${trade.expiry}-${trade.ltpRange}-${trade.entrySide}`;
+    return `${trade.indexName}-${trade.expiry}-${trade.ltpRange}-${trade.entrySide}-${trade.narration}`;
   };
 
   const getTabTitle = (tab: ChartTab) => {

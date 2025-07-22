@@ -265,14 +265,6 @@ const PositionTracker: React.FC = () => {
           >
             <span>Square Off All</span>
           </button>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button className="flex items-center justify-center space-x-1 px-2 py-2 text-orange-500 text-xs rounded transition-colors">
-              <span className="truncate">Portfolio SL: Undefined</span>
-            </button>
-            <button className="flex items-center justify-center space-x-1 px-2 py-2 text-blue-500 text-xs rounded">
-              <span className="truncate">Portfolio Trail: Undefined</span>
-            </button>
-          </div>
         </div>
       </div>
     </div>

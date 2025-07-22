@@ -539,15 +539,15 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       if (trade.entrySide === "BUY") {
         return {
           limit: lastPrice,
-          sl: lastPrice - 20,
-          tp: lastPrice + 20,
+          sl: lastPrice - 3,
+          tp: lastPrice + 3,
         };
       }
       if (trade.entrySide === "SELL") {
         return {
           limit: lastPrice,
-          sl: lastPrice + 20,
-          tp: lastPrice - 20,
+          sl: lastPrice + 3,
+          tp: lastPrice - 3,
         };
       }
     };

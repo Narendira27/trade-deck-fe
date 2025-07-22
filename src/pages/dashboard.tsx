@@ -41,7 +41,7 @@ const defaultColumns: Column[] = [
   { id: "qty", label: "Quantity", visible: true, width: "100px" },
   { id: "sl", label: "Stop Loss", visible: true, width: "100px" },
   { id: "target", label: "Target", visible: true, width: "100px" },
-  { id: "narration", label: "Narration", visible: true, width: "150px" },
+  { id: "narration", label: "Narration", visible: true, width: "175px" },
   {
     id: "entrySpot",
     label: "Entry Spot Price",

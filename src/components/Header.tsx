@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { BarChart2, Plus, Menu, Shield, Filter, TrendingUp } from "lucide-react";
+import {
+  BarChart2,
+  Plus,
+  Menu,
+  Shield,
+  Filter,
+  TrendingUp,
+} from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
@@ -43,26 +50,6 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
           {/* Desktop Controls */}
           <div className="hidden lg:flex items-center space-x-3">
-            <ColumnManager
-              columns={columns}
-              onColumnsChange={onColumnsChange}
-            />
-
-            {showDraggable && (
-              <DraggableBoxColumnManager
-                columns={draggableColumns}
-                onColumnsChange={onDraggableColumnsChange}
-              />
-            )}
-
-            <button
-              onClick={() => setIsFilterModalOpen(true)}
-              className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              <Filter size={16} />
-              <span className="text-sm">Filter</span>
-            </button>
-
             <div className="flex items-center space-x-2">
               <div className="flex items-center space-x-1 px-2 py-1 bg-red-600/20 rounded-md">
                 <Shield size={14} className="text-red-400" />
@@ -88,12 +75,23 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
+            {showDraggable && (
+              <DraggableBoxColumnManager
+                columns={draggableColumns}
+                onColumnsChange={onDraggableColumnsChange}
+              />
+            )}
+
+            <ColumnManager
+              columns={columns}
+              onColumnsChange={onColumnsChange}
+            />
+
             <button
-              onClick={() => setIsPortfolioModalOpen(true)}
-              className="flex items-center space-x-2 px-3 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+              onClick={() => setIsFilterModalOpen(true)}
+              className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
-              <Shield size={16} />
-              <span className="text-sm">Portfolio</span>
+              <Filter size={16} />
             </button>
 
             <button
@@ -101,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               <Plus size={16} />
-              <span className="text-sm">Add Trade</span>
+
             </button>
           </div>
 
@@ -121,14 +119,6 @@ const Header: React.FC<HeaderProps> = ({
             >
               <Plus size={14} />
               <span className="hidden sm:inline">Add</span>
-            </button>
-
-            <button
-              onClick={() => setIsPortfolioModalOpen(true)}
-              className="flex items-center space-x-1 px-2 py-1.5 bg-orange-600 text-white text-xs rounded-md hover:bg-orange-700 transition-colors"
-            >
-              <Shield size={14} />
-              <span className="hidden sm:inline">Portfolio</span>
             </button>
           </div>
 

@@ -824,7 +824,7 @@ const TableRow: React.FC<TableRowProps> = ({
           </div>
         ) : (
           <div
-            className="cursor-pointer hover:bg-gray-700 px-1 py-1 rounded"
+            className="cursor-pointer hover:bg-gray-700 text-[10px] px-1 py-1 rounded"
             onClick={() => setIsEditingNarration(true)}
           >
             {trade.narration || "Click to add"}
