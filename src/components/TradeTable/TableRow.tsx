@@ -765,6 +765,45 @@ const TableRow: React.FC<TableRowProps> = ({
         return trade.takeProfitPremium
           ? formatNumber(trade.takeProfitPremium)
           : "-";
+      case "narration":
+        return isEditingNarration ? (
+          <div className="flex items-center space-x-1">
+            <input
+              type="text"
+              value={narration}
+              onChange={(e) => setNarration(e.target.value)}
+              className="w-32 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+              placeholder="Enter narration"
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  updateNarration();
+                }
+              }}
+            />
+            <button
+              onClick={updateNarration}
+              className="px-1 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              ✓
+            </button>
+            <button
+              onClick={() => {
+                setIsEditingNarration(false);
+                setNarration(trade.narration || "");
+              }}
+              className="px-1 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <div
+            className="cursor-pointer hover:bg-gray-700 px-1 py-1 rounded"
+            onClick={() => setIsEditingNarration(true)}
+          >
+            {trade.narration || "Click to add"}
+          </div>
+        );
       case "entrySpot":
         return formatNumber(trade.entrySpotPrice);
       case "mtm":

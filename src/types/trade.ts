@@ -30,6 +30,7 @@ export interface Trade {
   isActive: boolean;
   strategySl?: number;
   strategyTrailing?: number;
+  narration?: string;
   liveTradePositions: liveTradePositions[];
 }
 

@@ -45,6 +45,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     >
   >({});
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const chartPositionRef = useRef<{ x: number; y: number } | null>(null);
 
   const [cursor, setCursor] = useState("default");
 
@@ -363,6 +364,18 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   useEffect(() => {
     if (!chartRef.current || !chartReady || !chartData.length) return;
 
+    // Save current chart position before updating
+    if (chartRef.current) {
+      const timeScale = chartRef.current.timeScale();
+      const visibleRange = timeScale.getVisibleRange();
+      if (visibleRange) {
+        chartPositionRef.current = {
+          x: visibleRange.from as number,
+          y: visibleRange.to as number,
+        };
+      }
+    }
+
     // Remove existing series
     if (candleSeriesRef.current) {
       chartRef.current.removeSeries(candleSeriesRef.current);
@@ -397,7 +410,15 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       lineSeriesRef.current = lineSeries;
     }
 
-    chartRef.current.timeScale().fitContent();
+    // Restore chart position if available, otherwise fit content
+    if (chartPositionRef.current) {
+      chartRef.current.timeScale().setVisibleRange({
+        from: chartPositionRef.current.x as Time,
+        to: chartPositionRef.current.y as Time,
+      });
+    } else {
+      chartRef.current.timeScale().fitContent();
+    }
   }, [chartData, chartType, chartReady]);
 
   useEffect(() => {

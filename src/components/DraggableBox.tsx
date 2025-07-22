@@ -54,7 +54,7 @@ const DraggableBox: React.FC<DraggableBoxProps> = ({ columns }) => {
   return showDraggable === true ? (
     <div
       ref={boxRef}
-      className={`absolute z-150 bg-gray-900 p-4 rounded-lg shadow-lg border border-gray-700 cursor-move select-none
+      className={`absolute z-[9999] bg-gray-900 p-4 rounded-lg shadow-lg border border-gray-700 cursor-move select-none
         ${isDragging ? "opacity-90" : ""}`}
       style={{
         left: `${position.x}px`,
