@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BarChart2, Plus, Menu, Shield, Filter } from "lucide-react";
+import { BarChart2, Plus, Menu, Shield, Filter, TrendingUp } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
