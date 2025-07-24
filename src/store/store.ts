@@ -148,7 +148,6 @@ const useStore = create<TradeStoreState>((set, get) => ({
       return; // No change, don't update
     }
 
-
     set((state) => {
       if (existingIndex !== -1) {
         const updatedPrices = [...state.optionPrice];
@@ -194,7 +193,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
 
 export const useDraggableStore = create<DraggableStoreState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       draggableData: [],
       showDraggable: false,
       setDraggableData: (data: draggableData[]) =>
@@ -224,7 +223,7 @@ export const useDraggableStore = create<DraggableStoreState>()(
         })),
     }),
     {
-      name: 'draggable-storage',
+      name: "draggable-storage",
     }
   )
 );

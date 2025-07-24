@@ -8,7 +8,6 @@ import {
   TrendingUp,
   Power,
   Target,
-  DollarSign,
   Eye,
 } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
