@@ -23,7 +23,6 @@ const PositionTracker: React.FC = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
-  // Mock data - replace with real data from your store
   const [positions, setPositions] = useState<Position[]>([]);
 
   // {

@@ -102,7 +102,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
     if (formData.ltpRange <= 0) {
       return toast.warning("Enter valid LTP Range");
     }
-    if (formData.pointOfAdjustment <= 0) {
+    if (formData.pointOfAdjustment < 0) {
       return toast.warning("Enter valid Point of Adjustment");
     }
     if (formData.entrySide !== "BUY" && formData.entrySide !== "SELL") {

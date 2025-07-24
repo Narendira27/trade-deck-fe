@@ -1,9 +1,19 @@
-import React from "react";
-import { LayoutDashboard, BarChart2, LogOut, KeyRound, X, Wallet, TrendingDown } from "lucide-react";
+import React, { useEffect } from "react";
+import {
+  LayoutDashboard,
+  BarChart2,
+  LogOut,
+  KeyRound,
+  X,
+  Wallet,
+  TrendingDown,
+} from "lucide-react";
 import cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import KeyModal from "./modals/keyModal";
 import { toast } from "sonner";
+import axios from "axios";
+import { API_URL } from "../config/config";
 
 interface SideNavProps {
   isOpen: boolean;
@@ -12,9 +22,30 @@ interface SideNavProps {
 
 const SideNav: React.FC<SideNavProps> = ({ isOpen, onToggle }) => {
   const [isKeyModalOpen, setIsKeyModalOpen] = React.useState(false);
-  const [fundsAvailable] = React.useState(50000); // Mock data - replace with actual data
-  const [fundsUsed] = React.useState(25000); // Mock data - replace with actual data
+  const [fundsAvailable, setFundsAvailable] = React.useState(0);
+  const [fundsUsed, setFundsUsed] = React.useState(0);
   const navigate = useNavigate();
+
+  const getFunds = () => {
+    const auth = cookies.get("auth");
+    axios
+      .get(`${API_URL}/user/funds`, {
+        headers: { Authorization: `Bearer ${auth}` },
+      })
+      .then((res) => {
+        const response = res.data.data;
+        setFundsAvailable(response.marginAvailable);
+        setFundsUsed(response.marginUtilized);
+      })
+      .catch((error) => {
+        console.log("Error fetching funds:", error);
+      });
+  };
+
+  useEffect(() => {
+    getFunds();
+    setInterval(getFunds, 1000 * 60);
+  }, []);
 
   const handleLogout = () => {
     onToggle(); // Close menu

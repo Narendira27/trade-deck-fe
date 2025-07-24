@@ -102,7 +102,7 @@ const ExcelLikeBox = ({ columns }: { columns: DraggableBoxColumn[] }) => {
       case "lowestValue":
         return (
           <td className="px-1 py-1 text-center text-wrap text-xs text-white">
-            {parseFloat(data.lowestValue) || 0}
+            {Math.round(parseFloat(data.lowestValue) * 100) / 100 || 0}
           </td>
         );
       case "myValue1":

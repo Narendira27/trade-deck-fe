@@ -28,6 +28,12 @@ interface HeaderProps {
   onDraggableColumnsChange: (columns: DraggableBoxColumn[]) => void;
 }
 
+interface Params {
+  isEnabled?: boolean;
+  stopLossAmount?: number;
+  stopLossTrailing?: number;
+}
+
 const Header: React.FC<HeaderProps> = ({
   columns,
   onColumnsChange,
@@ -43,28 +49,33 @@ const Header: React.FC<HeaderProps> = ({
   const [portfolioEnabled, setPortfolioEnabled] = useState(false);
   const { showDraggable } = useStore();
 
-  const updatePortfolioSettings = async (enabled?: boolean, slValue?: number, trailValue?: number) => {
+  const updatePortfolioSettings = async (
+    enabled?: boolean,
+    slValue?: number,
+    trailValue?: number
+  ) => {
     const auth = cookies.get("auth");
-    const data: any = {};
-    
+    const params: Params = {};
+
     if (enabled !== undefined) {
-      data.portfolioSLEnabled = enabled;
-      data.portfolioTrailEnabled = enabled;
+      params.isEnabled = enabled;
     }
-    if (slValue !== undefined) data.portfolioSL = slValue;
-    if (trailValue !== undefined) data.portfolioTrail = trailValue;
+    if (slValue !== undefined) params.stopLossAmount = slValue;
+    if (trailValue !== undefined) params.stopLossTrailing = trailValue;
 
     try {
-      await axios.put(`${API_URL}/user/portfolio-settings`, data, {
-        headers: { Authorization: `Bearer ${auth}` }
+      await axios.put(`${API_URL}/user/portfolio`, null, {
+        params,
+        headers: { Authorization: `Bearer ${auth}` },
       });
+
       if (enabled !== undefined) {
-        toast.success(`Portfolio controls ${enabled ? 'enabled' : 'disabled'}`);
+        toast.success(`Portfolio controls ${enabled ? "enabled" : "disabled"}`);
       } else {
-        toast.success('Portfolio settings updated');
+        toast.success("Portfolio settings updated");
       }
-    } catch (error) {
-      toast.error('Failed to update portfolio settings');
+    } catch {
+      toast.error("Failed to update portfolio settings");
     }
   };
 
@@ -105,15 +116,21 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={handlePortfolioToggle}
                 className={`p-1 rounded ${
-                  portfolioEnabled ? 'text-green-400 hover:text-green-300' : 'text-gray-400 hover:text-gray-300'
+                  portfolioEnabled
+                    ? "text-green-400 hover:text-green-300"
+                    : "text-gray-400 hover:text-gray-300"
                 }`}
-                title={`${portfolioEnabled ? 'Disable' : 'Enable'} Portfolio Controls`}
+                title={`${
+                  portfolioEnabled ? "Disable" : "Enable"
+                } Portfolio Controls`}
               >
                 <Power size={16} />
               </button>
-              <div className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
-                portfolioEnabled ? 'bg-red-600/20' : 'bg-gray-600/20'
-              }`}>
+              <div
+                className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
+                  portfolioEnabled ? "bg-red-600/20" : "bg-gray-600/20"
+                }`}
+              >
                 <Shield size={14} className="text-red-400" />
                 <span className="text-xs text-red-400">SL:</span>
                 <input
@@ -122,16 +139,18 @@ const Header: React.FC<HeaderProps> = ({
                   onChange={(e) => handleSLChange(Number(e.target.value))}
                   disabled={!portfolioEnabled}
                   className={`w-16 px-1 py-0.5 text-xs border border-gray-600 rounded ${
-                    portfolioEnabled 
-                      ? 'bg-gray-700 text-white' 
-                      : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                    portfolioEnabled
+                      ? "bg-gray-700 text-white"
+                      : "bg-gray-800 text-gray-500 cursor-not-allowed"
                   }`}
                   placeholder="0"
                 />
               </div>
-              <div className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
-                portfolioEnabled ? 'bg-blue-600/20' : 'bg-gray-600/20'
-              }`}>
+              <div
+                className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
+                  portfolioEnabled ? "bg-blue-600/20" : "bg-gray-600/20"
+                }`}
+              >
                 <TrendingUp size={14} className="text-blue-400" />
                 <span className="text-xs text-blue-400">Trail:</span>
                 <input
@@ -140,9 +159,9 @@ const Header: React.FC<HeaderProps> = ({
                   onChange={(e) => handleTrailChange(Number(e.target.value))}
                   disabled={!portfolioEnabled}
                   className={`w-16 px-1 py-0.5 text-xs border border-gray-600 rounded ${
-                    portfolioEnabled 
-                      ? 'bg-gray-700 text-white' 
-                      : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                    portfolioEnabled
+                      ? "bg-gray-700 text-white"
+                      : "bg-gray-800 text-gray-500 cursor-not-allowed"
                   }`}
                   placeholder="0"
                 />
@@ -173,7 +192,6 @@ const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               <Plus size={16} />
-
             </button>
           </div>
 
