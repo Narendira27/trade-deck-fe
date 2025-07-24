@@ -7,18 +7,22 @@ import {
   Filter,
   TrendingUp,
   Power,
+  Target,
+  DollarSign,
+  Eye,
 } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
 import PortfolioModal from "./modals/PortfolioModal";
 import FilterModal from "./modals/FilterModal";
-import useStore from "../store/store";
+import useStore, { useDraggableStore } from "../store/store";
 import { type DraggableBoxColumn } from "../types/draggableBox";
 import { API_URL } from "../config/config";
 import axios from "axios";
 import cookies from "js-cookie";
 import { toast } from "sonner";
+import { formatCurrency } from "../utils/formatters";
 
 interface HeaderProps {
   columns: Column[];
@@ -46,8 +50,13 @@ const Header: React.FC<HeaderProps> = ({
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [portfolioSL, setPortfolioSL] = useState(0);
   const [portfolioTrail, setPortfolioTrail] = useState(0);
+  const [portfolioTarget, setPortfolioTarget] = useState(0);
   const [portfolioEnabled, setPortfolioEnabled] = useState(false);
-  const { showDraggable } = useStore();
+  const { trades, filters, setFilters } = useStore();
+  const { showDraggable } = useDraggableStore();
+
+  // Calculate total MTM
+  const totalMtm = trades.reduce((sum, trade) => sum + trade.mtm, 0);
 
   const updatePortfolioSettings = async (
     enabled?: boolean,
@@ -62,6 +71,7 @@ const Header: React.FC<HeaderProps> = ({
     }
     if (slValue !== undefined) params.stopLossAmount = slValue;
     if (trailValue !== undefined) params.stopLossTrailing = trailValue;
+    // Add target parameter if needed in future
 
     try {
       await axios.put(`${API_URL}/user/portfolio`, null, {
@@ -99,6 +109,18 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const handleTargetChange = (value: number) => {
+    setPortfolioTarget(value);
+    // Add API call for target if needed in future
+  };
+
+  const toggleClosedTrades = () => {
+    setFilters({
+      ...filters,
+      showClosed: !filters.showClosed,
+    });
+  };
+
   return (
     <>
       <header className="bg-gray-900  text-white py-2 px-2 sm:py-3 sm:px-4 flex items-center justify-between border-b border-gray-800 min-h-[60px]">
@@ -126,6 +148,21 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <Power size={16} />
               </button>
+              
+              <div
+                className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
+                  totalMtm >= 0 ? "bg-green-600/20" : "bg-red-600/20"
+                }`}
+              >
+                <DollarSign size={14} className={totalMtm >= 0 ? "text-green-400" : "text-red-400"} />
+                <span className="text-xs text-gray-300">MTM:</span>
+                <span className={`text-xs font-medium ${
+                  totalMtm >= 0 ? "text-green-400" : "text-red-400"
+                }`}>
+                  {formatCurrency(totalMtm)}
+                </span>
+              </div>
+              
               <div
                 className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
                   portfolioEnabled ? "bg-red-600/20" : "bg-gray-600/20"
@@ -146,6 +183,7 @@ const Header: React.FC<HeaderProps> = ({
                   placeholder="0"
                 />
               </div>
+              
               <div
                 className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
                   portfolioEnabled ? "bg-blue-600/20" : "bg-gray-600/20"
@@ -157,6 +195,27 @@ const Header: React.FC<HeaderProps> = ({
                   type="number"
                   value={portfolioTrail}
                   onChange={(e) => handleTrailChange(Number(e.target.value))}
+                  disabled={!portfolioEnabled}
+                  className={`w-16 px-1 py-0.5 text-xs border border-gray-600 rounded ${
+                    portfolioEnabled
+                      ? "bg-gray-700 text-white"
+                      : "bg-gray-800 text-gray-500 cursor-not-allowed"
+                  }`}
+                  placeholder="0"
+                />
+              </div>
+              
+              <div
+                className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
+                  portfolioEnabled ? "bg-green-600/20" : "bg-gray-600/20"
+                }`}
+              >
+                <Target size={14} className="text-green-400" />
+                <span className="text-xs text-green-400">Trgt:</span>
+                <input
+                  type="number"
+                  value={portfolioTarget}
+                  onChange={(e) => handleTargetChange(Number(e.target.value))}
                   disabled={!portfolioEnabled}
                   className={`w-16 px-1 py-0.5 text-xs border border-gray-600 rounded ${
                     portfolioEnabled
@@ -186,6 +245,18 @@ const Header: React.FC<HeaderProps> = ({
             >
               <Filter size={16} />
             </button>
+            
+            <button
+              onClick={toggleClosedTrades}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                filters.showClosed
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-600 text-white hover:bg-gray-700"
+              }`}
+              title={filters.showClosed ? "Hide Closed Trades" : "Show Closed Trades"}
+            >
+              <Eye size={16} />
+            </button>
 
             <button
               onClick={() => setIsAddTradeModalOpen(true)}
@@ -203,6 +274,18 @@ const Header: React.FC<HeaderProps> = ({
             >
               <Filter size={14} />
               <span className="hidden sm:inline">Filter</span>
+            </button>
+            
+            <button
+              onClick={toggleClosedTrades}
+              className={`flex items-center space-x-1 px-2 py-1.5 text-xs rounded-md transition-colors ${
+                filters.showClosed
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-600 text-white hover:bg-gray-700"
+              }`}
+            >
+              <Eye size={14} />
+              <span className="hidden sm:inline">Closed</span>
             </button>
 
             <button

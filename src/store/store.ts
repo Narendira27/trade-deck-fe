@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { type Trade } from "../types/trade";
 
 interface indexData {
@@ -56,28 +57,31 @@ interface OptionPrice {
 interface TradeStoreState {
   trades: Trade[];
   indexData: indexData;
-  draggableData: draggableData[];
   indexPrice: IndexPriceData[];
   optionPrice: OptionPrice[];
   optionValues: optionValuesData[];
   optionLotSize: optionLotSizeType[];
-  showDraggable: boolean;
   filters: TradeFilters;
   setTrades: (data: Trade[]) => void;
   setIndexData: (data: indexData) => void;
-  setDraggableData: (data: draggableData[]) => void;
-  removeDraggableData: (id: string) => void;
   setIndexPrice: (data: IndexPriceData) => void;
   setOptionPrice: (data: OptionPrice) => void;
   setOptionValues: (data: optionValuesData[]) => void;
+  setOptionLotSize: (data: optionLotSizeType[]) => void;
+  setFilters: (filters: TradeFilters) => void;
+}
+
+interface DraggableStoreState {
+  draggableData: draggableData[];
+  showDraggable: boolean;
+  setDraggableData: (data: draggableData[]) => void;
+  removeDraggableData: (id: string) => void;
   setShowDraggable: () => void;
   updateDraggableData: (
     id: string,
     updatedData: Partial<draggableData>
   ) => void;
   updateLowestValue: (id: string, lowestValue: string) => void;
-  setOptionLotSize: (data: optionLotSizeType[]) => void;
-  setFilters: (filters: TradeFilters) => void;
 }
 
 const useStore = create<TradeStoreState>((set, get) => ({
@@ -86,12 +90,10 @@ const useStore = create<TradeStoreState>((set, get) => ({
     indices: [],
     expiry: {},
   },
-  draggableData: [],
   indexPrice: [],
   optionPrice: [],
   optionValues: [],
   optionLotSize: [],
-  showDraggable: false,
   filters: {
     showClosed: false,
     indexName: "",
@@ -106,14 +108,6 @@ const useStore = create<TradeStoreState>((set, get) => ({
   },
   setTrades: (data: Trade[]) => set({ trades: data }),
   setIndexData: (data: indexData) => set({ indexData: data }),
-  setDraggableData: (data: draggableData[]) =>
-    set((state) => ({
-      draggableData: [...state.draggableData, ...data],
-    })),
-  removeDraggableData: (id) =>
-    set((state) => ({
-      draggableData: state.draggableData.filter((item) => item.id !== id),
-    })),
   setIndexPrice: (data) => {
     const state = get();
     const existingIndex = state.indexPrice.findIndex(
@@ -191,30 +185,48 @@ const useStore = create<TradeStoreState>((set, get) => ({
 
     set({ optionValues: data });
   },
-  setShowDraggable: () => {
-    set((state) => ({
-      showDraggable: !state.showDraggable,
-    }));
-  },
-
-  updateDraggableData: (id, updatedData) =>
-    set((state) => ({
-      draggableData: state.draggableData.map((item) =>
-        item.id === id ? { ...item, ...updatedData } : item
-      ),
-    })),
-
-  updateLowestValue: (id, lowestValue) =>
-    set((state) => ({
-      draggableData: state.draggableData.map((item) =>
-        item.id === id ? { ...item, lowestValue } : item
-      ),
-    })),
   setOptionLotSize: (data: optionLotSizeType[]) => {
     set({ optionLotSize: data });
   },
 
   setFilters: (filters: TradeFilters) => set({ filters }),
 }));
+
+export const useDraggableStore = create<DraggableStoreState>()(
+  persist(
+    (set, get) => ({
+      draggableData: [],
+      showDraggable: false,
+      setDraggableData: (data: draggableData[]) =>
+        set((state) => ({
+          draggableData: [...state.draggableData, ...data],
+        })),
+      removeDraggableData: (id) =>
+        set((state) => ({
+          draggableData: state.draggableData.filter((item) => item.id !== id),
+        })),
+      setShowDraggable: () => {
+        set((state) => ({
+          showDraggable: !state.showDraggable,
+        }));
+      },
+      updateDraggableData: (id, updatedData) =>
+        set((state) => ({
+          draggableData: state.draggableData.map((item) =>
+            item.id === id ? { ...item, ...updatedData } : item
+          ),
+        })),
+      updateLowestValue: (id, lowestValue) =>
+        set((state) => ({
+          draggableData: state.draggableData.map((item) =>
+            item.id === id ? { ...item, lowestValue } : item
+          ),
+        })),
+    }),
+    {
+      name: 'draggable-storage',
+    }
+  )
+);
 
 export default useStore;

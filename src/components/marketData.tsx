@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import cookies from "js-cookie";
 import { toast } from "sonner";
-import useStore from "../store/store";
+import useStore, { useDraggableStore } from "../store/store";
 import { SOCKET_FE } from "../config/config";
 import throttle from "lodash/throttle";
 
@@ -41,9 +41,8 @@ const indexName: Record<number, string> = {
 
 const MarketDataComponent = () => {
   // ✅ Use selectors for stable function references
-  const draggableData = useStore((state) => state.draggableData);
   const setIndexPrice = useStore((state) => state.setIndexPrice);
-  const updateLowestValue = useStore((state) => state.updateLowestValue);
+  const { draggableData, updateLowestValue } = useDraggableStore();
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const socketRef = useRef<Socket | null>(null);

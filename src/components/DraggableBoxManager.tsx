@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Plus } from "lucide-react";
 import useStore from "../store/store";
+import { useDraggableStore } from "../store/store";
 
 const DraggableBoxManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
@@ -10,8 +11,8 @@ const DraggableBoxManager: React.FC = () => {
     ltpRange: "",
   });
 
-  const { indexData, showDraggable, setDraggableData, setShowDraggable } =
-    useStore();
+  const { indexData } = useStore();
+  const { showDraggable, setDraggableData, setShowDraggable } = useDraggableStore();
 
   const handleAddBox = (e: React.FormEvent) => {
     e.preventDefault();

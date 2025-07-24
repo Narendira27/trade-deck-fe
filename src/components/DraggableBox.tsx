@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Minus, Trash2 } from "lucide-react";
-import useStore from "../store/store";
+import { useDraggableStore } from "../store/store";
 import { type DraggableBoxColumn } from "../types/draggableBox";
 
 interface DraggableBoxProps {
@@ -13,7 +13,7 @@ const DraggableBox: React.FC<DraggableBoxProps> = ({ columns }) => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const boxRef = useRef<HTMLDivElement>(null);
 
-  const { showDraggable, setShowDraggable } = useStore();
+  const { showDraggable, setShowDraggable } = useDraggableStore();
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (boxRef.current) {
@@ -78,7 +78,7 @@ const DraggableBox: React.FC<DraggableBoxProps> = ({ columns }) => {
 
 const ExcelLikeBox = ({ columns }: { columns: DraggableBoxColumn[] }) => {
   const { draggableData, updateDraggableData, removeDraggableData } =
-    useStore();
+    useDraggableStore();
 
   const onChangeValue = (
     id: string,
