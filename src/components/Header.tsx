@@ -35,6 +35,7 @@ interface Params {
   isEnabled?: boolean;
   stopLossAmount?: number;
   stopLossTrailing?: number;
+  targetAmount?: number;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -60,7 +61,8 @@ const Header: React.FC<HeaderProps> = ({
   const updatePortfolioSettings = async (
     enabled?: boolean,
     slValue?: number,
-    trailValue?: number
+    trailValue?: number,
+    targetValue?: number
   ) => {
     const auth = cookies.get("auth");
     const params: Params = {};
@@ -70,7 +72,7 @@ const Header: React.FC<HeaderProps> = ({
     }
     if (slValue !== undefined) params.stopLossAmount = slValue;
     if (trailValue !== undefined) params.stopLossTrailing = trailValue;
-    // Add target parameter if needed in future
+    if (targetValue !== undefined) params.targetAmount = targetValue;
 
     try {
       await axios.put(`${API_URL}/user/portfolio`, null, {
@@ -110,7 +112,9 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleTargetChange = (value: number) => {
     setPortfolioTarget(value);
-    // Add API call for target if needed in future
+    if (portfolioEnabled) {
+      updatePortfolioSettings(undefined, undefined, undefined, value);
+    }
   };
 
   const toggleClosedTrades = () => {

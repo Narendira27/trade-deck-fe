@@ -78,7 +78,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
     debounceTimeoutRef.current = setTimeout(() => {
       updatePriceOnBackend(type, price);
-    }, 50);
+    }, 5);
   };
 
   const updatePriceOnBackend = async (type: LineType, price: number) => {
@@ -842,7 +842,6 @@ function removeIfNotEndingWith59(
     const lastSeconds = timestamp % 60;
 
     if (lastSeconds !== 59) {
-      chartData.pop();
       chartData.pop(); // Remove last item
       console.log("removed");
     }
