@@ -135,6 +135,21 @@ const Header: React.FC<HeaderProps> = ({
           {/* Desktop Controls */}
           <div className="hidden lg:flex items-center space-x-3">
             <div className="flex items-center space-x-2">
+              <div
+                className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
+                  totalMtm >= 0 ? "bg-green-600/20" : "bg-red-600/20"
+                }`}
+              >
+                <span className="text-xs text-gray-300">MTM:</span>
+                <span
+                  className={`text-xs pl-2 font-medium ${
+                    totalMtm >= 0 ? "text-green-400" : "text-red-400"
+                  }`}
+                >
+                  {formatCurrency(totalMtm || 0)}
+                </span>
+              </div>
+
               <button
                 onClick={handlePortfolioToggle}
                 className={`p-1 rounded ${
@@ -148,21 +163,7 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <Power size={16} />
               </button>
-              
-              <div
-                className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
-                  totalMtm >= 0 ? "bg-green-600/20" : "bg-red-600/20"
-                }`}
-              >
-                <DollarSign size={14} className={totalMtm >= 0 ? "text-green-400" : "text-red-400"} />
-                <span className="text-xs text-gray-300">MTM:</span>
-                <span className={`text-xs font-medium ${
-                  totalMtm >= 0 ? "text-green-400" : "text-red-400"
-                }`}>
-                  {formatCurrency(totalMtm)}
-                </span>
-              </div>
-              
+
               <div
                 className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
                   portfolioEnabled ? "bg-red-600/20" : "bg-gray-600/20"
@@ -183,7 +184,7 @@ const Header: React.FC<HeaderProps> = ({
                   placeholder="0"
                 />
               </div>
-              
+
               <div
                 className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
                   portfolioEnabled ? "bg-blue-600/20" : "bg-gray-600/20"
@@ -204,7 +205,7 @@ const Header: React.FC<HeaderProps> = ({
                   placeholder="0"
                 />
               </div>
-              
+
               <div
                 className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
                   portfolioEnabled ? "bg-green-600/20" : "bg-gray-600/20"
@@ -239,13 +240,13 @@ const Header: React.FC<HeaderProps> = ({
               onColumnsChange={onColumnsChange}
             />
 
-            <button
+            {/* <button
               onClick={() => setIsFilterModalOpen(true)}
               className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
               <Filter size={16} />
-            </button>
-            
+            </button> */}
+
             <button
               onClick={toggleClosedTrades}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
@@ -253,7 +254,9 @@ const Header: React.FC<HeaderProps> = ({
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "bg-gray-600 text-white hover:bg-gray-700"
               }`}
-              title={filters.showClosed ? "Hide Closed Trades" : "Show Closed Trades"}
+              title={
+                filters.showClosed ? "Hide Closed Trades" : "Show Closed Trades"
+              }
             >
               <Eye size={16} />
             </button>
@@ -275,7 +278,7 @@ const Header: React.FC<HeaderProps> = ({
               <Filter size={14} />
               <span className="hidden sm:inline">Filter</span>
             </button>
-            
+
             <button
               onClick={toggleClosedTrades}
               className={`flex items-center space-x-1 px-2 py-1.5 text-xs rounded-md transition-colors ${
