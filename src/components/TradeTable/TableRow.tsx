@@ -123,34 +123,49 @@ const TableRow: React.FC<TableRowProps> = ({
 
     const lotSize = lotSizeObj?.lotSize ?? 1;
 
-    const totalMtm = trade.liveTradePositions.reduce((acc, position) => {
-      const priceObj = optionPrice.find(
-        (price) => price.optionName === position.optionName
+    if (trade.alive === false) {
+      const mtm = trade.liveTradePositions.reduce((total, position) => {
+        if (position.closed && parseInt(position.currentQty) === 0) {
+          const qty = parseInt(position.initialQty);
+          const entry = position.entryPrice;
+          const exit = position.closePrice;
+
+          const mtm = (exit - entry) * qty * lotSize;
+          return total + mtm;
+        }
+        return total;
+      }, 0);
+      return mtm;
+    } else {
+      const totalMtm = trade.liveTradePositions.reduce((acc, position) => {
+        const priceObj = optionPrice.find(
+          (price) => price.optionName === position.optionName
+        );
+
+        const currentPrice = priceObj?.price ?? 0;
+        const entryPrice = position.entryPrice ?? 0;
+        const quantity = parseInt(position.currentQty) ?? 0;
+
+        let mtm = 0;
+
+        if (trade.entrySide === "SELL") {
+          mtm = (entryPrice - currentPrice) * (lotSize * quantity);
+        } else if (trade.entrySide === "BUY") {
+          console.log();
+          mtm = (currentPrice - entryPrice) * (lotSize * quantity);
+        }
+
+        return acc + mtm;
+      }, 0);
+
+      const filterActiveTrades = trade.liveTradePositions.filter(
+        (each) => each.closed === false
       );
 
-      const currentPrice = priceObj?.price ?? 0;
-      const entryPrice = position.entryPrice ?? 0;
-      const quantity = parseInt(position.currentQty) ?? 0;
+      if (filterActiveTrades.length === 0) return 0;
 
-      let mtm = 0;
-
-      if (trade.entrySide === "SELL") {
-        mtm = (entryPrice - currentPrice) * (lotSize * quantity);
-      } else if (trade.entrySide === "BUY") {
-        console.log();
-        mtm = (currentPrice - entryPrice) * (lotSize * quantity);
-      }
-
-      return acc + mtm;
-    }, 0);
-
-    const filterActiveTrades = trade.liveTradePositions.filter(
-      (each) => each.closed === false
-    );
-
-    if (filterActiveTrades.length === 0) return 0;
-
-    return totalMtm;
+      return totalMtm;
+    }
   }, [trade, optionLotSize, optionPrice]);
 
   useEffect(() => {
@@ -782,7 +797,7 @@ const TableRow: React.FC<TableRowProps> = ({
       case "entry":
         return trade.entryPrice ? formatNumber(trade.entryPrice) : "-";
       case "qty":
-        return trade.currentQty || "-";
+        return trade.alive === true ? trade.currentQty : trade.qty || "-";
       case "sl":
         return trade.stopLossPremium
           ? formatNumber(trade.stopLossPremium)
