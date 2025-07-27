@@ -141,7 +141,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
       existingIndex !== -1 &&
       state.indexPrice[existingIndex].price === data.price
     ) {
-      return; // No change, don't update
+      return;
     }
 
     set((state) => {
@@ -168,7 +168,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
       existingIndex !== -1 &&
       state.optionPrice[existingIndex].price === data.price
     ) {
-      return; // No change, don't update
+      return;
     }
 
     set((state) => {
@@ -187,8 +187,6 @@ const useStore = create<TradeStoreState>((set, get) => ({
 
   setOptionValues: (data: optionValuesData[]) => {
     const state = get();
-
-    // Compare existing and incoming data
     const hasChanges =
       data.length !== state.optionValues.length ||
       data.some((newItem) => {
@@ -202,7 +200,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
       });
 
     if (!hasChanges) {
-      return; // No change, don't update
+      return;
     }
 
     set({ optionValues: data });
@@ -238,7 +236,7 @@ export const useDraggableStore = create<DraggableStoreState>()(
       setDraggableData3: (data: draggableData[]) =>
         set((state) => ({
           draggableData3: [...state.draggableData3, ...data],
-        }));
+        })), // ✅ FIXED: replaced `;` with `,`
       removeDraggableData1: (id) =>
         set((state) => ({
           draggableData1: state.draggableData1.filter((item) => item.id !== id),
