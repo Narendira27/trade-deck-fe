@@ -78,7 +78,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
     debounceTimeoutRef.current = setTimeout(() => {
       updatePriceOnBackend(type, price);
-    }, 5);
+    }, 200);
   };
 
   const updatePriceOnBackend = async (type: LineType, price: number) => {
@@ -294,7 +294,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
               horzLines: { visible: false, color: "#374151" },
             },
             timeScale: { timeVisible: true },
-            crosshair: { mode: 1 },
+            crosshair: { mode: 0 },
             handleScale: {
               axisPressedMouseMove: { time: true, price: false },
               mouseWheel: true,
