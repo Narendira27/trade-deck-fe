@@ -62,6 +62,7 @@ interface TradeStoreState {
   optionValues: optionValuesData[];
   optionLotSize: optionLotSizeType[];
   filters: TradeFilters;
+  positionMtm: { [tradeId: string]: number };
   setTrades: (data: Trade[]) => void;
   setIndexData: (data: indexData) => void;
   setIndexPrice: (data: IndexPriceData) => void;
@@ -69,19 +70,40 @@ interface TradeStoreState {
   setOptionValues: (data: optionValuesData[]) => void;
   setOptionLotSize: (data: optionLotSizeType[]) => void;
   setFilters: (filters: TradeFilters) => void;
+  setPositionMtm: (tradeId: string, mtm: number) => void;
 }
 
 interface DraggableStoreState {
-  draggableData: draggableData[];
-  showDraggable: boolean;
-  setDraggableData: (data: draggableData[]) => void;
-  removeDraggableData: (id: string) => void;
-  setShowDraggable: () => void;
-  updateDraggableData: (
+  draggableData1: draggableData[];
+  draggableData2: draggableData[];
+  draggableData3: draggableData[];
+  showDraggable1: boolean;
+  showDraggable2: boolean;
+  showDraggable3: boolean;
+  setDraggableData1: (data: draggableData[]) => void;
+  setDraggableData2: (data: draggableData[]) => void;
+  setDraggableData3: (data: draggableData[]) => void;
+  removeDraggableData1: (id: string) => void;
+  removeDraggableData2: (id: string) => void;
+  removeDraggableData3: (id: string) => void;
+  setShowDraggable1: () => void;
+  setShowDraggable2: () => void;
+  setShowDraggable3: () => void;
+  updateDraggableData1: (
     id: string,
     updatedData: Partial<draggableData>
   ) => void;
-  updateLowestValue: (id: string, lowestValue: string) => void;
+  updateDraggableData2: (
+    id: string,
+    updatedData: Partial<draggableData>
+  ) => void;
+  updateDraggableData3: (
+    id: string,
+    updatedData: Partial<draggableData>
+  ) => void;
+  updateLowestValue1: (id: string, lowestValue: string) => void;
+  updateLowestValue2: (id: string, lowestValue: string) => void;
+  updateLowestValue3: (id: string, lowestValue: string) => void;
 }
 
 const useStore = create<TradeStoreState>((set, get) => ({
@@ -106,6 +128,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
       to: "",
     },
   },
+  positionMtm: {},
   setTrades: (data: Trade[]) => set({ trades: data }),
   setIndexData: (data: indexData) => set({ indexData: data }),
   setIndexPrice: (data) => {
@@ -118,7 +141,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
       existingIndex !== -1 &&
       state.indexPrice[existingIndex].price === data.price
     ) {
-      return; // No change, don't update
+      return;
     }
 
     set((state) => {
@@ -145,7 +168,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
       existingIndex !== -1 &&
       state.optionPrice[existingIndex].price === data.price
     ) {
-      return; // No change, don't update
+      return;
     }
 
     set((state) => {
@@ -164,8 +187,6 @@ const useStore = create<TradeStoreState>((set, get) => ({
 
   setOptionValues: (data: optionValuesData[]) => {
     const state = get();
-
-    // Compare existing and incoming data
     const hasChanges =
       data.length !== state.optionValues.length ||
       data.some((newItem) => {
@@ -179,7 +200,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
       });
 
     if (!hasChanges) {
-      return; // No change, don't update
+      return;
     }
 
     set({ optionValues: data });
@@ -189,35 +210,93 @@ const useStore = create<TradeStoreState>((set, get) => ({
   },
 
   setFilters: (filters: TradeFilters) => set({ filters }),
+  setPositionMtm: (tradeId: string, mtm: number) =>
+    set((state) => ({
+      positionMtm: { ...state.positionMtm, [tradeId]: mtm },
+    })),
 }));
 
 export const useDraggableStore = create<DraggableStoreState>()(
   persist(
     (set) => ({
-      draggableData: [],
-      showDraggable: false,
-      setDraggableData: (data: draggableData[]) =>
+      draggableData1: [],
+      draggableData2: [],
+      draggableData3: [],
+      showDraggable1: false,
+      showDraggable2: false,
+      showDraggable3: false,
+      setDraggableData1: (data: draggableData[]) =>
         set((state) => ({
-          draggableData: [...state.draggableData, ...data],
+          draggableData1: [...state.draggableData1, ...data],
         })),
-      removeDraggableData: (id) =>
+      setDraggableData2: (data: draggableData[]) =>
         set((state) => ({
-          draggableData: state.draggableData.filter((item) => item.id !== id),
+          draggableData2: [...state.draggableData2, ...data],
         })),
-      setShowDraggable: () => {
+      setDraggableData3: (data: draggableData[]) =>
         set((state) => ({
-          showDraggable: !state.showDraggable,
+          draggableData3: [...state.draggableData3, ...data],
+        })), // ✅ FIXED: replaced `;` with `,`
+      removeDraggableData1: (id) =>
+        set((state) => ({
+          draggableData1: state.draggableData1.filter((item) => item.id !== id),
+        })),
+      removeDraggableData2: (id) =>
+        set((state) => ({
+          draggableData2: state.draggableData2.filter((item) => item.id !== id),
+        })),
+      removeDraggableData3: (id) =>
+        set((state) => ({
+          draggableData3: state.draggableData3.filter((item) => item.id !== id),
+        })),
+      setShowDraggable1: () => {
+        set((state) => ({
+          showDraggable1: !state.showDraggable1,
         }));
       },
-      updateDraggableData: (id, updatedData) =>
+      setShowDraggable2: () => {
         set((state) => ({
-          draggableData: state.draggableData.map((item) =>
+          showDraggable2: !state.showDraggable2,
+        }));
+      },
+      setShowDraggable3: () => {
+        set((state) => ({
+          showDraggable3: !state.showDraggable3,
+        }));
+      },
+      updateDraggableData1: (id, updatedData) =>
+        set((state) => ({
+          draggableData1: state.draggableData1.map((item) =>
             item.id === id ? { ...item, ...updatedData } : item
           ),
         })),
-      updateLowestValue: (id, lowestValue) =>
+      updateDraggableData2: (id, updatedData) =>
         set((state) => ({
-          draggableData: state.draggableData.map((item) =>
+          draggableData2: state.draggableData2.map((item) =>
+            item.id === id ? { ...item, ...updatedData } : item
+          ),
+        })),
+      updateDraggableData3: (id, updatedData) =>
+        set((state) => ({
+          draggableData3: state.draggableData3.map((item) =>
+            item.id === id ? { ...item, ...updatedData } : item
+          ),
+        })),
+      updateLowestValue1: (id, lowestValue) =>
+        set((state) => ({
+          draggableData1: state.draggableData1.map((item) =>
+            item.id === id ? { ...item, lowestValue } : item
+          ),
+        })),
+      updateLowestValue2: (id, lowestValue) =>
+        set((state) => ({
+          draggableData2: state.draggableData2.map((item) =>
+            item.id === id ? { ...item, lowestValue } : item
+          ),
+        })),
+      updateLowestValue3: (id, lowestValue) =>
+        set((state) => ({
+          draggableData3: state.draggableData3.map((item) =>
             item.id === id ? { ...item, lowestValue } : item
           ),
         })),

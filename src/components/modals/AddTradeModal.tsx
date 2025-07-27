@@ -21,6 +21,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
     ltpRange: 0,
     pointOfAdjustment: 0,
     entrySide: "SELL",
+    narration: "",
   });
 
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -118,6 +119,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
         ltpRange: formData.ltpRange,
         pointOfAdjustment: formData.pointOfAdjustment,
         entrySide: formData.entrySide,
+        narration: formData.narration,
       },
       { headers: { Authorization: "Bearer " + auth } }
     );
@@ -132,6 +134,7 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
           ltpRange: 0,
           pointOfAdjustment: 0,
           entrySide: "BUY",
+          narration: "",
         });
         const result = await getTradeData();
         if (result.status === "ok") {
@@ -294,6 +297,24 @@ const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose }) => {
                   pointOfAdjustment: parseFloat(e.target.value),
                 })
               }
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Narration
+            </label>
+            <input
+              type="text"
+              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.narration}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  narration: e.target.value,
+                })
+              }
+              placeholder="Enter narration"
             />
           </div>
 

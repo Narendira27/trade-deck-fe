@@ -42,7 +42,14 @@ const indexName: Record<number, string> = {
 const MarketDataComponent = () => {
   // ✅ Use selectors for stable function references
   const setIndexPrice = useStore((state) => state.setIndexPrice);
-  const { draggableData, updateLowestValue } = useDraggableStore();
+  const {
+    draggableData1,
+    draggableData2,
+    draggableData3,
+    updateLowestValue1,
+    updateLowestValue2,
+    updateLowestValue3,
+  } = useDraggableStore();
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const socketRef = useRef<Socket | null>(null);
@@ -58,7 +65,9 @@ const MarketDataComponent = () => {
 
   const throttledUpdateLowestValue = useRef(
     throttle((id: string, lowestValue: string) => {
-      updateLowestValue(id, lowestValue);
+      updateLowestValue1(id, lowestValue);
+      updateLowestValue2(id, lowestValue);
+      updateLowestValue3(id, lowestValue);
     }, 1)
   ).current;
 
@@ -205,8 +214,10 @@ const MarketDataComponent = () => {
   }, [isConnected, subscribeToInstruments]);
 
   useEffect(() => {
-    if (draggableData.length > 0 && isConnected) {
-      const notSubscribedArr = draggableData.filter(
+    const allDraggableData = [...draggableData1, ...draggableData2, ...draggableData3];
+    
+    if (allDraggableData.length > 0 && isConnected) {
+      const notSubscribedArr = allDraggableData.filter(
         (data) =>
           !optionSubscribedArrRef.current.some((each) => each.id === data.id)
       );
@@ -218,7 +229,7 @@ const MarketDataComponent = () => {
         });
       }
     }
-  }, [draggableData, isConnected, subscribeToOptionInfo]);
+  }, [draggableData1, draggableData2, draggableData3, isConnected, subscribeToOptionInfo]);
 
   return <></>;
 };
