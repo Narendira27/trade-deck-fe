@@ -66,25 +66,6 @@ const DraggableBoxManager: React.FC = () => {
         <Plus size={24} />
       </button>
       <button
-        onClick={() => {
-          setSelectedBox(2);
-          setShowForm(true);
-        }}
-        className="fixed bottom-16 right-4 bg-green-500 p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
-      >
-        <Plus size={24} />
-      </button>
-      <button
-        onClick={() => {
-          setSelectedBox(3);
-          setShowForm(true);
-        }}
-        className="fixed bottom-28 right-4 bg-purple-500 p-2 rounded-full shadow-lg hover:bg-purple-600 transition-colors"
-      >
-        <Plus size={24} />
-      </button>
-
-      <button
         onClick={() => setShowDraggable1()}
         className="fixed bottom-4 right-20 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors"
       >
