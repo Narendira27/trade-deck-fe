@@ -65,8 +65,7 @@ const DraggableBoxManager: React.FC = () => {
       >
         <Plus size={24} />
       </button>
-      <>
-      </>
+      <div className="flex">
       <button
         onClick={() => setShowDraggable1()}
         className="fixed bottom-4 right-20 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors"
@@ -85,6 +84,7 @@ const DraggableBoxManager: React.FC = () => {
       >
         {showDraggable3 === true ? <Eye /> : <EyeOff />}
       </button>
+      <div/>
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
