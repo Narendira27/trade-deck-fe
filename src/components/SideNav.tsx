@@ -5,8 +5,6 @@ import {
   LogOut,
   KeyRound,
   X,
-  Wallet,
-  TrendingDown,
 } from "lucide-react";
 import cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
@@ -22,30 +20,7 @@ interface SideNavProps {
 
 const SideNav: React.FC<SideNavProps> = ({ isOpen, onToggle }) => {
   const [isKeyModalOpen, setIsKeyModalOpen] = React.useState(false);
-  const [fundsAvailable, setFundsAvailable] = React.useState(0);
-  const [fundsUsed, setFundsUsed] = React.useState(0);
   const navigate = useNavigate();
-
-  const getFunds = () => {
-    const auth = cookies.get("auth");
-    axios
-      .get(`${API_URL}/user/funds`, {
-        headers: { Authorization: `Bearer ${auth}` },
-      })
-      .then((res) => {
-        const response = res.data.data;
-        setFundsAvailable(response.marginAvailable);
-        setFundsUsed(response.marginUtilized);
-      })
-      .catch((error) => {
-        console.log("Error fetching funds:", error);
-      });
-  };
-
-  useEffect(() => {
-    getFunds();
-    setInterval(getFunds, 1000 * 60);
-  }, []);
 
   const handleLogout = () => {
     onToggle(); // Close menu
@@ -98,39 +73,6 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onToggle }) => {
               <LayoutDashboard className="flex-shrink-0" size={18} />
               <span className="ml-3 whitespace-nowrap">Dashboard</span>
             </a>
-
-            {/* Funds Section */}
-            <div className="mt-4 p-3 bg-gray-800 rounded-md">
-              <h4 className="text-sm font-medium text-white mb-2">Funds</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Wallet className="text-green-400" size={14} />
-                    <span className="text-xs text-gray-300">Available</span>
-                  </div>
-                  <span className="text-xs text-green-400 font-medium">
-                    ₹{fundsAvailable.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <TrendingDown className="text-red-400" size={14} />
-                    <span className="text-xs text-gray-300">Used</span>
-                  </div>
-                  <span className="text-xs text-red-400 font-medium">
-                    ₹{fundsUsed.toLocaleString()}
-                  </span>
-                </div>
-                <div className="border-t border-gray-700 pt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-300">Total</span>
-                    <span className="text-xs text-white font-medium">
-                      ₹{(fundsAvailable + fundsUsed).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div>

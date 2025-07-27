@@ -41,7 +41,6 @@ const defaultColumns: Column[] = [
   { id: "qty", label: "Quantity", visible: true, width: "100px" },
   { id: "sl", label: "Stop Loss", visible: true, width: "100px" },
   { id: "target", label: "Target", visible: true, width: "100px" },
-  { id: "narration", label: "Narration", visible: true, width: "175px" },
   {
     id: "entrySpot",
     label: "Entry Spot Price",
@@ -230,7 +229,9 @@ function Dashboard() {
           </div>
 
           <DraggableBoxManager />
-          <DraggableBox columns={draggableColumns} />
+          <DraggableBox columns={draggableColumns} boxNumber={1} />
+          <DraggableBox columns={draggableColumns} boxNumber={2} />
+          <DraggableBox columns={draggableColumns} boxNumber={3} />
 
           <MarketDataComponent />
           <GetValues />

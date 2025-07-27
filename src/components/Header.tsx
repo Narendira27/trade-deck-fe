@@ -9,6 +9,8 @@ import {
   Power,
   Target,
   Eye,
+  Wallet,
+  TrendingDown,
 } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
 import AddTradeModal from "./modals/AddTradeModal";
@@ -52,8 +54,32 @@ const Header: React.FC<HeaderProps> = ({
   const [portfolioTrail, setPortfolioTrail] = useState(0);
   const [portfolioTarget, setPortfolioTarget] = useState(0);
   const [portfolioEnabled, setPortfolioEnabled] = useState(false);
+  const [fundsAvailable, setFundsAvailable] = useState(0);
+  const [fundsUsed, setFundsUsed] = useState(0);
   const { trades, filters, setFilters } = useStore();
-  const { showDraggable } = useDraggableStore();
+  const { showDraggable1, showDraggable2, showDraggable3 } = useDraggableStore();
+
+  React.useEffect(() => {
+    const getFunds = () => {
+      const auth = cookies.get("auth");
+      axios
+        .get(`${API_URL}/user/funds`, {
+          headers: { Authorization: `Bearer ${auth}` },
+        })
+        .then((res) => {
+          const response = res.data.data;
+          setFundsAvailable(response.marginAvailable);
+          setFundsUsed(response.marginUtilized);
+        })
+        .catch((error) => {
+          console.log("Error fetching funds:", error);
+        });
+    };
+
+    getFunds();
+    const interval = setInterval(getFunds, 1000 * 60);
+    return () => clearInterval(interval);
+  }, []);
 
   // Calculate total MTM
   const totalMtm = trades.reduce((sum, trade) => sum + trade.mtm, 0);
@@ -138,6 +164,23 @@ const Header: React.FC<HeaderProps> = ({
           {/* Desktop Controls */}
           <div className="hidden lg:flex items-center space-x-3">
             <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 px-2 py-1 bg-gray-800 rounded-md">
+                <div className="flex items-center space-x-1">
+                  <Wallet className="text-green-400" size={14} />
+                  <span className="text-xs text-gray-300">Available:</span>
+                  <span className="text-xs text-green-400 font-medium">
+                    ₹{fundsAvailable.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <TrendingDown className="text-red-400" size={14} />
+                  <span className="text-xs text-gray-300">Used:</span>
+                  <span className="text-xs text-red-400 font-medium">
+                    ₹{fundsUsed.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
               <div
                 className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
                   totalMtm >= 0 ? "bg-green-600/20" : "bg-red-600/20"
@@ -231,7 +274,7 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {showDraggable && (
+            {(showDraggable1 || showDraggable2 || showDraggable3) && (
               <DraggableBoxColumnManager
                 columns={draggableColumns}
                 onColumnsChange={onDraggableColumnsChange}

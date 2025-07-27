@@ -5,6 +5,7 @@ import { useDraggableStore } from "../store/store";
 
 const DraggableBoxManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
+  const [selectedBox, setSelectedBox] = useState<1 | 2 | 3>(1);
   const [formData, setFormData] = useState({
     expiry: "",
     index: "",
@@ -12,19 +13,38 @@ const DraggableBoxManager: React.FC = () => {
   });
 
   const { indexData } = useStore();
-  const { showDraggable, setDraggableData, setShowDraggable } = useDraggableStore();
+  const {
+    showDraggable1,
+    showDraggable2,
+    showDraggable3,
+    setDraggableData1,
+    setDraggableData2,
+    setDraggableData3,
+    setShowDraggable1,
+    setShowDraggable2,
+    setShowDraggable3,
+  } = useDraggableStore();
 
   const handleAddBox = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.index && formData.expiry) {
-      setDraggableData([
+      const newData = [
         {
           id: Date.now().toString(),
           index: formData.index,
           expiry: formData.expiry,
           ltpRange: formData.ltpRange,
         },
-      ]);
+      ];
+
+      if (selectedBox === 1) {
+        setDraggableData1(newData);
+      } else if (selectedBox === 2) {
+        setDraggableData2(newData);
+      } else {
+        setDraggableData3(newData);
+      }
+
       setFormData({
         expiry: "",
         index: "",
@@ -37,24 +57,72 @@ const DraggableBoxManager: React.FC = () => {
   return (
     <div className="relative">
       <button
-        onClick={() => setShowForm(true)}
+        onClick={() => {
+          setSelectedBox(1);
+          setShowForm(true);
+        }}
         className="fixed bottom-4 right-4 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors"
       >
         <Plus size={24} />
       </button>
       <button
-        onClick={() => setShowDraggable()}
+        onClick={() => {
+          setSelectedBox(2);
+          setShowForm(true);
+        }}
+        className="fixed bottom-16 right-4 bg-green-500 p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
+      >
+        <Plus size={24} />
+      </button>
+      <button
+        onClick={() => {
+          setSelectedBox(3);
+          setShowForm(true);
+        }}
+        className="fixed bottom-28 right-4 bg-purple-500 p-2 rounded-full shadow-lg hover:bg-purple-600 transition-colors"
+      >
+        <Plus size={24} />
+      </button>
+
+      <button
+        onClick={() => setShowDraggable1()}
         className="fixed bottom-4 right-20 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors"
       >
-        {showDraggable === true ? <Eye /> : <EyeOff />}
+        {showDraggable1 === true ? <Eye /> : <EyeOff />}
+      </button>
+      <button
+        onClick={() => setShowDraggable2()}
+        className="fixed bottom-16 right-20 bg-green-500 p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
+      >
+        {showDraggable2 === true ? <Eye /> : <EyeOff />}
+      </button>
+      <button
+        onClick={() => setShowDraggable3()}
+        className="fixed bottom-28 right-20 bg-purple-500 p-2 rounded-full shadow-lg hover:bg-purple-600 transition-colors"
+      >
+        {showDraggable3 === true ? <Eye /> : <EyeOff />}
       </button>
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="bg-gray-900 border border-gray-500 p-6 rounded-lg shadow-xl w-96">
-            <h3 className="text-lg font-semibold mb-4">Add Row</h3>
+            <h3 className="text-lg font-semibold mb-4">Add Row to Box {selectedBox}</h3>
             <form onSubmit={handleAddBox}>
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Select Box
+                  </label>
+                  <select
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={selectedBox}
+                    onChange={(e) => setSelectedBox(Number(e.target.value) as 1 | 2 | 3)}
+                  >
+                    <option value={1}>Box 1</option>
+                    <option value={2}>Box 2</option>
+                    <option value={3}>Box 3</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     Index

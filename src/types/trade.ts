@@ -55,6 +55,7 @@ export interface TradeFormData {
   ltpRange: number;
   entrySide: string;
   pointOfAdjustment: number;
+  narration: string;
 }
 
 export interface OrderFormData {
