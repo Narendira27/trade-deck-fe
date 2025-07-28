@@ -1,17 +1,9 @@
-import React, { useEffect } from "react";
-import {
-  LayoutDashboard,
-  BarChart2,
-  LogOut,
-  KeyRound,
-  X,
-} from "lucide-react";
+import React from "react";
+import { LayoutDashboard, BarChart2, LogOut, KeyRound, X } from "lucide-react";
 import cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import KeyModal from "./modals/keyModal";
 import { toast } from "sonner";
-import axios from "axios";
-import { API_URL } from "../config/config";
 
 interface SideNavProps {
   isOpen: boolean;

@@ -23,7 +23,7 @@ const PositionTracker: React.FC = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
-  const { trades, optionPrice, optionLotSize, positionMtm, setPositionMtm } = useStore();
+  const { trades, optionPrice, optionLotSize, setPositionMtm } = useStore();
   const [positions, setPositions] = useState<Position[]>([]);
 
   useEffect(() => {
