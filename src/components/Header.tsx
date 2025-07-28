@@ -57,7 +57,8 @@ const Header: React.FC<HeaderProps> = ({
   const [fundsAvailable, setFundsAvailable] = useState(0);
   const [fundsUsed, setFundsUsed] = useState(0);
   const { trades, filters, setFilters } = useStore();
-  const { showDraggable1, showDraggable2, showDraggable3 } = useDraggableStore();
+  const { showDraggable1, showDraggable2, showDraggable3 } =
+    useDraggableStore();
 
   React.useEffect(() => {
     const getFunds = () => {
@@ -107,9 +108,11 @@ const Header: React.FC<HeaderProps> = ({
       });
 
       if (enabled !== undefined) {
-        toast.success(`Portfolio controls ${enabled ? "enabled" : "disabled"}`);
+        // toast.success(`Portfolio controls ${enabled ? "enabled" : "disabled"}`);
+        toast.error("Failed to update portfolio settings");
       } else {
-        toast.success("Portfolio settings updated");
+        // toast.success("Portfolio settings updated");
+        toast.error("Failed to update portfolio settings");
       }
     } catch {
       toast.error("Failed to update portfolio settings");
