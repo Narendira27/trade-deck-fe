@@ -73,18 +73,18 @@ const defaultColumns: Column[] = [
     visible: true,
     width: "140px",
   },
-  {
-    id: "strategySl",
-    label: "Strategy SL(in ₹)",
-    visible: true,
-    width: "120px",
-  },
-  {
-    id: "strategyTrailing",
-    label: "Strategy Trailing(in ₹)",
-    visible: true,
-    width: "140px",
-  },
+  // {
+  //   id: "strategySl",
+  //   label: "Strategy SL(in ₹)",
+  //   visible: true,
+  //   width: "120px",
+  // },
+  // {
+  //   id: "strategyTrailing",
+  //   label: "Strategy Trailing(in ₹)",
+  //   visible: true,
+  //   width: "140px",
+  // },
   { id: "exitPercentages", label: "Exit %", visible: true, width: "150px" },
 ];
 
@@ -147,7 +147,7 @@ function Dashboard() {
         .catch(() => {
           toast.error("Cannot update the Trade Data, Refresh the page");
         });
-    }, 1 * 1000);
+    }, 0.4 * 1000);
 
     const auth = cookies.get("auth");
     axios

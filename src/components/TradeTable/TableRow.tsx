@@ -923,13 +923,13 @@ const TableRow: React.FC<TableRowProps> = ({
                 >
                   <Edit size={12} />
                 </button>
-                <button
+                {/* <button
                   onClick={onHedge}
                   className="p-1 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
                   title="Hedge"
                 >
                   <Shield size={12} />
-                </button>
+                </button> */}
                 <button
                   onClick={onDeleteOrder}
                   className="p-1 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"

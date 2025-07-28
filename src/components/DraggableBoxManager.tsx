@@ -65,29 +65,33 @@ const DraggableBoxManager: React.FC = () => {
       >
         <Plus size={24} />
       </button>
-      <button
-        onClick={() => setShowDraggable1()}
-        className="fixed bottom-4 right-20 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors"
-      >
-        {showDraggable1 === true ? <Eye /> : <EyeOff />}
-      </button>
-      <button
-        onClick={() => setShowDraggable2()}
-        className="fixed bottom-16 right-20 bg-green-500 p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
-      >
-        {showDraggable2 === true ? <Eye /> : <EyeOff />}
-      </button>
-      <button
-        onClick={() => setShowDraggable3()}
-        className="fixed bottom-28 right-20 bg-purple-500 p-2 rounded-full shadow-lg hover:bg-purple-600 transition-colors"
-      >
-        {showDraggable3 === true ? <Eye /> : <EyeOff />}
-      </button>
+      <div>
+        <button
+          onClick={() => setShowDraggable1()}
+          className="fixed bottom-4 right-20 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors"
+        >
+          {showDraggable1 === true ? <Eye /> : <EyeOff />}
+        </button>
+        <button
+          onClick={() => setShowDraggable2()}
+          className="fixed bottom-16 right-20 bg-green-500 p-2 rounded-full shadow-lg hover:bg-green-600 transition-colors"
+        >
+          {showDraggable2 === true ? <Eye /> : <EyeOff />}
+        </button>
+        <button
+          onClick={() => setShowDraggable3()}
+          className="fixed bottom-28 right-20 bg-purple-500 p-2 rounded-full shadow-lg hover:bg-purple-600 transition-colors"
+        >
+          {showDraggable3 === true ? <Eye /> : <EyeOff />}
+        </button>
+      </div>
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="bg-gray-900 border border-gray-500 p-6 rounded-lg shadow-xl w-96">
-            <h3 className="text-lg font-semibold mb-4">Add Row to Box {selectedBox}</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Add Row to Box {selectedBox}
+            </h3>
             <form onSubmit={handleAddBox}>
               <div className="space-y-4">
                 <div>
@@ -97,7 +101,9 @@ const DraggableBoxManager: React.FC = () => {
                   <select
                     className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={selectedBox}
-                    onChange={(e) => setSelectedBox(Number(e.target.value) as 1 | 2 | 3)}
+                    onChange={(e) =>
+                      setSelectedBox(Number(e.target.value) as 1 | 2 | 3)
+                    }
                   >
                     <option value={1}>Box 1</option>
                     <option value={2}>Box 2</option>

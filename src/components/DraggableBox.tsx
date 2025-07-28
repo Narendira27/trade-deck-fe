@@ -23,8 +23,18 @@ const DraggableBox: React.FC<DraggableBoxProps> = ({ columns, boxNumber }) => {
     setShowDraggable3,
   } = useDraggableStore();
 
-  const showDraggable = boxNumber === 1 ? showDraggable1 : boxNumber === 2 ? showDraggable2 : showDraggable3;
-  const setShowDraggable = boxNumber === 1 ? setShowDraggable1 : boxNumber === 2 ? setShowDraggable2 : setShowDraggable3;
+  const showDraggable =
+    boxNumber === 1
+      ? showDraggable1
+      : boxNumber === 2
+      ? showDraggable2
+      : showDraggable3;
+  const setShowDraggable =
+    boxNumber === 1
+      ? setShowDraggable1
+      : boxNumber === 2
+      ? setShowDraggable2
+      : setShowDraggable3;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (boxRef.current) {
@@ -82,12 +92,18 @@ const DraggableBox: React.FC<DraggableBoxProps> = ({ columns, boxNumber }) => {
           <Minus size={12} />
         </button>
       </div>
-      <ExcelLikeBox columns={columns} />
+      <ExcelLikeBox columns={columns} boxNumber={boxNumber} />
     </div>
   ) : null;
 };
 
-const ExcelLikeBox = ({ columns, boxNumber }: { columns: DraggableBoxColumn[]; boxNumber: 1 | 2 | 3 }) => {
+const ExcelLikeBox = ({
+  columns,
+  boxNumber,
+}: {
+  columns: DraggableBoxColumn[];
+  boxNumber: 1 | 2 | 3;
+}) => {
   const {
     draggableData1,
     draggableData2,
@@ -100,9 +116,24 @@ const ExcelLikeBox = ({ columns, boxNumber }: { columns: DraggableBoxColumn[]; b
     removeDraggableData3,
   } = useDraggableStore();
 
-  const draggableData = boxNumber === 1 ? draggableData1 : boxNumber === 2 ? draggableData2 : draggableData3;
-  const updateDraggableData = boxNumber === 1 ? updateDraggableData1 : boxNumber === 2 ? updateDraggableData2 : updateDraggableData3;
-  const removeDraggableData = boxNumber === 1 ? removeDraggableData1 : boxNumber === 2 ? removeDraggableData2 : removeDraggableData3;
+  const draggableData =
+    boxNumber === 1
+      ? draggableData1
+      : boxNumber === 2
+      ? draggableData2
+      : draggableData3;
+  const updateDraggableData =
+    boxNumber === 1
+      ? updateDraggableData1
+      : boxNumber === 2
+      ? updateDraggableData2
+      : updateDraggableData3;
+  const removeDraggableData =
+    boxNumber === 1
+      ? removeDraggableData1
+      : boxNumber === 2
+      ? removeDraggableData2
+      : removeDraggableData3;
 
   const onChangeValue = (
     id: string,
