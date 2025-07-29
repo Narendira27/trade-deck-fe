@@ -24,6 +24,8 @@ import axios from "axios";
 import cookies from "js-cookie";
 import { toast } from "sonner";
 import { formatCurrency } from "../utils/formatters";
+import StatusIndicator from "./StatusIndicator";
+import StatusModal from "./modals/StatusModal";
 
 interface HeaderProps {
   columns: Column[];
@@ -50,6 +52,8 @@ const Header: React.FC<HeaderProps> = ({
   const [isAddTradeModalOpen, setIsAddTradeModalOpen] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+
   const [portfolioSL, setPortfolioSL] = useState(0);
   const [portfolioTrail, setPortfolioTrail] = useState(0);
   const [portfolioTarget, setPortfolioTarget] = useState(0);
@@ -157,6 +161,7 @@ const Header: React.FC<HeaderProps> = ({
     <>
       <header className="bg-gray-900  text-white py-2 px-2 sm:py-3 sm:px-4 flex items-center justify-between border-b border-gray-800 min-h-[60px]">
         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+          <StatusIndicator onClick={() => setIsStatusModalOpen(true)} />
           <BarChart2 className="text-blue-500 flex-shrink-0" size={20} />
           <h1 className="text-base sm:text-lg lg:text-xl font-semibold truncate">
             TradeDeck
@@ -372,6 +377,10 @@ const Header: React.FC<HeaderProps> = ({
       <FilterModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
+      />
+      <StatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
       />
     </>
   );
