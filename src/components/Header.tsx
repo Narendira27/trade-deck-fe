@@ -214,14 +214,22 @@ const Header: React.FC<HeaderProps> = ({
                   <Wallet className="text-green-400" size={14} />
                   <span className="text-xs text-gray-300">Available:</span>
                   <span className="text-xs text-green-400 font-medium">
-                    ₹{fundsAvailable.toLocaleString()}
+                    ₹
+                    {Number(fundsAvailable).toLocaleString(undefined, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <TrendingDown className="text-red-400" size={14} />
                   <span className="text-xs text-gray-300">Used:</span>
                   <span className="text-xs text-red-400 font-medium">
-                    ₹{fundsUsed.toLocaleString()}
+                    ₹
+                    {Number(fundsUsed).toLocaleString(undefined, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
               </div>
