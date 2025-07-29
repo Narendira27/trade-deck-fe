@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BarChart2,
   Plus,
@@ -60,7 +60,8 @@ const Header: React.FC<HeaderProps> = ({
   const [portfolioEnabled, setPortfolioEnabled] = useState(false);
   const [fundsAvailable, setFundsAvailable] = useState(0);
   const [fundsUsed, setFundsUsed] = useState(0);
-  const { trades, filters, setFilters } = useStore();
+  const [totalMtm, setTotalMtm] = useState(0);
+  const { trades, filters, setFilters, positionMtm } = useStore();
   const { showDraggable1, showDraggable2, showDraggable3 } =
     useDraggableStore();
 
@@ -87,7 +88,43 @@ const Header: React.FC<HeaderProps> = ({
   }, []);
 
   // Calculate total MTM
-  const totalMtm = trades.reduce((sum, trade) => sum + trade.mtm, 0);
+  // const totalMtm = trades.reduce((sum, trade) => sum + trade.mtm, 0);
+
+  // const positionMtmT = {
+  //   "123": 100,
+  //   "234": 500,
+  // };
+
+  useEffect(() => {
+    const positionLength = Object.keys(positionMtm).length;
+    let total = 0;
+    if (positionLength > 0) {
+      total = Object.values(positionMtm).reduce((sum, value) => sum + value, 0);
+    }
+
+    const userMtm = async () => {
+      try {
+        const request = await axios.get(`${API_URL}/user/closedMtm`, {
+          headers: { Authorization: `Bearer ${cookies.get("auth")}` },
+        });
+        const returnData = request?.data;
+        return returnData;
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    userMtm()
+      .then((data) => {
+        setTotalMtm(data.totalNetAmount + total);
+      })
+      .catch(() => {
+        toast.error("Failed to fetch user MTM");
+      });
+
+    // const {id } = trades
+    // positionMtm[id];
+  }, [trades, positionMtm]);
 
   const updatePortfolioSettings = async (
     enabled?: boolean,
