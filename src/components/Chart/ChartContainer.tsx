@@ -132,22 +132,22 @@ const ChartContainer: React.FC = () => {
   }, [trades]);
 
   // Periodic data refresh every 5 minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Get all unique trade IDs from visible tabs
-      const visibleTabs = getVisibleTabs();
-      const uniqueTradeIds = [
-        ...new Set(visibleTabs.map((tab) => tab.tradeId).filter((id) => id)),
-      ];
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     // Get all unique trade IDs from visible tabs
+  //     const visibleTabs = getVisibleTabs();
+  //     const uniqueTradeIds = [
+  //       ...new Set(visibleTabs.map((tab) => tab.tradeId).filter((id) => id)),
+  //     ];
 
-      // Fetch fresh data for all visible trades
-      uniqueTradeIds.forEach((tradeId) => {
-        updateChartData(tradeId);
-      });
-    }, 5 * 60 * 1000); // 5 minutes
+  //     // Fetch fresh data for all visible trades
+  //     uniqueTradeIds.forEach((tradeId) => {
+  //       updateChartData(tradeId);
+  //     });
+  //   }, 5 * 60 * 1000); // 5 minutes
 
-    return () => clearInterval(interval);
-  }, [tabs, layout]);
+  //   return () => clearInterval(interval);
+  // }, [tabs, layout]);
 
   // Initial data fetch when tabs change
   useEffect(() => {
