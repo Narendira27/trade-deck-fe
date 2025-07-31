@@ -127,8 +127,12 @@ const TableRow: React.FC<TableRowProps> = ({
           const qty = parseInt(position.initialQty);
           const entry = position.entryPrice;
           const exit = position.closePrice;
-
-          const mtm = (exit - entry) * qty * lotSize;
+          let mtm = 0;
+          if (trade.entrySide === "SELL") {
+            mtm = (entry - exit) * qty * lotSize;
+          } else if (trade.entrySide === "BUY") {
+            mtm = (exit - entry) * qty * lotSize;
+          }
           return total + mtm;
         }
         return total;

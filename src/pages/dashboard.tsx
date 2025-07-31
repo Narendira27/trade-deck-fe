@@ -147,7 +147,7 @@ function Dashboard() {
         .catch(() => {
           toast.error("Cannot update the Trade Data, Refresh the page");
         });
-    }, 0.4 * 1000);
+    }, 2 * 1000);
 
     const auth = cookies.get("auth");
     axios

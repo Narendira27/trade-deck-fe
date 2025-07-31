@@ -102,6 +102,9 @@ const Header: React.FC<HeaderProps> = ({
       total = Object.values(positionMtm).reduce((sum, value) => sum + value, 0);
     }
 
+    // console.log("Position MTM:", positionMtm);
+    // console.log(total);
+
     const userMtm = async () => {
       try {
         const request = await axios.get(`${API_URL}/user/closedMtm`, {

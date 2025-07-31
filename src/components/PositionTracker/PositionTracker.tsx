@@ -36,6 +36,15 @@ const PositionTracker: React.FC = () => {
         }))
     );
 
+    // const getPositions = trades
+    //   .filter((each) => each.alive === false && each.isDummy === false)
+    //   .flatMap((each) =>
+    //     each.liveTradePositions.map((pos) => ({
+    //       ...pos,
+    //       entrySide: each.entrySide,
+    //     }))
+    //   );
+    // console.log(getPositions);
     const modifyDetails = getPositions.reduce((acc, each) => {
       const { optionName, id, currentQty } = each;
       const parts = optionName.split(" ");
@@ -47,25 +56,43 @@ const PositionTracker: React.FC = () => {
       const priceObj = optionPrice.find(
         (price) => price.optionName === optionName
       );
+      // let priceObj = { price: 0 };
+      // if (each.closed === false) {
+      //   priceObj = optionPrice.find(
+      //     (price) => price.optionName === optionName
+      //   ) || { price: 0 };
+      // }
 
       if (lotSizeObj && priceObj) {
         const price = priceObj.price;
         const lotSize = lotSizeObj.lotSize;
         let mtm = 0;
 
-        if (each.entrySide === "SELL")
+        if (each.entrySide === "SELL" && each.closed === false)
           mtm = (each.entryPrice - price) * (parseInt(currentQty) * lotSize);
-        if (each.entrySide === "BUY")
+        if (each.entrySide === "BUY" && each.closed === false)
           mtm = (price - each.entryPrice) * (parseInt(currentQty) * lotSize);
+        if (each.entrySide === "SELL" && each.closed === true)
+          mtm =
+            (each.entryPrice - each.closePrice) *
+            (parseInt(each.initialQty) * lotSize);
+        if (each.entrySide === "BUY" && each.closed === true)
+          mtm =
+            (each.closePrice - each.entryPrice) *
+            (parseInt(each.initialQty) * lotSize);
 
         setPositionMtm(id, mtm);
+
+        const getQty =
+          each.closed === false ? each.currentQty : each.initialQty;
+        const getPrice = each.closed === false ? price : each.closePrice;
 
         acc.push({
           id,
           optionName,
-          price,
+          price: getPrice,
           mtm,
-          quantity: parseInt(currentQty),
+          quantity: parseInt(getQty),
           entrySide: each.entrySide as "SELL" | "BUY",
           type,
         });
@@ -182,7 +209,7 @@ const PositionTracker: React.FC = () => {
               onClick={() => handleSort("price")}
               className="flex items-center justify-end space-x-1 hover:text-white transition-colors text-xs font-medium text-gray-300"
             >
-              <span className="text-xs">Price</span>
+              <span className="text-xs">Last Price</span>
               {getSortIcon("price")}
             </button>
             <button

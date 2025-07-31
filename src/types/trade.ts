@@ -23,6 +23,7 @@ export interface Trade {
   tpTriggered: boolean;
   alive: boolean;
   isDeleted: boolean;
+  isDummy: boolean;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
