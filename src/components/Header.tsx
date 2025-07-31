@@ -13,7 +13,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
-import AddTradeModal from "./modals/AddTradeModal";
+import AddInstanceModal from "./modals/AddInstanceModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
 import PortfolioModal from "./modals/PortfolioModal";
 import FilterModal from "./modals/FilterModal";
@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({
   draggableColumns,
   onDraggableColumnsChange,
 }) => {
-  const [isAddTradeModalOpen, setIsAddTradeModalOpen] = useState(false);
+  const [isAddInstanceModalOpen, setIsAddInstanceModalOpen] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -364,7 +364,7 @@ const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
-              onClick={() => setIsAddTradeModalOpen(true)}
+              onClick={() => setIsAddInstanceModalOpen(true)}
               className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               <Plus size={16} />
@@ -394,7 +394,7 @@ const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
-              onClick={() => setIsAddTradeModalOpen(true)}
+              onClick={() => setIsAddInstanceModalOpen(true)}
               className="flex items-center space-x-1 px-2 py-1.5 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors"
             >
               <Plus size={14} />
@@ -412,9 +412,9 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      <AddTradeModal
-        isOpen={isAddTradeModalOpen}
-        onClose={() => setIsAddTradeModalOpen(false)}
+      <AddInstanceModal
+        isOpen={isAddInstanceModalOpen}
+        onClose={() => setIsAddInstanceModalOpen(false)}
       />
 
       <PortfolioModal

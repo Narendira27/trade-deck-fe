@@ -1,3 +1,34 @@
+export interface Instance {
+  id: string;
+  indexName: string;
+  expiry: string;
+  ltpRange: number;
+  legCount: number;
+  tradeDetails: TradeDetail[];
+}
+
+export interface TradeDetail {
+  id: string;
+  qty: number;
+  currentQty: number;
+  entrySide: string;
+  entryType: string;
+  entryPrice: number;
+  stopLossPoints: number;
+  stopLossPremium: number;
+  takeProfitPoints: number;
+  takeProfitPremium: number;
+  pointOfAdjustment: number;
+  pointOfAdjustmentLowerLimit: number;
+  pointOfAdjustmentUpperLimit: number;
+  entryTriggered: boolean;
+  slTriggered: boolean;
+  tpTriggered: boolean;
+  reason: string;
+  userExit: number;
+  updatedAt: string;
+}
+
 export interface Trade {
   id: string;
   indexName: string;
