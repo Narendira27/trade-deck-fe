@@ -1,13 +1,22 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { type Instance, type TradeDetail } from "../../types/trade";
 import { formatCurrency, formatNumber } from "../../utils/formatters";
 import TradeDetailRow from "./TradeDetailRow";
+import InstanceColumnManager from "./InstanceColumnManager";
+import TradeDetailColumnManager from "./TradeDetailColumnManager";
+import AddPositionModal from "../modals/AddPositionModal";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_URL } from "../../config/config";
 import cookies from "js-cookie";
 import useStore from "../../store/store";
+import { 
+  type InstanceColumn, 
+  type TradeDetailColumn,
+  defaultInstanceColumns,
+  defaultTradeDetailColumns 
+} from "../../types/instanceColumns";
 
 interface InstanceTableProps {
   instances: Instance[];
@@ -15,7 +24,30 @@ interface InstanceTableProps {
 
 const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
   const [expandedInstances, setExpandedInstances] = useState<Set<string>>(new Set());
-  const { setInstances } = useStore();
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
+  const [isAddPositionModalOpen, setIsAddPositionModalOpen] = useState(false);
+  
+  // Column management with localStorage persistence
+  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(() => {
+    const saved = localStorage.getItem('instanceColumns');
+    return saved ? JSON.parse(saved) : defaultInstanceColumns;
+  });
+  
+  const [tradeDetailColumns, setTradeDetailColumns] = useState<TradeDetailColumn[]>(() => {
+    const saved = localStorage.getItem('tradeDetailColumns');
+    return saved ? JSON.parse(saved) : defaultTradeDetailColumns;
+  });
+
+  const { setInstances, indexPrice, optionValues } = useStore();
+
+  // Save to localStorage when columns change
+  useEffect(() => {
+    localStorage.setItem('instanceColumns', JSON.stringify(instanceColumns));
+  }, [instanceColumns]);
+
+  useEffect(() => {
+    localStorage.setItem('tradeDetailColumns', JSON.stringify(tradeDetailColumns));
+  }, [tradeDetailColumns]);
 
   const toggleExpanded = (instanceId: string) => {
     const newExpanded = new Set(expandedInstances);
@@ -27,9 +59,9 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
     setExpandedInstances(newExpanded);
   };
 
-  const handleAddPosition = async (instanceId: string) => {
-    // TODO: Implement add position modal/form
-    toast.info("Add position functionality to be implemented");
+  const handleAddPosition = (instanceId: string) => {
+    setSelectedInstanceId(instanceId);
+    setIsAddPositionModalOpen(true);
   };
 
   const handleDeleteInstance = async (instanceId: string) => {
@@ -59,8 +91,67 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
     });
   };
 
+  // Get current values for instances
+  const getInstanceValues = (instance: Instance) => {
+    const indexName: Record<string, number> = {
+      NIFTY: 26000,
+      BANKNIFTY: 26001,
+      FINNIFTY: 26034,
+      MIDCPNIFTY: 26121,
+      SENSEX: 26065,
+      BANKEX: 26118,
+    };
+
+    const currentIndexPrice = indexPrice.find(
+      (each) => each.id === indexName[instance.indexName]
+    );
+
+    const currentOptionValue = optionValues.find(
+      (each) => each.id === instance.id
+    );
+
+    return {
+      ltpSpot: currentIndexPrice?.price || 0,
+      lowestValue: currentOptionValue?.lowestCombinedPremium || 0,
+    };
+  };
+
+  const getCellValue = (columnId: string, instance: Instance) => {
+    const values = getInstanceValues(instance);
+    
+    switch (columnId) {
+      case "indexName":
+        return instance.indexName;
+      case "ltpSpot":
+        return formatNumber(values.ltpSpot);
+      case "expiry":
+        return instance.expiry;
+      case "ltpRange":
+        return formatNumber(instance.ltpRange);
+      case "lowestValue":
+        return formatNumber(values.lowestValue);
+      default:
+        return "-";
+    }
+  };
+
+  const visibleInstanceColumns = instanceColumns.filter((col) => col.visible);
+  const visibleTradeDetailColumns = tradeDetailColumns.filter((col) => col.visible);
+
   return (
     <div className="h-full flex flex-col">
+      {/* Column Management Controls */}
+      <div className="flex items-center justify-end space-x-2 p-2 bg-gray-800 border-b border-gray-700">
+        <InstanceColumnManager
+          columns={instanceColumns}
+          onColumnsChange={setInstanceColumns}
+        />
+        <TradeDetailColumnManager
+          columns={tradeDetailColumns}
+          onColumnsChange={setTradeDetailColumns}
+        />
+      </div>
+
       <div className="flex-1 overflow-auto">
         {/* Desktop Table View */}
         <div className="hidden lg:block h-full">
@@ -68,22 +159,19 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
             <table className="w-full border-collapse">
               <thead className="bg-gray-800 sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-300 border-b border-gray-700 w-12">
+                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-300 border-b border-gray-700 w-8">
                     
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-300 border-b border-gray-700">
-                    Index Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-300 border-b border-gray-700">
-                    Expiry
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-300 border-b border-gray-700">
-                    LTP Range
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-300 border-b border-gray-700">
-                    Leg Count
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-300 border-b border-gray-700 w-32">
+                  {visibleInstanceColumns.map((column) => (
+                    <th
+                      key={column.id}
+                      className="px-2 py-1 text-left text-xs font-medium text-gray-300 border-b border-gray-700"
+                      style={{ width: column.width }}
+                    >
+                      {column.label}
+                    </th>
+                  ))}
+                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-300 border-b border-gray-700 w-20">
                     Actions
                   </th>
                 </tr>
@@ -94,45 +182,38 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
                     <React.Fragment key={instance.id}>
                       {/* Main Instance Row */}
                       <tr className="hover:bg-gray-800/50 transition-colors border-b border-gray-800">
-                        <td className="px-4 py-3">
+                        <td className="px-2 py-1">
                           <button
                             onClick={() => toggleExpanded(instance.id)}
                             className="text-gray-400 hover:text-white transition-colors"
                           >
                             {expandedInstances.has(instance.id) ? (
-                              <ChevronDown size={16} />
+                              <ChevronDown size={12} />
                             ) : (
-                              <ChevronRight size={16} />
+                              <ChevronRight size={12} />
                             )}
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-sm text-white">
-                          {instance.indexName}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-white">
-                          {instance.expiry}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-white">
-                          {formatNumber(instance.ltpRange)}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-white">
-                          {instance.legCount}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex space-x-2">
+                        {visibleInstanceColumns.map((column) => (
+                          <td key={column.id} className="px-2 py-1 text-xs text-white">
+                            {getCellValue(column.id, instance)}
+                          </td>
+                        ))}
+                        <td className="px-2 py-1">
+                          <div className="flex space-x-1">
                             <button
                               onClick={() => handleAddPosition(instance.id)}
-                              className="p-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                              className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                               title="Add Position"
                             >
-                              <Plus size={14} />
+                              <Plus size={10} />
                             </button>
                             <button
                               onClick={() => handleDeleteInstance(instance.id)}
-                              className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
+                              className="p-1 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
                               title="Delete Instance"
                             >
-                              <Trash2 size={14} />
+                              <Trash2 size={10} />
                             </button>
                           </div>
                         </td>
@@ -141,35 +222,28 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
                       {/* Expanded Trade Details */}
                       {expandedInstances.has(instance.id) && instance.tradeDetails && (
                         <tr>
-                          <td colSpan={6} className="px-0 py-0">
+                          <td colSpan={visibleInstanceColumns.length + 2} className="px-0 py-0">
                             <div className="bg-gray-800/30 border-l-4 border-blue-500">
-                              <div className="p-4">
-                                <h4 className="text-sm font-medium text-white mb-3">
-                                  Trade Details
+                              <div className="p-2">
+                                <h4 className="text-xs font-medium text-white mb-2">
+                                  Trade Details ({instance.tradeDetails.length})
                                 </h4>
                                 <div className="overflow-x-auto">
                                   <table className="w-full">
                                     <thead>
                                       <tr className="bg-gray-700">
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Qty</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Current Qty</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Entry Side</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Entry Type</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Entry Price</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">SL Points</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">SL Premium</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">TP Points</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">TP Premium</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">POA</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">POA Lower</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">POA Upper</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Entry Triggered</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">SL Triggered</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">TP Triggered</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Reason</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">User Exit</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Updated At</th>
-                                        <th className="px-3 py-2 text-xs font-medium text-gray-300 text-left">Actions</th>
+                                        {visibleTradeDetailColumns.map((column) => (
+                                          <th
+                                            key={column.id}
+                                            className="px-2 py-1 text-xs font-medium text-gray-300 text-left"
+                                            style={{ width: column.width }}
+                                          >
+                                            {column.label}
+                                          </th>
+                                        ))}
+                                        <th className="px-2 py-1 text-xs font-medium text-gray-300 text-left w-24">
+                                          Actions
+                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody>
@@ -178,6 +252,7 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
                                           key={detail.id}
                                           tradeDetail={detail}
                                           instanceId={instance.id}
+                                          visibleColumns={visibleTradeDetailColumns}
                                         />
                                       ))}
                                     </tbody>
@@ -192,7 +267,7 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-400">
+                    <td colSpan={visibleInstanceColumns.length + 2} className="text-center py-8 text-gray-400">
                       No instances to display
                     </td>
                   </tr>
@@ -204,107 +279,115 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
 
         {/* Mobile/Tablet Card View */}
         <div className="lg:hidden">
-          <div className="space-y-4 p-4 h-full overflow-auto">
+          <div className="space-y-3 p-3 h-full overflow-auto">
             {instances.length > 0 ? (
-              instances.map((instance) => (
-                <div
-                  key={instance.id}
-                  className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700"
-                >
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h3 className="text-base font-medium text-white">
-                          {instance.indexName}
-                        </h3>
-                        <p className="text-sm text-gray-400">
-                          {instance.expiry} • Range: {formatNumber(instance.ltpRange)} • Legs: {instance.legCount}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2 ml-4">
-                        <button
-                          onClick={() => handleAddPosition(instance.id)}
-                          className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                          title="Add Position"
-                        >
-                          <Plus size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteInstance(instance.id)}
-                          className="p-2 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
-                          title="Delete Instance"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => toggleExpanded(instance.id)}
-                          className="p-2 text-gray-400 hover:text-white transition-colors"
-                        >
-                          {expandedInstances.has(instance.id) ? (
-                            <ChevronDown size={16} />
-                          ) : (
-                            <ChevronRight size={16} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {expandedInstances.has(instance.id) && instance.tradeDetails && (
-                      <div className="mt-4 pt-4 border-t border-gray-700">
-                        <h4 className="text-sm font-medium text-white mb-3">
-                          Trade Details ({instance.tradeDetails.length})
-                        </h4>
-                        <div className="space-y-3">
-                          {instance.tradeDetails.map((detail) => (
-                            <div
-                              key={detail.id}
-                              className="bg-gray-700 p-3 rounded-lg"
-                            >
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                  <span className="text-gray-400">Qty:</span>
-                                  <span className="text-white ml-1">{detail.qty}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-400">Current Qty:</span>
-                                  <span className="text-white ml-1">{detail.currentQty}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-400">Side:</span>
-                                  <span className="text-white ml-1">{detail.entrySide}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-400">Type:</span>
-                                  <span className="text-white ml-1">{detail.entryType}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-400">Entry:</span>
-                                  <span className="text-white ml-1">{formatNumber(detail.entryPrice)}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-400">User Exit:</span>
-                                  <span className="text-white ml-1">{detail.userExit}%</span>
-                                </div>
-                              </div>
-                              <div className="flex justify-end mt-3 space-x-2">
-                                <button className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
-                                  Place Order
-                                </button>
-                                <button className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500">
-                                  Update
-                                </button>
-                                <button className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+              instances.map((instance) => {
+                const values = getInstanceValues(instance);
+                return (
+                  <div
+                    key={instance.id}
+                    className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700"
+                  >
+                    <div className="p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h3 className="text-sm font-medium text-white">
+                            {instance.indexName}
+                          </h3>
+                          <p className="text-xs text-gray-400">
+                            {instance.expiry} • Range: {formatNumber(instance.ltpRange)}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            LTP: {formatNumber(values.ltpSpot)} • Lowest: {formatNumber(values.lowestValue)}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-1 ml-2">
+                          <button
+                            onClick={() => handleAddPosition(instance.id)}
+                            className="p-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                            title="Add Position"
+                          >
+                            <Plus size={12} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteInstance(instance.id)}
+                            className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
+                            title="Delete Instance"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                          <button
+                            onClick={() => toggleExpanded(instance.id)}
+                            className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                          >
+                            {expandedInstances.has(instance.id) ? (
+                              <ChevronDown size={12} />
+                            ) : (
+                              <ChevronRight size={12} />
+                            )}
+                          </button>
                         </div>
                       </div>
-                    )}
+
+                      {expandedInstances.has(instance.id) && instance.tradeDetails && (
+                        <div className="mt-3 pt-3 border-t border-gray-700">
+                          <h4 className="text-xs font-medium text-white mb-2">
+                            Trade Details ({instance.tradeDetails.length})
+                          </h4>
+                          <div className="space-y-2">
+                            {instance.tradeDetails.map((detail) => (
+                              <div
+                                key={detail.id}
+                                className="bg-gray-700 p-2 rounded-lg"
+                              >
+                                <div className="grid grid-cols-2 gap-1 text-xs">
+                                  <div>
+                                    <span className="text-gray-400">Qty:</span>
+                                    <span className="text-white ml-1">{detail.qty}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">Current:</span>
+                                    <span className="text-white ml-1">{detail.currentQty}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">Side:</span>
+                                    <span className="text-white ml-1">{detail.entrySide}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">Type:</span>
+                                    <span className="text-white ml-1">{detail.entryType}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">Entry:</span>
+                                    <span className="text-white ml-1">{formatNumber(detail.entryPrice)}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">MTM:</span>
+                                    <span className={`ml-1 ${detail.mtm >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      {formatCurrency(detail.mtm)}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex justify-end mt-2 space-x-1">
+                                  <button className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                                    Place Order
+                                  </button>
+                                  <button className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500">
+                                    Update
+                                  </button>
+                                  <button className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="text-center py-8 text-gray-400">
                 No instances to display
@@ -313,6 +396,12 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
           </div>
         </div>
       </div>
+
+      <AddPositionModal
+        isOpen={isAddPositionModalOpen}
+        onClose={() => setIsAddPositionModalOpen(false)}
+        instanceId={selectedInstanceId || ""}
+      />
     </div>
   );
 };

@@ -15,7 +15,6 @@ interface InstanceFormData {
   indexName: string;
   expiry: string;
   ltpRange: number;
-  legCount: number;
 }
 
 const AddInstanceModal: React.FC<AddInstanceModalProps> = ({ isOpen, onClose }) => {
@@ -23,7 +22,6 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({ isOpen, onClose }) 
     indexName: "",
     expiry: "",
     ltpRange: 0,
-    legCount: 1,
   });
 
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -102,9 +100,6 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({ isOpen, onClose }) 
     if (formData.legCount <= 0) {
       return toast.warning("Enter valid leg count");
     }
-    if (formData.ltpRange <= 0) {
-      return toast.warning("Enter valid LTP Range");
-    }
 
     const addInstanceRequest = axios.post(
       API_URL + "/user/instances",
@@ -112,7 +107,6 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({ isOpen, onClose }) 
         indexName: formData.indexName,
         expiry: formData.expiry,
         ltpRange: formData.ltpRange,
-        legCount: formData.legCount,
       },
       { headers: { Authorization: "Bearer " + auth } }
     );
@@ -125,7 +119,6 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({ isOpen, onClose }) 
           indexName: "",
           expiry: "",
           ltpRange: 0,
-          legCount: 1,
         });
         
         // Refresh instances data
@@ -221,7 +214,7 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({ isOpen, onClose }) 
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 LTP Range
@@ -234,24 +227,6 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({ isOpen, onClose }) 
                   setFormData({
                     ...formData,
                     ltpRange: parseFloat(e.target.value) || 0,
-                  })
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Leg Count
-              </label>
-              <input
-                type="number"
-                min="1"
-                className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.legCount}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    legCount: parseInt(e.target.value) || 1,
                   })
                 }
               />
