@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import Header from "../components/Header";
 import SideNav from "../components/SideNav";
-import TradeTable from "../components/TradeTable";
+import InstanceTable from "../components/TradeTable/InstanceTable";
 import { jwtDecode } from "jwt-decode";
 import { type Column } from "../components/TradeTable/ColumnManager";
 import MarketDataComponent from "../components/marketData";
@@ -89,7 +89,7 @@ const defaultColumns: Column[] = [
 ];
 
 function Dashboard() {
-  const { trades, setTrades, setOptionLotSize } = useStore();
+  const { trades, instances, setTrades, setInstances, setOptionLotSize } = useStore();
   const [columns, setColumns] = useState<Column[]>(defaultColumns);
   const [draggableColumns, setDraggableColumns] = useState<
     DraggableBoxColumn[]
@@ -99,22 +99,30 @@ function Dashboard() {
 
   const getTradeData = useCallback(() => {
     const auth = cookies.get("auth");
-    const verifyToken = axios.get(API_URL + "/user/tradeInfo", {
+    
+    // Fetch instances data
+    const instancesPromise = axios.get(API_URL + "/user/instances", {
+      headers: { Authorization: "Bearer " + auth },
+    });
+    
+    // Keep the original trades fetch for backward compatibility
+    const tradesPromise = axios.get(API_URL + "/user/tradeInfo", {
       headers: { Authorization: "Bearer " + auth },
     });
 
-    toast.promise(verifyToken, {
-      loading: "Checking session & fetching latest trades...",
-      success: (data) => {
-        setTrades(data.data.data);
-        return "Trades updated successfully!";
+    toast.promise(Promise.all([instancesPromise, tradesPromise]), {
+      loading: "Checking session & fetching latest data...",
+      success: ([instancesData, tradesData]) => {
+        setInstances(instancesData.data.data);
+        setTrades(tradesData.data.data);
+        return "Data updated successfully!";
       },
       error: () => {
         navigate("/login");
         return "Session expired / Server Down . Please log in again.";
       },
     });
-  }, [navigate, setTrades]);
+  }, [navigate, setTrades, setInstances]);
 
   useEffect(() => {
     const auth = cookies.get("auth");
@@ -137,6 +145,20 @@ function Dashboard() {
   useEffect(() => {
     const interval = setInterval(() => {
       const auth = cookies.get("auth");
+      
+      // Update instances
+      axios
+        .get(API_URL + "/user/instances", {
+          headers: { Authorization: "Bearer " + auth },
+        })
+        .then((data) => {
+          setInstances(data.data.data);
+        })
+        .catch(() => {
+          toast.error("Cannot update the Instance Data, Refresh the page");
+        });
+        
+      // Keep updating trades for backward compatibility
       axios
         .get(API_URL + "/user/tradeInfo", {
           headers: { Authorization: "Bearer " + auth },
@@ -145,7 +167,7 @@ function Dashboard() {
           setTrades(data.data.data);
         })
         .catch(() => {
-          toast.error("Cannot update the Trade Data, Refresh the page");
+          // Silent fail for trades as instances is primary now
         });
     }, 2 * 1000);
 
@@ -164,7 +186,7 @@ function Dashboard() {
     return () => {
       clearInterval(interval);
     };
-  }, [getTradeData, setTrades, setOptionLotSize]);
+  }, [getTradeData, setTrades, setInstances, setOptionLotSize]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
@@ -181,7 +203,7 @@ function Dashboard() {
           {/* Mobile Layout */}
           <div className="lg:hidden h-full flex flex-col">
             <div className="flex-1 min-h-0">
-              <TradeTable trades={trades} columns={columns} />
+              <InstanceTable instances={instances} />
             </div>
             <div className="h-48 sm:h-64 border-t border-gray-700">
               <div className="grid grid-cols-1 sm:grid-cols-2 h-full gap-1 p-1">
@@ -205,7 +227,7 @@ function Dashboard() {
             >
               {/* Top section - Trade Table */}
               <div className="h-full bg-gray-900 border-b border-gray-700">
-                <TradeTable trades={trades} columns={columns} />
+                <InstanceTable instances={instances} />
               </div>
 
               {/* Bottom section - Chart and Position Tracker */}

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { type Trade } from "../types/trade";
+import { type Trade, type Instance } from "../types/trade";
 
 interface indexData {
   indices: string[];
@@ -56,6 +56,7 @@ interface OptionPrice {
 
 interface TradeStoreState {
   trades: Trade[];
+  instances: Instance[];
   indexData: indexData;
   indexPrice: IndexPriceData[];
   optionPrice: OptionPrice[];
@@ -64,6 +65,7 @@ interface TradeStoreState {
   filters: TradeFilters;
   positionMtm: { [tradeId: string]: number };
   setTrades: (data: Trade[]) => void;
+  setInstances: (data: Instance[]) => void;
   setIndexData: (data: indexData) => void;
   setIndexPrice: (data: IndexPriceData) => void;
   setOptionPrice: (data: OptionPrice) => void;
@@ -108,6 +110,7 @@ interface DraggableStoreState {
 
 const useStore = create<TradeStoreState>((set, get) => ({
   trades: [],
+  instances: [],
   indexData: {
     indices: [],
     expiry: {},
@@ -130,6 +133,7 @@ const useStore = create<TradeStoreState>((set, get) => ({
   },
   positionMtm: {},
   setTrades: (data: Trade[]) => set({ trades: data }),
+  setInstances: (data: Instance[]) => set({ instances: data }),
   setIndexData: (data: indexData) => set({ indexData: data }),
   setIndexPrice: (data) => {
     const state = get();
