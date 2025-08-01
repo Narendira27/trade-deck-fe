@@ -9,6 +9,12 @@ import SideNav from "../components/SideNav";
 import InstanceTable from "../components/TradeTable/InstanceTable";
 import { jwtDecode } from "jwt-decode";
 import { type Column } from "../components/TradeTable/ColumnManager";
+import { 
+  type InstanceColumn, 
+  type TradeDetailColumn,
+  defaultInstanceColumns,
+  defaultTradeDetailColumns 
+} from "../types/instanceColumns";
 import MarketDataComponent from "../components/marketData";
 import GetValues from "../components/getValues";
 import ResizablePanel from "../components/ResizablePanel";
@@ -91,6 +97,8 @@ const defaultColumns: Column[] = [
 function Dashboard() {
   const { trades, instances, setTrades, setInstances, setOptionLotSize } = useStore();
   const [columns, setColumns] = useState<Column[]>(defaultColumns);
+  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(defaultInstanceColumns);
+  const [tradeDetailColumns, setTradeDetailColumns] = useState<TradeDetailColumn[]>(defaultTradeDetailColumns);
   const [draggableColumns, setDraggableColumns] = useState<
     DraggableBoxColumn[]
   >(defaultDraggableColumns);
@@ -193,6 +201,10 @@ function Dashboard() {
       <Header
         columns={columns}
         onColumnsChange={setColumns}
+        instanceColumns={instanceColumns}
+        onInstanceColumnsChange={setInstanceColumns}
+        tradeDetailColumns={tradeDetailColumns}
+        onTradeDetailColumnsChange={setTradeDetailColumns}
         draggableColumns={draggableColumns}
         onDraggableColumnsChange={setDraggableColumns}
         onMenuToggle={() => setIsSideNavOpen(!isSideNavOpen)}
@@ -203,7 +215,13 @@ function Dashboard() {
           {/* Mobile Layout */}
           <div className="lg:hidden h-full flex flex-col">
             <div className="flex-1 min-h-0">
-              <InstanceTable instances={instances} />
+              <InstanceTable 
+                instances={instances} 
+                instanceColumns={instanceColumns}
+                tradeDetailColumns={tradeDetailColumns}
+                onInstanceColumnsChange={setInstanceColumns}
+                onTradeDetailColumnsChange={setTradeDetailColumns}
+              />
             </div>
             <div className="h-48 sm:h-64 border-t border-gray-700">
               <div className="grid grid-cols-1 sm:grid-cols-2 h-full gap-1 p-1">
@@ -227,7 +245,13 @@ function Dashboard() {
             >
               {/* Top section - Trade Table */}
               <div className="h-full bg-gray-900 border-b border-gray-700">
-                <InstanceTable instances={instances} />
+                <InstanceTable 
+                  instances={instances} 
+                  instanceColumns={instanceColumns}
+                  tradeDetailColumns={tradeDetailColumns}
+                  onInstanceColumnsChange={setInstanceColumns}
+                  onTradeDetailColumnsChange={setTradeDetailColumns}
+                />
               </div>
 
               {/* Bottom section - Chart and Position Tracker */}

@@ -3,9 +3,6 @@ import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { type Instance, type TradeDetail } from "../../types/trade";
 import { formatCurrency, formatNumber } from "../../utils/formatters";
 import TradeDetailRow from "./TradeDetailRow";
-import InstanceColumnManager from "./InstanceColumnManager";
-import TradeDetailColumnManager from "./TradeDetailColumnManager";
-import AddPositionModal from "../modals/AddPositionModal";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_URL } from "../../config/config";
@@ -14,40 +11,37 @@ import useStore from "../../store/store";
 import { 
   type InstanceColumn, 
   type TradeDetailColumn,
-  defaultInstanceColumns,
-  defaultTradeDetailColumns 
 } from "../../types/instanceColumns";
 
 interface InstanceTableProps {
   instances: Instance[];
+  instanceColumns: InstanceColumn[];
+  tradeDetailColumns: TradeDetailColumn[];
+  onInstanceColumnsChange: (columns: InstanceColumn[]) => void;
+  onTradeDetailColumnsChange: (columns: TradeDetailColumn[]) => void;
 }
 
-const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
+const InstanceTable: React.FC<InstanceTableProps> = ({ 
+  instances, 
+  instanceColumns, 
+  tradeDetailColumns,
+  onInstanceColumnsChange,
+  onTradeDetailColumnsChange 
+}) => {
   const [expandedInstances, setExpandedInstances] = useState<Set<string>>(new Set());
-  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
-  const [isAddPositionModalOpen, setIsAddPositionModalOpen] = useState(false);
-  
-  // Column management with localStorage persistence
-  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(() => {
-    const saved = localStorage.getItem('instanceColumns');
-    return saved ? JSON.parse(saved) : defaultInstanceColumns;
+  const [addingPositionToInstance, setAddingPositionToInstance] = useState<string | null>(null);
+  const [newPositionData, setNewPositionData] = useState({
+    qty: 1,
+    entrySide: "SELL" as "BUY" | "SELL",
+    entryType: "LIMIT" as "MARKET" | "LIMIT",
+    entryPrice: 0,
+    stopLossPoints: 0,
+    takeProfitPoints: 0,
   });
   
-  const [tradeDetailColumns, setTradeDetailColumns] = useState<TradeDetailColumn[]>(() => {
-    const saved = localStorage.getItem('tradeDetailColumns');
-    return saved ? JSON.parse(saved) : defaultTradeDetailColumns;
-  });
 
   const { setInstances, indexPrice, optionValues } = useStore();
 
-  // Save to localStorage when columns change
-  useEffect(() => {
-    localStorage.setItem('instanceColumns', JSON.stringify(instanceColumns));
-  }, [instanceColumns]);
-
-  useEffect(() => {
-    localStorage.setItem('tradeDetailColumns', JSON.stringify(tradeDetailColumns));
-  }, [tradeDetailColumns]);
 
   const toggleExpanded = (instanceId: string) => {
     const newExpanded = new Set(expandedInstances);
@@ -60,8 +54,52 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
   };
 
   const handleAddPosition = (instanceId: string) => {
-    setSelectedInstanceId(instanceId);
-    setIsAddPositionModalOpen(true);
+    setAddingPositionToInstance(instanceId);
+    setNewPositionData({
+      qty: 1,
+      entrySide: "SELL",
+      entryType: "LIMIT",
+      entryPrice: 0,
+      stopLossPoints: 0,
+      takeProfitPoints: 0,
+    });
+  };
+
+  const handleCancelAddPosition = () => {
+    setAddingPositionToInstance(null);
+    setNewPositionData({
+      qty: 1,
+      entrySide: "SELL",
+      entryType: "LIMIT",
+      entryPrice: 0,
+      stopLossPoints: 0,
+      takeProfitPoints: 0,
+    });
+  };
+
+  const handleSavePosition = async (instanceId: string) => {
+    const auth = cookies.get("auth");
+    
+    try {
+      await axios.post(
+        `${API_URL}/user/instances/${instanceId}/positions`,
+        newPositionData,
+        {
+          headers: { Authorization: `Bearer ${auth}` },
+        }
+      );
+      
+      // Refresh instances data
+      const response = await axios.get(`${API_URL}/user/instances`, {
+        headers: { Authorization: `Bearer ${auth}` },
+      });
+      setInstances(response.data.data);
+      
+      handleCancelAddPosition();
+      toast.success("Position added successfully!");
+    } catch (error) {
+      toast.error("Failed to add position");
+    }
   };
 
   const handleDeleteInstance = async (instanceId: string) => {
@@ -140,17 +178,6 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Column Management Controls */}
-      <div className="flex items-center justify-end space-x-2 p-2 bg-gray-800 border-b border-gray-700">
-        <InstanceColumnManager
-          columns={instanceColumns}
-          onColumnsChange={setInstanceColumns}
-        />
-        <TradeDetailColumnManager
-          columns={tradeDetailColumns}
-          onColumnsChange={setTradeDetailColumns}
-        />
-      </div>
 
       <div className="flex-1 overflow-auto">
         {/* Desktop Table View */}
@@ -219,6 +246,114 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
                         </td>
                       </tr>
 
+                      {/* Add Position Form Row */}
+                      {addingPositionToInstance === instance.id && (
+                        <tr>
+                          <td colSpan={visibleInstanceColumns.length + 2} className="px-0 py-0">
+                            <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4">
+                              <h4 className="text-sm font-medium text-white mb-3">Add New Position</h4>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                                <div>
+                                  <label className="block text-xs text-gray-300 mb-1">Qty</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={newPositionData.qty}
+                                    onChange={(e) => setNewPositionData({
+                                      ...newPositionData,
+                                      qty: parseInt(e.target.value) || 1
+                                    })}
+                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs text-gray-300 mb-1">Side</label>
+                                  <select
+                                    value={newPositionData.entrySide}
+                                    onChange={(e) => setNewPositionData({
+                                      ...newPositionData,
+                                      entrySide: e.target.value as "BUY" | "SELL"
+                                    })}
+                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  >
+                                    <option value="SELL">SELL</option>
+                                    <option value="BUY">BUY</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-xs text-gray-300 mb-1">Type</label>
+                                  <select
+                                    value={newPositionData.entryType}
+                                    onChange={(e) => setNewPositionData({
+                                      ...newPositionData,
+                                      entryType: e.target.value as "MARKET" | "LIMIT"
+                                    })}
+                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  >
+                                    <option value="LIMIT">LIMIT</option>
+                                    <option value="MARKET">MARKET</option>
+                                  </select>
+                                </div>
+                                {newPositionData.entryType === "LIMIT" && (
+                                  <div>
+                                    <label className="block text-xs text-gray-300 mb-1">Entry Price</label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={newPositionData.entryPrice}
+                                      onChange={(e) => setNewPositionData({
+                                        ...newPositionData,
+                                        entryPrice: parseFloat(e.target.value) || 0
+                                      })}
+                                      className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                    />
+                                  </div>
+                                )}
+                                <div>
+                                  <label className="block text-xs text-gray-300 mb-1">SL Points</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={newPositionData.stopLossPoints}
+                                    onChange={(e) => setNewPositionData({
+                                      ...newPositionData,
+                                      stopLossPoints: parseFloat(e.target.value) || 0
+                                    })}
+                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs text-gray-300 mb-1">TP Points</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={newPositionData.takeProfitPoints}
+                                    onChange={(e) => setNewPositionData({
+                                      ...newPositionData,
+                                      takeProfitPoints: parseFloat(e.target.value) || 0
+                                    })}
+                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end space-x-2 mt-3">
+                                <button
+                                  onClick={handleCancelAddPosition}
+                                  className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleSavePosition(instance.id)}
+                                  className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                >
+                                  Add Position
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                       {/* Expanded Trade Details */}
                       {expandedInstances.has(instance.id) && instance.tradeDetails && (
                         <tr>
@@ -329,6 +464,54 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
                         </div>
                       </div>
 
+                      {addingPositionToInstance === instance.id && (
+                        <div className="mt-3 pt-3 border-t border-gray-700 bg-blue-900/20 p-3 rounded">
+                          <h4 className="text-xs font-medium text-white mb-2">Add New Position</h4>
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            <div>
+                              <label className="block text-xs text-gray-300 mb-1">Qty</label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={newPositionData.qty}
+                                onChange={(e) => setNewPositionData({
+                                  ...newPositionData,
+                                  qty: parseInt(e.target.value) || 1
+                                })}
+                                className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-300 mb-1">Side</label>
+                              <select
+                                value={newPositionData.entrySide}
+                                onChange={(e) => setNewPositionData({
+                                  ...newPositionData,
+                                  entrySide: e.target.value as "BUY" | "SELL"
+                                })}
+                                className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                              >
+                                <option value="SELL">SELL</option>
+                                <option value="BUY">BUY</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={handleCancelAddPosition}
+                              className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => handleSavePosition(instance.id)}
+                              className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       {expandedInstances.has(instance.id) && instance.tradeDetails && (
                         <div className="mt-3 pt-3 border-t border-gray-700">
                           <h4 className="text-xs font-medium text-white mb-2">
@@ -396,12 +579,6 @@ const InstanceTable: React.FC<InstanceTableProps> = ({ instances }) => {
           </div>
         </div>
       </div>
-
-      <AddPositionModal
-        isOpen={isAddPositionModalOpen}
-        onClose={() => setIsAddPositionModalOpen(false)}
-        instanceId={selectedInstanceId || ""}
-      />
     </div>
   );
 };

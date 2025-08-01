@@ -13,12 +13,15 @@ import {
   TrendingDown,
 } from "lucide-react";
 import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
+import InstanceColumnManager from "./TradeTable/InstanceColumnManager";
+import TradeDetailColumnManager from "./TradeTable/TradeDetailColumnManager";
 import AddInstanceModal from "./modals/AddInstanceModal";
 import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
 import PortfolioModal from "./modals/PortfolioModal";
 import FilterModal from "./modals/FilterModal";
 import useStore, { useDraggableStore } from "../store/store";
 import { type DraggableBoxColumn } from "../types/draggableBox";
+import { type InstanceColumn, type TradeDetailColumn } from "../types/instanceColumns";
 import { API_URL } from "../config/config";
 import axios from "axios";
 import cookies from "js-cookie";
@@ -30,6 +33,10 @@ import StatusModal from "./modals/StatusModal";
 interface HeaderProps {
   columns: Column[];
   onColumnsChange: (columns: Column[]) => void;
+  instanceColumns: InstanceColumn[];
+  onInstanceColumnsChange: (columns: InstanceColumn[]) => void;
+  tradeDetailColumns: TradeDetailColumn[];
+  onTradeDetailColumnsChange: (columns: TradeDetailColumn[]) => void;
   onMenuToggle: () => void;
   draggableColumns: DraggableBoxColumn[];
   onDraggableColumnsChange: (columns: DraggableBoxColumn[]) => void;
@@ -45,6 +52,10 @@ interface Params {
 const Header: React.FC<HeaderProps> = ({
   columns,
   onColumnsChange,
+  instanceColumns,
+  onInstanceColumnsChange,
+  tradeDetailColumns,
+  onTradeDetailColumnsChange,
   onMenuToggle,
   draggableColumns,
   onDraggableColumnsChange,
@@ -330,6 +341,15 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
+            <InstanceColumnManager
+              columns={instanceColumns}
+              onColumnsChange={onInstanceColumnsChange}
+            />
+
+            <TradeDetailColumnManager
+              columns={tradeDetailColumns}
+              onColumnsChange={onTradeDetailColumnsChange}
+            />
             {(showDraggable1 || showDraggable2 || showDraggable3) && (
               <DraggableBoxColumnManager
                 columns={draggableColumns}

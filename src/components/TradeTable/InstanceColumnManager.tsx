@@ -97,10 +97,6 @@ const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black bg-opacity-25"
-            onClick={() => setIsOpen(false)}
-          />
-          <div
             className="fixed z-50 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-96 flex flex-col"
             style={{
               left: `${position.x}px`,
