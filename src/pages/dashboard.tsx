@@ -15,6 +15,8 @@ import {
   defaultInstanceColumns,
   defaultTradeDetailColumns,
 } from "../types/instanceColumns";
+import { loadInstanceColumnsFromStorage } from "../components/TradeTable/InstanceColumnManager";
+import { loadTradeDetailColumnsFromStorage } from "../components/TradeTable/TradeDetailColumnManager";
 import MarketDataComponent from "../components/marketData";
 import GetValues from "../components/getValues";
 import ResizablePanel from "../components/ResizablePanel";
@@ -97,12 +99,14 @@ const defaultColumns: Column[] = [
 function Dashboard() {
   const { instances, setTrades, setInstances, setOptionLotSize } = useStore();
   const [columns, setColumns] = useState<Column[]>(defaultColumns);
-  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(
-    defaultInstanceColumns
-  );
-  const [tradeDetailColumns, setTradeDetailColumns] = useState<
-    TradeDetailColumn[]
-  >(defaultTradeDetailColumns);
+  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(() => {
+    const saved = loadInstanceColumnsFromStorage();
+    return saved || defaultInstanceColumns;
+  });
+  const [tradeDetailColumns, setTradeDetailColumns] = useState<TradeDetailColumn[]>(() => {
+    const saved = loadTradeDetailColumnsFromStorage();
+    return saved || defaultTradeDetailColumns;
+  });
   const [draggableColumns, setDraggableColumns] = useState<
     DraggableBoxColumn[]
   >(defaultDraggableColumns);

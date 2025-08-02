@@ -31,12 +31,8 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
   const [expandedInstances, setExpandedInstances] = useState<Set<string>>(new Set());
   const [addingPositionToInstance, setAddingPositionToInstance] = useState<string | null>(null);
   const [newPositionData, setNewPositionData] = useState({
-    qty: 1,
-    entrySide: "SELL" as "BUY" | "SELL",
-    entryType: "LIMIT" as "MARKET" | "LIMIT",
-    entryPrice: 0,
-    stopLossPoints: 0,
-    takeProfitPoints: 0,
+    pointOfAdjustment: 0,
+    legCount: 1,
   });
   
 
@@ -56,24 +52,16 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
   const handleAddPosition = (instanceId: string) => {
     setAddingPositionToInstance(instanceId);
     setNewPositionData({
-      qty: 1,
-      entrySide: "SELL",
-      entryType: "LIMIT",
-      entryPrice: 0,
-      stopLossPoints: 0,
-      takeProfitPoints: 0,
+      pointOfAdjustment: 0,
+      legCount: 1,
     });
   };
 
   const handleCancelAddPosition = () => {
     setAddingPositionToInstance(null);
     setNewPositionData({
-      qty: 1,
-      entrySide: "SELL",
-      entryType: "LIMIT",
-      entryPrice: 0,
-      stopLossPoints: 0,
-      takeProfitPoints: 0,
+      pointOfAdjustment: 0,
+      legCount: 1,
     });
   };
 
@@ -252,102 +240,46 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
                           <td colSpan={visibleInstanceColumns.length + 2} className="px-0 py-0">
                             <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4">
                               <h4 className="text-sm font-medium text-white mb-3">Add New Position</h4>
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                              <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className="block text-xs text-gray-300 mb-1">Qty</label>
+                                  <label className="block text-xs text-gray-300 mb-1">POA</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={newPositionData.pointOfAdjustment}
+                                    onChange={(e) => setNewPositionData({
+                                      ...newPositionData,
+                                      pointOfAdjustment: parseFloat(e.target.value) || 0
+                                    })}
+                                    className="w-full px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs text-gray-300 mb-1">Leg Count</label>
                                   <input
                                     type="number"
                                     min="1"
-                                    value={newPositionData.qty}
+                                    value={newPositionData.legCount}
                                     onChange={(e) => setNewPositionData({
                                       ...newPositionData,
-                                      qty: parseInt(e.target.value) || 1
+                                      legCount: parseInt(e.target.value) || 1
                                     })}
-                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs text-gray-300 mb-1">Side</label>
-                                  <select
-                                    value={newPositionData.entrySide}
-                                    onChange={(e) => setNewPositionData({
-                                      ...newPositionData,
-                                      entrySide: e.target.value as "BUY" | "SELL"
-                                    })}
-                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-                                  >
-                                    <option value="SELL">SELL</option>
-                                    <option value="BUY">BUY</option>
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="block text-xs text-gray-300 mb-1">Type</label>
-                                  <select
-                                    value={newPositionData.entryType}
-                                    onChange={(e) => setNewPositionData({
-                                      ...newPositionData,
-                                      entryType: e.target.value as "MARKET" | "LIMIT"
-                                    })}
-                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-                                  >
-                                    <option value="LIMIT">LIMIT</option>
-                                    <option value="MARKET">MARKET</option>
-                                  </select>
-                                </div>
-                                {newPositionData.entryType === "LIMIT" && (
-                                  <div>
-                                    <label className="block text-xs text-gray-300 mb-1">Entry Price</label>
-                                    <input
-                                      type="number"
-                                      step="0.01"
-                                      value={newPositionData.entryPrice}
-                                      onChange={(e) => setNewPositionData({
-                                        ...newPositionData,
-                                        entryPrice: parseFloat(e.target.value) || 0
-                                      })}
-                                      className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-                                    />
-                                  </div>
-                                )}
-                                <div>
-                                  <label className="block text-xs text-gray-300 mb-1">SL Points</label>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={newPositionData.stopLossPoints}
-                                    onChange={(e) => setNewPositionData({
-                                      ...newPositionData,
-                                      stopLossPoints: parseFloat(e.target.value) || 0
-                                    })}
-                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs text-gray-300 mb-1">TP Points</label>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={newPositionData.takeProfitPoints}
-                                    onChange={(e) => setNewPositionData({
-                                      ...newPositionData,
-                                      takeProfitPoints: parseFloat(e.target.value) || 0
-                                    })}
-                                    className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                    className="w-full px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
                                   />
                                 </div>
                               </div>
-                              <div className="flex justify-end space-x-2 mt-3">
+                              <div className="flex justify-end space-x-1 mt-2">
                                 <button
                                   onClick={handleCancelAddPosition}
-                                  className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                                  className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
                                 >
                                   Cancel
                                 </button>
                                 <button
                                   onClick={() => handleSavePosition(instance.id)}
-                                  className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                                 >
-                                  Add Position
+                                  Add
                                 </button>
                               </div>
                             </div>
@@ -466,46 +398,45 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
 
                       {addingPositionToInstance === instance.id && (
                         <div className="mt-3 pt-3 border-t border-gray-700 bg-blue-900/20 p-3 rounded">
-                          <h4 className="text-xs font-medium text-white mb-2">Add New Position</h4>
-                          <div className="grid grid-cols-2 gap-2 mb-3">
+                          <h4 className="text-xs font-medium text-white mb-1">Add New Position</h4>
+                          <div className="grid grid-cols-2 gap-1 mb-2">
                             <div>
-                              <label className="block text-xs text-gray-300 mb-1">Qty</label>
+                              <label className="block text-xs text-gray-300 mb-1">POA</label>
                               <input
                                 type="number"
-                                min="1"
-                                value={newPositionData.qty}
+                                step="0.01"
+                                value={newPositionData.pointOfAdjustment}
                                 onChange={(e) => setNewPositionData({
                                   ...newPositionData,
-                                  qty: parseInt(e.target.value) || 1
+                                  pointOfAdjustment: parseFloat(e.target.value) || 0
                                 })}
-                                className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                className="w-full px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-300 mb-1">Side</label>
-                              <select
-                                value={newPositionData.entrySide}
+                              <label className="block text-xs text-gray-300 mb-1">Leg Count</label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={newPositionData.legCount}
                                 onChange={(e) => setNewPositionData({
                                   ...newPositionData,
-                                  entrySide: e.target.value as "BUY" | "SELL"
+                                  legCount: parseInt(e.target.value) || 1
                                 })}
-                                className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-                              >
-                                <option value="SELL">SELL</option>
-                                <option value="BUY">BUY</option>
-                              </select>
+                                className="w-full px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                              />
                             </div>
                           </div>
-                          <div className="flex justify-end space-x-2">
+                          <div className="flex justify-end space-x-1">
                             <button
                               onClick={handleCancelAddPosition}
-                              className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                              className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
                             >
                               Cancel
                             </button>
                             <button
                               onClick={() => handleSavePosition(instance.id)}
-                              className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                              className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                             >
                               Add
                             </button>

@@ -13,6 +13,16 @@ interface InstanceColumnManagerProps {
   onColumnsChange: (columns: InstanceColumn[]) => void;
 }
 
+// Save columns to localStorage
+const saveColumnsToStorage = (columns: InstanceColumn[]) => {
+  localStorage.setItem('instanceColumns', JSON.stringify(columns));
+};
+
+// Load columns from localStorage
+export const loadInstanceColumnsFromStorage = (): InstanceColumn[] | null => {
+  const saved = localStorage.getItem('instanceColumns');
+  return saved ? JSON.parse(saved) : null;
+};
 const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
   columns,
   onColumnsChange,
@@ -61,6 +71,7 @@ const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
       const items = Array.from(columns);
       const [moved] = items.splice(result.source.index, 1);
       items.splice(result.destination.index, 0, moved);
+      saveColumnsToStorage(items);
       onColumnsChange(items);
     },
     [columns, onColumnsChange]
@@ -71,17 +82,22 @@ const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
       const updated = columns.map((col) =>
         col.id === columnId ? { ...col, visible: !col.visible } : col
       );
+      saveColumnsToStorage(updated);
       onColumnsChange(updated);
     },
     [columns, onColumnsChange]
   );
 
   const showAll = useCallback(() => {
-    onColumnsChange(columns.map((col) => ({ ...col, visible: true })));
+    const updated = columns.map((col) => ({ ...col, visible: true }));
+    saveColumnsToStorage(updated);
+    onColumnsChange(updated);
   }, [columns, onColumnsChange]);
 
   const hideAll = useCallback(() => {
-    onColumnsChange(columns.map((col) => ({ ...col, visible: false })));
+    const updated = columns.map((col) => ({ ...col, visible: false }));
+    saveColumnsToStorage(updated);
+    onColumnsChange(updated);
   }, [columns, onColumnsChange]);
 
   return (
