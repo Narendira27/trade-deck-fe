@@ -239,10 +239,10 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
                         <tr>
                           <td colSpan={visibleInstanceColumns.length + 2} className="px-0 py-0">
                             <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4">
-                              <h4 className="text-sm font-medium text-white mb-3">Add New Position</h4>
-                              <div className="grid grid-cols-2 gap-2">
+                              <h4 className="text-xs font-medium text-white mb-2">Add New Position</h4>
+                              <div className="grid grid-cols-4 gap-1">
                                 <div>
-                                  <label className="block text-xs text-gray-300 mb-1">POA</label>
+                                  <label className="block text-xs text-gray-300 mb-0.5">POA</label>
                                   <input
                                     type="number"
                                     step="0.01"
@@ -251,11 +251,11 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
                                       ...newPositionData,
                                       pointOfAdjustment: parseFloat(e.target.value) || 0
                                     })}
-                                    className="w-full px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                    className="w-full px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs text-gray-300 mb-1">Leg Count</label>
+                                  <label className="block text-xs text-gray-300 mb-0.5">Legs</label>
                                   <input
                                     type="number"
                                     min="1"
@@ -264,23 +264,25 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
                                       ...newPositionData,
                                       legCount: parseInt(e.target.value) || 1
                                     })}
-                                    className="w-full px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                    className="w-full px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
                                   />
                                 </div>
-                              </div>
-                              <div className="flex justify-end space-x-1 mt-2">
-                                <button
-                                  onClick={handleCancelAddPosition}
-                                  className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={() => handleSavePosition(instance.id)}
-                                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                >
-                                  Add
-                                </button>
+                                <div className="col-span-2">
+                                  <div className="flex justify-end space-x-1 mt-4">
+                                    <button
+                                      onClick={handleCancelAddPosition}
+                                      className="px-2 py-0.5 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={() => handleSavePosition(instance.id)}
+                                      className="px-2 py-0.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                    >
+                                      Add
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -397,11 +399,11 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
                       </div>
 
                       {addingPositionToInstance === instance.id && (
-                        <div className="mt-3 pt-3 border-t border-gray-700 bg-blue-900/20 p-3 rounded">
-                          <h4 className="text-xs font-medium text-white mb-1">Add New Position</h4>
-                          <div className="grid grid-cols-2 gap-1 mb-2">
+                        <div className="mt-2 pt-2 border-t border-gray-700 bg-blue-900/20 p-2 rounded">
+                          <h4 className="text-xs font-medium text-white mb-1">Add Position</h4>
+                          <div className="grid grid-cols-2 gap-1 mb-1">
                             <div>
-                              <label className="block text-xs text-gray-300 mb-1">POA</label>
+                              <label className="block text-xs text-gray-300 mb-0.5">POA</label>
                               <input
                                 type="number"
                                 step="0.01"
@@ -410,11 +412,11 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
                                   ...newPositionData,
                                   pointOfAdjustment: parseFloat(e.target.value) || 0
                                 })}
-                                className="w-full px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                className="w-full px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-300 mb-1">Leg Count</label>
+                              <label className="block text-xs text-gray-300 mb-0.5">Legs</label>
                               <input
                                 type="number"
                                 min="1"
@@ -423,20 +425,20 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
                                   ...newPositionData,
                                   legCount: parseInt(e.target.value) || 1
                                 })}
-                                className="w-full px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                className="w-full px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
                               />
                             </div>
                           </div>
                           <div className="flex justify-end space-x-1">
                             <button
                               onClick={handleCancelAddPosition}
-                              className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                              className="px-2 py-0.5 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
                             >
                               Cancel
                             </button>
                             <button
                               onClick={() => handleSavePosition(instance.id)}
-                              className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                              className="px-2 py-0.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                             >
                               Add
                             </button>

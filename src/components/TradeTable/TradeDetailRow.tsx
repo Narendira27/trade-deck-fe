@@ -141,20 +141,39 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
     const qty = tradeDetail.currentQty;
     if (qty <= 0) return [];
     
-    if (qty === 1) return [100];
-    if (qty === 2) return [50, 100];
-    if (qty === 3) return [33, 67, 100];
-    if (qty === 4) return [25, 50, 75, 100];
-    
-    // For quantities > 4, show common percentages that result in whole numbers
+    // Calculate percentages that result in whole lots
     const percentages = [];
-    for (let i = 1; i <= qty; i++) {
-      const percentage = Math.round((i / qty) * 100);
-      if (percentage <= 100 && !percentages.includes(percentage)) {
-        percentages.push(percentage);
+    
+    if (qty === 1) {
+      percentages.push(100);
+    } else if (qty === 2) {
+      percentages.push(50, 100);
+    } else if (qty === 3) {
+      percentages.push(33, 67, 100);
+    } else if (qty === 4) {
+      percentages.push(25, 50, 75, 100);
+    } else if (qty === 5) {
+      percentages.push(20, 40, 60, 80, 100);
+    } else if (qty >= 10) {
+      percentages.push(10, 20, 30, 40, 50, 60, 70, 80, 90, 100);
+    } else {
+      // For other quantities, calculate based on divisors
+      for (let i = 1; i <= qty; i++) {
+        const percentage = Math.round((i / qty) * 100);
+        if (!percentages.includes(percentage)) {
+          percentages.push(percentage);
+        }
       }
     }
-    return percentages;
+    
+    return percentages.sort((a, b) => a - b);
+  };
+
+  const getLotSize = () => {
+    const lotData = optionLotSize.find(lot => 
+      lot.optionName.toLowerCase().includes('nifty') // You might need to adjust this logic
+    );
+    return lotData?.lotSize || 1;
   };
 
   const getCellValue = (columnId: string) => {
@@ -162,21 +181,18 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
       switch (columnId) {
         case "qty":
           return (
-            <input
-              type="number"
-              value={editData.qty}
-              onChange={(e) => setEditData({ ...editData, qty: parseInt(e.target.value) || 0 })}
-              className="w-16 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-            />
-          );
-        case "currentQty":
-          return (
-            <input
-              type="number"
-              value={editData.currentQty}
-              onChange={(e) => setEditData({ ...editData, currentQty: parseInt(e.target.value) || 0 })}
-              className="w-16 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-            />
+            <div className="flex flex-col">
+              <span className="text-xs mb-1 text-gray-400">Lot: {getLotSize()}</span>
+              <input
+                type="number"
+                value={Math.floor(editData.qty / getLotSize())}
+                onChange={(e) => {
+                  const lots = parseInt(e.target.value) || 0;
+                  setEditData({ ...editData, qty: lots * getLotSize() });
+                }}
+                className="w-16 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+              />
+            </div>
           );
         case "entrySide":
           return (
@@ -201,7 +217,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
             </select>
           );
         case "entryPrice":
-          return (
+          return editData.entryType === "LIMIT" ? (
             <input
               type="number"
               step="0.01"
@@ -209,16 +225,8 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               onChange={(e) => setEditData({ ...editData, entryPrice: parseFloat(e.target.value) || 0 })}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
-          );
-        case "entrySpotPrice":
-          return (
-            <input
-              type="number"
-              step="0.01"
-              value={editData.entrySpotPrice}
-              onChange={(e) => setEditData({ ...editData, entrySpotPrice: parseFloat(e.target.value) || 0 })}
-              className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-            />
+          ) : (
+            <span className="text-xs text-gray-400">Market</span>
           );
         case "stopLossPoints":
           return (
@@ -290,35 +298,17 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
-        case "reason":
-          return (
-            <input
-              type="text"
-              value={editData.reason}
-              onChange={(e) => setEditData({ ...editData, reason: e.target.value })}
-              className="w-24 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-            />
-          );
-        case "userExit":
-          return (
-            <input
-              type="number"
-              value={editData.userExit}
-              onChange={(e) => setEditData({ ...editData, userExit: parseFloat(e.target.value) || 0 })}
-              className="w-16 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
-            />
-          );
       }
     }
 
     // Display values
     switch (columnId) {
       case "qty":
-        return tradeDetail.qty;
+        return Math.floor(tradeDetail.qty / getLotSize());
       case "currentQty":
         return tradeDetail.currentQty;
       case "qtyInLots":
-        return tradeDetail.qtyInLots || Math.floor(tradeDetail.qty / (optionLotSize.find(lot => lot.optionName.includes('nifty'))?.lotSize || 1));
+        return tradeDetail.qtyInLots || Math.floor(tradeDetail.qty / getLotSize());
       case "entrySide":
         return tradeDetail.entrySide;
       case "entryType":
