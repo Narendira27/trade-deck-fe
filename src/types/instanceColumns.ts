@@ -21,7 +21,7 @@ export const defaultInstanceColumns: InstanceColumn[] = [
 ];
 
 export const defaultTradeDetailColumns: TradeDetailColumn[] = [
-  { id: "qty", label: "Initial Qty", visible: true, width: "80px" },
+  { id: "qty", label: "Initial Qty (Lots)", visible: true, width: "100px" },
   { id: "currentQty", label: "Current Qty", visible: true, width: "100px" },
   { id: "qtyInLots", label: "Qty (Lots)", visible: true, width: "90px" },
   { id: "entrySide", label: "Entry Side", visible: true, width: "100px" },
