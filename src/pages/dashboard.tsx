@@ -9,11 +9,11 @@ import SideNav from "../components/SideNav";
 import InstanceTable from "../components/TradeTable/InstanceTable";
 import { jwtDecode } from "jwt-decode";
 import { type Column } from "../components/TradeTable/ColumnManager";
-import { 
-  type InstanceColumn, 
+import {
+  type InstanceColumn,
   type TradeDetailColumn,
   defaultInstanceColumns,
-  defaultTradeDetailColumns 
+  defaultTradeDetailColumns,
 } from "../types/instanceColumns";
 import MarketDataComponent from "../components/marketData";
 import GetValues from "../components/getValues";
@@ -95,10 +95,14 @@ const defaultColumns: Column[] = [
 ];
 
 function Dashboard() {
-  const { trades, instances, setTrades, setInstances, setOptionLotSize } = useStore();
+  const { instances, setTrades, setInstances, setOptionLotSize } = useStore();
   const [columns, setColumns] = useState<Column[]>(defaultColumns);
-  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(defaultInstanceColumns);
-  const [tradeDetailColumns, setTradeDetailColumns] = useState<TradeDetailColumn[]>(defaultTradeDetailColumns);
+  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(
+    defaultInstanceColumns
+  );
+  const [tradeDetailColumns, setTradeDetailColumns] = useState<
+    TradeDetailColumn[]
+  >(defaultTradeDetailColumns);
   const [draggableColumns, setDraggableColumns] = useState<
     DraggableBoxColumn[]
   >(defaultDraggableColumns);
@@ -107,12 +111,12 @@ function Dashboard() {
 
   const getTradeData = useCallback(() => {
     const auth = cookies.get("auth");
-    
+
     // Fetch instances data
     const instancesPromise = axios.get(API_URL + "/user/instances", {
       headers: { Authorization: "Bearer " + auth },
     });
-    
+
     // Keep the original trades fetch for backward compatibility
     const tradesPromise = axios.get(API_URL + "/user/tradeInfo", {
       headers: { Authorization: "Bearer " + auth },
@@ -151,33 +155,33 @@ function Dashboard() {
   }, [navigate, getTradeData]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const auth = cookies.get("auth");
-      
-      // Update instances
-      axios
-        .get(API_URL + "/user/instances", {
-          headers: { Authorization: "Bearer " + auth },
-        })
-        .then((data) => {
-          setInstances(data.data.data);
-        })
-        .catch(() => {
-          toast.error("Cannot update the Instance Data, Refresh the page");
-        });
-        
-      // Keep updating trades for backward compatibility
-      axios
-        .get(API_URL + "/user/tradeInfo", {
-          headers: { Authorization: "Bearer " + auth },
-        })
-        .then((data) => {
-          setTrades(data.data.data);
-        })
-        .catch(() => {
-          // Silent fail for trades as instances is primary now
-        });
-    }, 2 * 1000);
+    // const interval = setInterval(() => {
+    //   const auth = cookies.get("auth");
+
+    //   // Update instances
+    //   axios
+    //     .get(API_URL + "/user/instances", {
+    //       headers: { Authorization: "Bearer " + auth },
+    //     })
+    //     .then((data) => {
+    //       setInstances(data.data.data);
+    //     })
+    //     .catch(() => {
+    //       toast.error("Cannot update the Instance Data, Refresh the page");
+    //     });
+
+    //   // Keep updating trades for backward compatibility
+    //   axios
+    //     .get(API_URL + "/user/tradeInfo", {
+    //       headers: { Authorization: "Bearer " + auth },
+    //     })
+    //     .then((data) => {
+    //       setTrades(data.data.data);
+    //     })
+    //     .catch(() => {
+    //       // Silent fail for trades as instances is primary now
+    //     });
+    // }, 2 * 1000);
 
     const auth = cookies.get("auth");
     axios
@@ -192,7 +196,7 @@ function Dashboard() {
       });
 
     return () => {
-      clearInterval(interval);
+      // clearInterval(interval);
     };
   }, [getTradeData, setTrades, setInstances, setOptionLotSize]);
 
@@ -215,8 +219,8 @@ function Dashboard() {
           {/* Mobile Layout */}
           <div className="lg:hidden h-full flex flex-col">
             <div className="flex-1 min-h-0">
-              <InstanceTable 
-                instances={instances} 
+              <InstanceTable
+                instances={instances}
                 instanceColumns={instanceColumns}
                 tradeDetailColumns={tradeDetailColumns}
                 onInstanceColumnsChange={setInstanceColumns}
@@ -245,8 +249,8 @@ function Dashboard() {
             >
               {/* Top section - Trade Table */}
               <div className="h-full bg-gray-900 border-b border-gray-700">
-                <InstanceTable 
-                  instances={instances} 
+                <InstanceTable
+                  instances={instances}
                   instanceColumns={instanceColumns}
                   tradeDetailColumns={tradeDetailColumns}
                   onInstanceColumnsChange={setInstanceColumns}

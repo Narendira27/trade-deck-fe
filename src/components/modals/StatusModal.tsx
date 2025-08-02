@@ -9,6 +9,7 @@ import {
 import axios from "axios";
 import cookies from "js-cookie";
 import { API_URL, SOCKET_MAIN, SOCKET_FE } from "../../config/config";
+import checkServiceStatusFast from "../../utils/checkCoreService";
 
 interface StatusModalProps {
   isOpen: boolean;
@@ -101,58 +102,52 @@ const StatusModal: React.FC<StatusModalProps> = ({ isOpen, onClose }) => {
         .catch(() => false);
 
       // Check socket servers
-      const mainSocketStatus = await fetch(`${SOCKET_MAIN}/health`)
+      const mainSocketStatus = await fetch(`${SOCKET_MAIN}/api-status`)
         .then((res) => res.json())
-        .then((data) => data.brokerWSConnected && data.redisConnected)
-        .catch(() => false);
-
-      const feSocketStatus = await fetch(`${SOCKET_FE}/health`)
-        .then((res) => res.json())
-        .then((data) => data.brokerWSConnected && data.redisConnected)
-        .catch(() => false);
-
-      // Check API keys status
-      const apiKeysStatus = await axios
-        .get(`${API_URL}/user/keys`, {
-          headers: { Authorization: `Bearer ${auth}` },
-        })
-        .then((res) => {
-          const keys = res.data.keys;
-          const interactiveKey = keys.find((k: any) => k.keyName === "key-1");
-          const marketDataKey1 = keys.find((k: any) => k.keyName === "key-2");
-          const marketDataKey2 = keys.find((k: any) => k.keyName === "key-3");
-
-          return {
-            interactive: !!(
-              interactiveKey?.apiKey && interactiveKey?.apiSecret
-            ),
-            marketData: !!(
-              marketDataKey1?.apiKey &&
-              marketDataKey1?.apiSecret &&
-              marketDataKey2?.apiKey &&
-              marketDataKey2?.apiSecret
-            ),
-          };
-        })
-        .catch(() => ({ interactive: false, marketData: false }));
-
-      // Check portfolio settings
-      const portfolioStatus = await axios
-        .get(`${API_URL}/user/portfolio`, {
-          headers: { Authorization: `Bearer ${auth}` },
-        })
         .then(() => true)
         .catch(() => false);
 
+      const feSocketStatus = await fetch(`${SOCKET_FE}/api-status`)
+        .then((res) => res.json())
+        .then(() => true)
+        .catch(() => false);
+
+      // Check API keys status
+      const interactiveKeyStatus = await axios
+        .get(`${API_URL}/user/funds`, {
+          headers: { Authorization: `Bearer ${auth}` },
+        })
+        .then(() => {
+          return {
+            interactive: true,
+          };
+        })
+        .catch(() => ({ interactive: false }));
+
+      const checkServices = await axios
+        .get(`${API_URL}/user/servicesEvents`, {
+          headers: { Authorization: `Bearer ${auth}` },
+        })
+        .then((res) => {
+          console.log(res.data);
+          return checkServiceStatusFast(res.data);
+        })
+        .catch(() => ({
+          sl: false,
+          tp: false,
+          placeOrder: false,
+          portfolioTrailing: false,
+        }));
+
       setStatus({
         backend: backendStatus,
-        pointOfAdjustment: backendStatus && mainSocketStatus,
-        sl: backendStatus && mainSocketStatus,
-        tp: backendStatus && mainSocketStatus,
-        placeOrder: backendStatus && apiKeysStatus.interactive,
-        portfolioTrailing: portfolioStatus,
-        interactiveApi: apiKeysStatus.interactive,
-        marketDataApis: apiKeysStatus.marketData && feSocketStatus,
+        pointOfAdjustment: false,
+        sl: checkServices.sl,
+        tp: checkServices.tp,
+        placeOrder: checkServices.placeOrder,
+        portfolioTrailing: checkServices.portfolioTrailing,
+        interactiveApi: interactiveKeyStatus.interactive,
+        marketDataApis: feSocketStatus && mainSocketStatus,
       });
     } catch (error) {
       console.error("Error checking system status:", error);

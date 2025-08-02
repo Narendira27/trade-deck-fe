@@ -21,7 +21,10 @@ import PortfolioModal from "./modals/PortfolioModal";
 import FilterModal from "./modals/FilterModal";
 import useStore, { useDraggableStore } from "../store/store";
 import { type DraggableBoxColumn } from "../types/draggableBox";
-import { type InstanceColumn, type TradeDetailColumn } from "../types/instanceColumns";
+import {
+  type InstanceColumn,
+  type TradeDetailColumn,
+} from "../types/instanceColumns";
 import { API_URL } from "../config/config";
 import axios from "axios";
 import cookies from "js-cookie";
@@ -357,10 +360,10 @@ const Header: React.FC<HeaderProps> = ({
               />
             )}
 
-            <ColumnManager
+            {/* <ColumnManager
               columns={columns}
               onColumnsChange={onColumnsChange}
-            />
+            /> */}
 
             {/* <button
               onClick={() => setIsFilterModalOpen(true)}
