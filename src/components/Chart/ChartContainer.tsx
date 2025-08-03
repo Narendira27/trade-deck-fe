@@ -89,19 +89,50 @@ const ChartContainer: React.FC = () => {
     try {
       setIsLoading((prev) => ({ ...prev, [tradeId]: true }));
 
-      const token = cookies.get("auth");
-      const response = await axios.get(API_URL + "/user/candle/", {
-        headers: { Authorization: "Bearer " + token },
-        params: {
-          indexName: trade.indexName,
-          expiryDate: trade.expiry,
-          range: trade.ltpRange,
-        },
-      });
+      // Generate mock candle data temporarily
+      const generateMockCandleData = (): CandlestickData[] => {
+        const data: CandlestickData[] = [];
+        const basePrice = trade.ltpRange || 100;
+        const now = Math.floor(Date.now() / 1000);
+        const startTime = now - (100 * 60); // 100 minutes ago
+        
+        let currentPrice = basePrice;
+        
+        for (let i = 0; i < 100; i++) {
+          const time = startTime + (i * 60); // 1 minute intervals
+          
+          // Generate realistic price movement
+          const volatility = basePrice * 0.02; // 2% volatility
+          const change = (Math.random() - 0.5) * volatility;
+          const open = currentPrice;
+          const close = Math.max(0.1, open + change);
+          
+          // Generate high and low based on open and close
+          const minPrice = Math.min(open, close);
+          const maxPrice = Math.max(open, close);
+          const extraRange = volatility * 0.5;
+          
+          const high = maxPrice + (Math.random() * extraRange);
+          const low = Math.max(0.1, minPrice - (Math.random() * extraRange));
+          
+          data.push({
+            time: time,
+            open: parseFloat(open.toFixed(2)),
+            high: parseFloat(high.toFixed(2)),
+            low: parseFloat(low.toFixed(2)),
+            close: parseFloat(close.toFixed(2)),
+          });
+          
+          currentPrice = close;
+        }
+        
+        return data;
+      };
 
-      const candleData = response.data.data;
-      if (!candleData || candleData.length === 0) return [];
-
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const candleData = generateMockCandleData();
       return candleData;
     } catch (error) {
       console.error("Error fetching chart data:", error);
