@@ -16,7 +16,7 @@ export default defineConfig({
         manualChunks: {
           react: ["react", "react-dom"],
           lodash: ["lodash"],
-          chart: ["lightweight-charts"],
+          chart: ["klinecharts"],
           dnd: ["@hello-pangea/dnd"],
         },
       },
