@@ -1,6 +1,7 @@
 /** eslint-disable */
 import React, { useEffect, useRef, useState } from "react";
-import { init, dispose, Chart } from "klinecharts";
+import { init, dispose } from "klinecharts";
+import type { Chart } from "klinecharts";
 import useStore from "../../store/store";
 import { toast } from "sonner";
 import { API_URL } from "../../config/config";
