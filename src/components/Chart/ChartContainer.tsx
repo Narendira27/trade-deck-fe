@@ -74,6 +74,18 @@ const ChartContainer: React.FC = () => {
     const trade = trades.find((t) => t.id === tradeId);
     if (!trade) return [];
 
+    // Validate trade parameters before making API call
+    if (!trade.indexName || trade.indexName.trim() === "" || 
+        !trade.expiry || trade.expiry.trim() === "" || 
+        !trade.ltpRange || trade.ltpRange <= 0) {
+      console.warn("Invalid trade parameters, skipping API call:", {
+        indexName: trade.indexName,
+        expiry: trade.expiry,
+        ltpRange: trade.ltpRange
+      });
+      return [];
+    }
+
     try {
       setIsLoading((prev) => ({ ...prev, [tradeId]: true }));
 
