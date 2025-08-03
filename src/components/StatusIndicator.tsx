@@ -47,7 +47,6 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({ onClick }) => {
           headers: { Authorization: `Bearer ${auth}` },
         })
         .then((res) => {
-          console.log(res.data);
           return checkServiceStatusFast(res.data);
         })
         .catch(() => ({

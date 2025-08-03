@@ -9,6 +9,8 @@ export interface Instance {
 }
 
 export interface TradeDetail {
+  humanId: string;
+  legCount: number;
   id: string;
   qty: number;
   currentQty: number;
@@ -31,6 +33,7 @@ export interface TradeDetail {
   userExit: number;
   mtm: number;
   updatedAt: string;
+  liveTradePositions: liveTradePositions[];
 }
 
 export interface Trade {

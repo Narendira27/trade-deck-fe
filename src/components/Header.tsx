@@ -251,7 +251,7 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
 
-              <div
+              {/* <div
                 className={`flex items-center space-x-1 px-2 py-1 rounded-md ${
                   totalMtm >= 0 ? "bg-green-600/20" : "bg-red-600/20"
                 }`}
@@ -264,7 +264,7 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   {formatCurrency(totalMtm || 0)}
                 </span>
-              </div>
+              </div> */}
 
               <button
                 onClick={handlePortfolioToggle}

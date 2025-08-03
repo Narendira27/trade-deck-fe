@@ -23,10 +23,11 @@ const PositionTracker: React.FC = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
-  const { trades, optionPrice, optionLotSize, setPositionMtm } = useStore();
+  const { instances, optionPrice, optionLotSize, setPositionMtm } = useStore();
   const [positions, setPositions] = useState<Position[]>([]);
 
   useEffect(() => {
+    const trades = instances.flatMap((instance) => instance.tradeDetails);
     const getPositions = trades.flatMap((each) =>
       each.liveTradePositions
         .filter((pos) => !pos.closed)
@@ -35,6 +36,7 @@ const PositionTracker: React.FC = () => {
           entrySide: each.entrySide, // Include parent trade's entrySide
         }))
     );
+    console.log(getPositions);
 
     // const getPositions = trades
     //   .filter((each) => each.alive === false && each.isDummy === false)
@@ -100,8 +102,9 @@ const PositionTracker: React.FC = () => {
 
       return acc;
     }, [] as Position[]);
+    console.log("mod", modifyDetails);
     setPositions(modifyDetails);
-  }, [trades, optionPrice, optionLotSize, setPositionMtm]);
+  }, [instances, optionPrice, optionLotSize, setPositionMtm]);
 
   const handleSort = (key: keyof Position) => {
     let direction: "asc" | "desc" = "asc";
