@@ -37,7 +37,7 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
     legCount: 1,
   });
 
-  const { indexPrice, optionValues } = useStore();
+  const { indexPrice, optionValues, setInstances } = useStore();
 
   const toggleExpanded = (instanceId: string) => {
     const newExpanded = new Set(expandedInstances);
@@ -95,6 +95,10 @@ const InstanceTable: React.FC<InstanceTableProps> = ({
               headers: { Authorization: `Bearer ${auth}` },
             });
             toast.success("Instance deleted successfully");
+            const res = await axios.get(`${API_URL}/user/instances`, {
+              headers: { Authorization: `Bearer ${auth}` },
+            });
+            setInstances(res.data.data);
           } catch (error) {
             console.log(error);
             toast.error("Failed to delete instance");

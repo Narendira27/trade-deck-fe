@@ -75,13 +75,18 @@ const ChartContainer: React.FC = () => {
     if (!trade) return [];
 
     // Validate trade parameters before making API call
-    if (!trade.indexName || trade.indexName.trim() === "" || 
-        !trade.expiry || trade.expiry.trim() === "" || 
-        !trade.ltpRange || trade.ltpRange <= 0) {
+    if (
+      !trade.indexName ||
+      trade.indexName.trim() === "" ||
+      !trade.expiry ||
+      trade.expiry.trim() === "" ||
+      !trade.ltpRange ||
+      trade.ltpRange <= 0
+    ) {
       console.warn("Invalid trade parameters, skipping API call:", {
         indexName: trade.indexName,
         expiry: trade.expiry,
-        ltpRange: trade.ltpRange
+        ltpRange: trade.ltpRange,
       });
       return [];
     }
@@ -94,27 +99,27 @@ const ChartContainer: React.FC = () => {
         const data: CandlestickData[] = [];
         const basePrice = trade.ltpRange || 100;
         const now = Math.floor(Date.now() / 1000);
-        const startTime = now - (100 * 60); // 100 minutes ago
-        
+        const startTime = now - 100 * 60; // 100 minutes ago
+
         let currentPrice = basePrice;
-        
+
         for (let i = 0; i < 100; i++) {
-          const time = startTime + (i * 60); // 1 minute intervals
-          
+          const time = startTime + i * 60; // 1 minute intervals
+
           // Generate realistic price movement
           const volatility = basePrice * 0.02; // 2% volatility
           const change = (Math.random() - 0.5) * volatility;
           const open = currentPrice;
           const close = Math.max(0.1, open + change);
-          
+
           // Generate high and low based on open and close
           const minPrice = Math.min(open, close);
           const maxPrice = Math.max(open, close);
           const extraRange = volatility * 0.5;
-          
-          const high = maxPrice + (Math.random() * extraRange);
-          const low = Math.max(0.1, minPrice - (Math.random() * extraRange));
-          
+
+          const high = maxPrice + Math.random() * extraRange;
+          const low = Math.max(0.1, minPrice - Math.random() * extraRange);
+
           data.push({
             time: time,
             open: parseFloat(open.toFixed(2)),
@@ -122,16 +127,16 @@ const ChartContainer: React.FC = () => {
             low: parseFloat(low.toFixed(2)),
             close: parseFloat(close.toFixed(2)),
           });
-          
+
           currentPrice = close;
         }
-        
+
         return data;
       };
 
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const candleData = generateMockCandleData();
       return candleData;
     } catch (error) {
@@ -155,24 +160,24 @@ const ChartContainer: React.FC = () => {
   };
 
   // Update tabs when trades change
-  useEffect(() => {
-    const filteredTrade = trades.filter((each) => each.alive === true);
-    if (filteredTrade.length > 0 && tabs.length > 0 && tabs[0].tradeId === "") {
-      const firstTrade = filteredTrade[0];
-      const newTab = {
-        id: "1",
-        tradeId: firstTrade.id,
-        symbol: firstTrade.indexName,
-        expiry: firstTrade.expiry,
-        range: firstTrade.ltpRange,
-        timeframe: "1m",
-        chartType: "candlestick" as const,
-      };
-      setTabs([newTab]);
-      // Fetch data for the new trade
-      updateChartData(firstTrade.id);
-    }
-  }, [trades]);
+  // useEffect(() => {
+  //   const filteredTrade = trades.filter((each) => each.alive === true);
+  //   if (filteredTrade.length > 0 && tabs.length > 0 && tabs[0].tradeId === "") {
+  //     const firstTrade = filteredTrade[0];
+  //     const newTab = {
+  //       id: "1",
+  //       tradeId: firstTrade.id,
+  //       symbol: firstTrade.indexName,
+  //       expiry: firstTrade.expiry,
+  //       range: firstTrade.ltpRange,
+  //       timeframe: "1m",
+  //       chartType: "candlestick" as const,
+  //     };
+  //     setTabs([newTab]);
+  //     // Fetch data for the new trade
+  //     updateChartData(firstTrade.id);
+  //   }
+  // }, [trades]);
 
   // Periodic data refresh every 5 minutes
   // useEffect(() => {

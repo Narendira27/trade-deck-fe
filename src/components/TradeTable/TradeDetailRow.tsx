@@ -42,6 +42,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
 
     const putData = {
       qty,
+      currentQty: qty,
       entrySide,
       entryType,
       entryPrice,

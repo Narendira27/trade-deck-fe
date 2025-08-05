@@ -27,6 +27,7 @@ const PositionTracker: React.FC = () => {
   const [positions, setPositions] = useState<Position[]>([]);
 
   useEffect(() => {
+    if (instances.length === 0) return;
     const trades = instances.flatMap((instance) => instance.tradeDetails);
     const getPositions = trades.flatMap((each) =>
       each.liveTradePositions
@@ -36,7 +37,7 @@ const PositionTracker: React.FC = () => {
           entrySide: each.entrySide, // Include parent trade's entrySide
         }))
     );
-    console.log(getPositions);
+    // console.log(getPositions);
 
     // const getPositions = trades
     //   .filter((each) => each.alive === false && each.isDummy === false)
@@ -102,7 +103,7 @@ const PositionTracker: React.FC = () => {
 
       return acc;
     }, [] as Position[]);
-    console.log("mod", modifyDetails);
+    // console.log("mod", modifyDetails);
     setPositions(modifyDetails);
   }, [instances, optionPrice, optionLotSize, setPositionMtm]);
 

@@ -31,6 +31,7 @@ import {
 
 import { API_URL } from "../config/config";
 import useStore from "../store/store";
+import LatestSocket from "../components/latestSocket";
 
 interface MyJwtPayload {
   updatePassword: boolean;
@@ -99,11 +100,15 @@ const defaultColumns: Column[] = [
 function Dashboard() {
   const { instances, setTrades, setInstances, setOptionLotSize } = useStore();
   const [columns, setColumns] = useState<Column[]>(defaultColumns);
-  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(() => {
-    const saved = loadInstanceColumnsFromStorage();
-    return saved || defaultInstanceColumns;
-  });
-  const [tradeDetailColumns, setTradeDetailColumns] = useState<TradeDetailColumn[]>(() => {
+  const [instanceColumns, setInstanceColumns] = useState<InstanceColumn[]>(
+    () => {
+      const saved = loadInstanceColumnsFromStorage();
+      return saved || defaultInstanceColumns;
+    }
+  );
+  const [tradeDetailColumns, setTradeDetailColumns] = useState<
+    TradeDetailColumn[]
+  >(() => {
     const saved = loadTradeDetailColumnsFromStorage();
     return saved || defaultTradeDetailColumns;
   });
@@ -289,6 +294,7 @@ function Dashboard() {
 
           <MarketDataComponent />
           <GetValues />
+          <LatestSocket />
         </main>
 
         <SideNav
