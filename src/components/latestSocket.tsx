@@ -10,6 +10,16 @@ interface WsTradeInfo {
   data: Instance[];
 }
 
+interface OrderInfo {
+  OrderStatus: string;
+  CancelRejectReason: string;
+}
+
+interface OrderData {
+  OrderStatus: string;
+  CancelRejectReason: string;
+}
+
 const LatestSocket = () => {
   const { setInstances } = useStore();
   const socketRef = useRef<Socket | null>(null);
@@ -20,11 +30,27 @@ const LatestSocket = () => {
     toast.success("Trade information updated successfully");
   };
 
-  const handleOrder = (data) => {
-    console.log(data);
+  const handleOrder = (data: OrderInfo) => {
+    // console.log(data);
+    if (data.OrderStatus === "PendingNew") {
+      toast.info("Order is pending", {
+        position: "top-center",
+      });
+    }
+
+    if (data.OrderStatus === "Rejected") {
+      toast.error("Order rejected : " + data.CancelRejectReason, {
+        position: "top-center",
+      });
+    }
   };
-  const handleTradeData = (data) => {
+  const handleTradeData = (data: OrderData) => {
     console.log(data);
+    if (data.OrderStatus === "Filled") {
+      toast.success("Order Filled", {
+        position: "top-center",
+      });
+    }
   };
   const handlePositionData = (data) => {
     console.log(data);

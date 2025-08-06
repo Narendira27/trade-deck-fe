@@ -12,7 +12,7 @@ import {
   Wallet,
   TrendingDown,
 } from "lucide-react";
-import ColumnManager, { type Column } from "./TradeTable/ColumnManager";
+import { type Column } from "./TradeTable/ColumnManager";
 import InstanceColumnManager from "./TradeTable/InstanceColumnManager";
 import TradeDetailColumnManager from "./TradeTable/TradeDetailColumnManager";
 import AddInstanceModal from "./modals/AddInstanceModal";
@@ -29,7 +29,6 @@ import { API_URL } from "../config/config";
 import axios from "axios";
 import cookies from "js-cookie";
 import { toast } from "sonner";
-import { formatCurrency } from "../utils/formatters";
 import StatusIndicator from "./StatusIndicator";
 import StatusModal from "./modals/StatusModal";
 
@@ -53,8 +52,6 @@ interface Params {
 }
 
 const Header: React.FC<HeaderProps> = ({
-  columns,
-  onColumnsChange,
   instanceColumns,
   onInstanceColumnsChange,
   tradeDetailColumns,
@@ -74,8 +71,7 @@ const Header: React.FC<HeaderProps> = ({
   const [portfolioEnabled, setPortfolioEnabled] = useState(false);
   const [fundsAvailable, setFundsAvailable] = useState(0);
   const [fundsUsed, setFundsUsed] = useState(0);
-  const [totalMtm, setTotalMtm] = useState(0);
-  const { trades, filters, setFilters, positionMtm } = useStore();
+  const { filters, setFilters } = useStore();
   const { showDraggable1, showDraggable2, showDraggable3 } =
     useDraggableStore();
 
@@ -100,48 +96,6 @@ const Header: React.FC<HeaderProps> = ({
     const interval = setInterval(getFunds, 1000 * 60);
     return () => clearInterval(interval);
   }, []);
-
-  // Calculate total MTM
-  // const totalMtm = trades.reduce((sum, trade) => sum + trade.mtm, 0);
-
-  // const positionMtmT = {
-  //   "123": 100,
-  //   "234": 500,
-  // };
-
-  useEffect(() => {
-    const positionLength = Object.keys(positionMtm).length;
-    let total = 0;
-    if (positionLength > 0) {
-      total = Object.values(positionMtm).reduce((sum, value) => sum + value, 0);
-    }
-
-    // console.log("Position MTM:", positionMtm);
-    // console.log(total);
-
-    const userMtm = async () => {
-      try {
-        const request = await axios.get(`${API_URL}/user/closedMtm`, {
-          headers: { Authorization: `Bearer ${cookies.get("auth")}` },
-        });
-        const returnData = request?.data;
-        return returnData;
-      } catch (e) {
-        console.log(e);
-      }
-    };
-
-    userMtm()
-      .then((data) => {
-        setTotalMtm(data.totalNetAmount + total);
-      })
-      .catch(() => {
-        toast.error("Failed to fetch user MTM");
-      });
-
-    // const {id } = trades
-    // positionMtm[id];
-  }, [trades, positionMtm]);
 
   const updatePortfolioSettings = async (
     enabled?: boolean,

@@ -185,15 +185,38 @@ const PositionTracker: React.FC = () => {
           <h3 className="text-sm sm:text-base font-semibold text-white">
             Live Positions
           </h3>
-          <div className="text-right">
-            <p className="text-xs text-gray-400">Total MTM</p>
-            <p
-              className={`text-xs sm:text-sm font-semibold ${
-                totalMtm >= 0 ? "text-green-400" : "text-red-400"
-              }`}
-            >
-              {formatCurrency(totalMtm)}
-            </p>
+          <div className="flex space-x-6">
+            <div>
+              <p className="text-xs text-gray-400">RealizedMtm</p>
+              <p
+                className={`text-xs sm:text-sm font-semibold ${
+                  totalMtm >= 0 ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {formatCurrency(totalMtm)}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-400">UnRealizedMTM</p>
+              <p
+                className={`text-xs sm:text-sm font-semibold ${
+                  totalMtm >= 0 ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {formatCurrency(totalMtm)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">Total MTM</p>
+              <p
+                className={`text-xs sm:text-sm font-semibold ${
+                  totalMtm >= 0 ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {formatCurrency(totalMtm)}
+              </p>
+            </div>
           </div>
         </div>
       </div>

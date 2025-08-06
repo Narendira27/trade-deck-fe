@@ -1,5 +1,12 @@
 import React, { useState, useCallback, memo } from "react";
-import { Settings, Eye, EyeOff, GripVertical, X, GripHorizontal } from "lucide-react";
+import {
+  Settings,
+  Eye,
+  EyeOff,
+  GripVertical,
+  X,
+  GripHorizontal,
+} from "lucide-react";
 import {
   DragDropContext,
   Droppable,
@@ -15,12 +22,12 @@ interface InstanceColumnManagerProps {
 
 // Save columns to localStorage
 const saveColumnsToStorage = (columns: InstanceColumn[]) => {
-  localStorage.setItem('instanceColumns', JSON.stringify(columns));
+  localStorage.setItem("instanceColumns", JSON.stringify(columns));
 };
 
 // Load columns from localStorage
 export const loadInstanceColumnsFromStorage = (): InstanceColumn[] | null => {
-  const saved = localStorage.getItem('instanceColumns');
+  const saved = localStorage.getItem("instanceColumns");
   return saved ? JSON.parse(saved) : null;
 };
 const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
@@ -41,14 +48,17 @@ const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
     setIsDragging(true);
   };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (isDragging) {
-      setPosition({
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y,
-      });
-    }
-  }, [isDragging, dragOffset]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y,
+        });
+      }
+    },
+    [isDragging, dragOffset]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -107,7 +117,6 @@ const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
         className="flex items-center space-x-1 px-2 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition-colors"
       >
         <Settings size={12} />
-        <span>Columns</span>
       </button>
 
       {isOpen && (
@@ -119,13 +128,15 @@ const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
               top: `${position.y}px`,
             }}
           >
-            <div 
+            <div
               className="p-3 border-b border-gray-700 cursor-move flex justify-between items-center"
               onMouseDown={handleMouseDown}
             >
               <div className="flex items-center space-x-2">
                 <GripHorizontal size={14} className="text-gray-400" />
-                <h3 className="text-sm font-semibold text-white">Instance Columns</h3>
+                <h3 className="text-sm font-semibold text-white">
+                  Instance Columns
+                </h3>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
@@ -195,7 +206,8 @@ const InstanceColumnManager: React.FC<InstanceColumnManagerProps> = ({
             <div className="p-3 border-t border-gray-700">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-gray-400">
-                  {columns.filter((c) => c.visible).length} of {columns.length} visible
+                  {columns.filter((c) => c.visible).length} of {columns.length}{" "}
+                  visible
                 </span>
                 <div className="flex space-x-1">
                   <button

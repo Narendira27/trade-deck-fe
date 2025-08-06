@@ -53,9 +53,9 @@ const DraggableBoxColumnManager: React.FC<DraggableBoxColumnManagerProps> = ({
     <div className="relative">
       <button
         onClick={() => setIsOpen((o) => !o)}
-        className="hidden lg:flex items-center space-x-2 px-2 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
+        className="flex items-center space-x-1 px-2 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition-colors"
       >
-        <Settings size={16} />
+        <Settings size={12} />
       </button>
 
       {isOpen && (

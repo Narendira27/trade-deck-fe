@@ -474,10 +474,6 @@ const ChartContainer: React.FC = () => {
                 : "Refresh"}
             </button>
           </div>
-
-          <div className="text-sm text-gray-400">
-            Last: <span className="text-white font-medium">24,235.50</span>
-          </div>
         </div>
       )}
 
@@ -487,8 +483,7 @@ const ChartContainer: React.FC = () => {
           {getVisibleTabs().map((tab) => (
             <div key={tab.id} className="relative">
               {layout !== "single" && (
-                <div className="absolute top-2 left-2 z-10 bg-gray-800 px-2 py-1 rounded text-xs text-white flex items-center space-x-2">
-                  <span>{getTabTitle(tab)}</span>
+                <div className="absolute top-2 left-2 z-10  px-2 py-1 rounded text-xs text-white flex items-center space-x-2">
                   {isLoading[tab.tradeId] && (
                     <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                   )}

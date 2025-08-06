@@ -46,7 +46,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     stopLoss: 0,
     currentPrice: 0,
   });
-  const [orderType, setOrderType] = useState<'BUY' | 'SELL'>('BUY');
+  const [orderType, setOrderType] = useState<"BUY" | "SELL">("BUY");
   const [quantity, setQuantity] = useState(1);
 
   const overlayRefs = useRef<{
@@ -96,7 +96,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           }
 
           // Disable right-click context menu
-          container.addEventListener('contextmenu', (e) => {
+          container.addEventListener("contextmenu", (e) => {
             e.preventDefault();
           });
 
@@ -109,41 +109,41 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
               show: true,
               axisLine: {
                 show: true,
-                color: '#4a5568',
-                size: 1
+                color: "#4a5568",
+                size: 1,
               },
               tickText: {
                 show: true,
-                color: '#a0aec0',
+                color: "#a0aec0",
                 size: 12,
-                weight: 'normal'
+                weight: "normal",
               },
               tickLine: {
                 show: true,
-                color: '#4a5568',
+                color: "#4a5568",
                 size: 1,
-                length: 3
-              }
+                length: 3,
+              },
             },
             yAxis: {
               show: true,
               axisLine: {
                 show: true,
-                color: '#4a5568',
-                size: 1
+                color: "#4a5568",
+                size: 1,
               },
               tickText: {
                 show: true,
-                color: '#a0aec0',
+                color: "#a0aec0",
                 size: 12,
-                weight: 'normal'
+                weight: "normal",
               },
               tickLine: {
                 show: true,
-                color: '#4a5568',
+                color: "#4a5568",
                 size: 1,
-                length: 3
-              }
+                length: 3,
+              },
             },
             crosshair: {
               show: true,
@@ -151,57 +151,57 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
                 show: true,
                 line: {
                   show: true,
-                  style: 'dash',
+                  style: "dash",
                   dashValue: [4, 2],
                   size: 1,
-                  color: '#718096'
+                  color: "#718096",
                 },
                 text: {
                   show: true,
-                  color: '#ffffff',
+                  color: "#ffffff",
                   size: 12,
-                  backgroundColor: '#2d3748',
-                  borderColor: '#4a5568',
+                  backgroundColor: "#2d3748",
+                  borderColor: "#4a5568",
                   borderSize: 1,
                   borderRadius: 2,
                   paddingLeft: 4,
                   paddingRight: 4,
                   paddingTop: 2,
-                  paddingBottom: 2
-                }
+                  paddingBottom: 2,
+                },
               },
               vertical: {
                 show: true,
                 line: {
                   show: true,
-                  style: 'dash',
+                  style: "dash",
                   dashValue: [4, 2],
                   size: 1,
-                  color: '#718096'
+                  color: "#718096",
                 },
                 text: {
                   show: true,
-                  color: '#ffffff',
+                  color: "#ffffff",
                   size: 12,
-                  backgroundColor: '#2d3748',
-                  borderColor: '#4a5568',
+                  backgroundColor: "#2d3748",
+                  borderColor: "#4a5568",
                   borderSize: 1,
                   borderRadius: 2,
                   paddingLeft: 4,
                   paddingRight: 4,
                   paddingTop: 2,
-                  paddingBottom: 2
-                }
-              }
+                  paddingBottom: 2,
+                },
+              },
             },
             separator: {
               size: 1,
-              color: '#4a5568',
+              color: "#4a5568",
               fill: true,
-              activeBackgroundColor: '#2d3748'
+              activeBackgroundColor: "#2d3748",
             },
             candle: {
-              type: chartType === 'line' ? "area" : "candle_solid",
+              type: chartType === "line" ? "area" : "candle_solid",
               area: {
                 lineSize: 2,
                 lineColor: "#4299e1",
@@ -219,36 +219,36 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
                 ],
               },
               bar: {
-                upColor: '#10b981',
-                downColor: '#ef4444',
-                noChangeColor: '#888888',
+                upColor: "#10b981",
+                downColor: "#ef4444",
+                noChangeColor: "#888888",
               },
             },
             indicator: {
               ohlc: {
                 show: true,
-                upColor: '#48bb78',
-                downColor: '#f56565',
-                noChangeColor: '#a0aec0'
+                upColor: "#48bb78",
+                downColor: "#f56565",
+                noChangeColor: "#a0aec0",
               },
               lastValueMark: {
                 show: true,
                 text: {
                   show: true,
-                  color: '#ffffff',
+                  color: "#ffffff",
                   size: 12,
-                  weight: 'normal',
-                  backgroundColor: '#4299e1',
-                  borderColor: '#2b6cb0',
+                  weight: "normal",
+                  backgroundColor: "#4299e1",
+                  borderColor: "#2b6cb0",
                   borderSize: 1,
                   borderRadius: 2,
                   paddingLeft: 4,
                   paddingRight: 4,
                   paddingTop: 2,
-                  paddingBottom: 2
-                }
-              }
-            }
+                  paddingBottom: 2,
+                },
+              },
+            },
           });
 
           // Generate and load data
@@ -335,8 +335,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           paddingLeft: 6,
           paddingRight: 6,
           paddingTop: 3,
-          paddingBottom: 3
-        }
+          paddingBottom: 3,
+        },
       },
       onDrawEnd: ({ overlay }) => {
         overlayRefs.current.takeProfit = overlay;
@@ -362,8 +362,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           paddingLeft: 6,
           paddingRight: 6,
           paddingTop: 3,
-          paddingBottom: 3
-        }
+          paddingBottom: 3,
+        },
       },
       onDrawEnd: ({ overlay }) => {
         overlayRefs.current.limitPrice = overlay;
@@ -389,8 +389,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           paddingLeft: 6,
           paddingRight: 6,
           paddingTop: 3,
-          paddingBottom: 3
-        }
+          paddingBottom: 3,
+        },
       },
       onDrawEnd: ({ overlay }) => {
         overlayRefs.current.stopLoss = overlay;
@@ -431,7 +431,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       stopLoss = overlayRefs.current.stopLoss.points[0].value;
     }
 
-    setOrderValues(prev => ({
+    setOrderValues((prev) => ({
       ...prev,
       limitPrice: parseFloat(limitPrice.toFixed(2)),
       takeProfit: parseFloat(takeProfit.toFixed(2)),
@@ -443,7 +443,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     if (!trade) return;
 
     updateOrderValues();
-    
+
     const orderData = {
       type: orderType,
       symbol: symbol,
@@ -465,8 +465,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           entryPrice: orderValues.limitPrice,
           stopLossPremium: orderValues.stopLoss,
           takeProfitPremium: orderValues.takeProfit,
-          stopLossPoints: Math.abs(orderValues.limitPrice - orderValues.stopLoss),
-          takeProfitPoints: Math.abs(orderValues.takeProfit - orderValues.limitPrice),
+          stopLossPoints: Math.abs(
+            orderValues.limitPrice - orderValues.stopLoss
+          ),
+          takeProfitPoints: Math.abs(
+            orderValues.takeProfit - orderValues.limitPrice
+          ),
         },
         {
           headers: { Authorization: "Bearer " + token },
@@ -497,13 +501,13 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     chartRef.current.zoomAtCoordinate(1.0, { x: 0, y: 0 });
   };
 
-  if (!trade) {
-    return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        Trade not found
-      </div>
-    );
-  }
+  // if (!trade) {
+  //   return (
+  //     <div className="flex items-center justify-center h-full text-gray-400">
+  //       Trade not found
+  //     </div>
+  //   );
+  // }
 
   if (isLoading && !chartReady) {
     return (
@@ -520,38 +524,10 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     <div className="w-full h-full relative bg-gray-900">
       <div
         ref={chartContainerRef}
-        className="w-full h-full"
+        className="w-full h-full border border-gray-400"
       />
-      
-      {/* Chart Controls */}
-      <div className="absolute top-2 right-2 flex space-x-2 z-10">
-        <button
-          onClick={scrollUpside}
-          className="px-2 py-1 text-xs cursor-pointer bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          ↑
-        </button>
-        <button
-          onClick={scrollDownside}
-          className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          ↓
-        </button>
-        <button
-          onClick={resetMargins}
-          className="text-xs px-2 py-1 cursor-pointer bg-yellow-600 text-white rounded hover:bg-yellow-700"
-        >
-          Reset
-        </button>
-        <button
-          onClick={onRefreshData}
-          className="text-xs px-2 py-1 cursor-pointer bg-purple-600 text-white rounded hover:bg-purple-700"
-        >
-          Refresh
-        </button>
-      </div>
 
-      {/* Order Panel Toggle Button */}
+      {/* Order Panel Toggle Button
       {trade.entryType === "UNDEFINED" && (
         <button
           onClick={() => {
@@ -563,8 +539,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           <Target size={14} />
           Place Order
         </button>
-      )}
-
+      )} */}
       {/* Order Panel Overlay */}
       {showOrderPanel && (
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -587,22 +562,22 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
                 </label>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setOrderType('BUY')}
+                    onClick={() => setOrderType("BUY")}
                     className={`flex-1 py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
-                      orderType === 'BUY'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      orderType === "BUY"
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                     }`}
                   >
                     <TrendingUp size={18} />
                     BUY
                   </button>
                   <button
-                    onClick={() => setOrderType('SELL')}
+                    onClick={() => setOrderType("SELL")}
                     className={`flex-1 py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
-                      orderType === 'SELL'
-                        ? 'bg-red-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      orderType === "SELL"
+                        ? "bg-red-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                     }`}
                   >
                     <TrendingDown size={18} />
@@ -670,7 +645,11 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
               <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                 <div className="text-sm text-yellow-700">Risk/Reward Ratio</div>
                 <div className="text-lg font-semibold text-yellow-800">
-                  1:{((orderValues.takeProfit - orderValues.limitPrice) / Math.abs(orderValues.limitPrice - orderValues.stopLoss)).toFixed(2)}
+                  1:
+                  {(
+                    (orderValues.takeProfit - orderValues.limitPrice) /
+                    Math.abs(orderValues.limitPrice - orderValues.stopLoss)
+                  ).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -685,9 +664,9 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
               <button
                 onClick={handlePlaceOrder}
                 className={`flex-1 py-2 px-4 rounded-lg text-white transition-colors duration-200 ${
-                  orderType === 'BUY'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-red-600 hover:bg-red-700'
+                  orderType === "BUY"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-red-600 hover:bg-red-700"
                 }`}
               >
                 Place {orderType} Order
