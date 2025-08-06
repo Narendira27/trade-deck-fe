@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, X, Grid3X3, Grid2X2, LayoutGrid } from "lucide-react";
+import { Plus, X, Grid3X3, Grid2X2, LayoutGrid, Eye } from "lucide-react";
 import TradingViewChart from "./TradingViewChart";
 import useStore from "../../store/store";
 import type { Trade } from "../../types/trade";
@@ -8,6 +8,7 @@ import axios from "axios";
 import cookies from "js-cookie";
 import { toast } from "sonner";
 import type { CandlestickData } from "lightweight-charts";
+import TradePopupWindow from "./TradePopupWindow";
 
 interface ChartTab {
   id: string;
@@ -66,6 +67,7 @@ const ChartContainer: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState("1");
   const [layout, setLayout] = useState<LayoutType>("single");
+  const [showTradePopup, setShowTradePopup] = useState(false);
 
   // Function to fetch candle data for a specific trade
   const fetchCandleData = async (
@@ -473,6 +475,14 @@ const ChartContainer: React.FC = () => {
                 ? "Refreshing..."
                 : "Refresh"}
             </button>
+
+            <button
+              onClick={() => setShowTradePopup(true)}
+              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+            >
+              <Eye size={14} />
+              <span>Show</span>
+            </button>
           </div>
         </div>
       )}
@@ -502,6 +512,11 @@ const ChartContainer: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <TradePopupWindow
+        isOpen={showTradePopup}
+        onClose={() => setShowTradePopup(false)}
+      />
     </div>
   );
 };
