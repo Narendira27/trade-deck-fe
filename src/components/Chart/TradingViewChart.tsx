@@ -210,11 +210,11 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
                 backgroundColor: [
                   {
                     offset: 0,
-                    color: "rgba(66, 153, 225, 0.1)",
+                    color: "rgba(255, 255, 255, 0)",
                   },
                   {
                     offset: 1,
-                    color: "rgba(66, 153, 225, 0.05)",
+                    color: "rgba(255, 255, 255, 0)",
                   },
                 ],
               },
@@ -484,21 +484,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       console.error(error);
       toast.error("Error placing order");
     }
-  };
-
-  const scrollDownside = () => {
-    if (!chartRef.current) return;
-    chartRef.current.zoomAtCoordinate(0.9, { x: 0, y: 0 });
-  };
-
-  const scrollUpside = () => {
-    if (!chartRef.current) return;
-    chartRef.current.zoomAtCoordinate(1.1, { x: 0, y: 0 });
-  };
-
-  const resetMargins = () => {
-    if (!chartRef.current) return;
-    chartRef.current.zoomAtCoordinate(1.0, { x: 0, y: 0 });
   };
 
   // if (!trade) {
