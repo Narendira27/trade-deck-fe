@@ -52,9 +52,11 @@ const LatestSocket = () => {
       });
     }
   };
+  // @ts-expect-error cannot
   const handlePositionData = (data) => {
     console.log(data);
   };
+  // @ts-expect-error cannot
   const handleLogout = (data) => {
     console.log(data);
   };

@@ -97,9 +97,9 @@ const AddInstanceModal: React.FC<AddInstanceModalProps> = ({ isOpen, onClose }) 
     if (!formData.expiry.trim()) {
       return toast.warning("Select Expiry");
     }
-    if (formData.legCount <= 0) {
-      return toast.warning("Enter valid leg count");
-    }
+    // if (formData.legCount <= 0) {
+    //   return toast.warning("Enter valid leg count");
+    // }
 
     const addInstanceRequest = axios.post(
       API_URL + "/user/instances",

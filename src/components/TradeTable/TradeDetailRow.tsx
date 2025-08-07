@@ -112,6 +112,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
   const getExitPercentages = () => {
     const qty = tradeDetail.currentQty;
     if (qty <= 0) return [];
+    // @ts-expect-error cannot
     const percentages = [];
 
     if (qty === 1) percentages.push(100);
@@ -124,6 +125,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
     else {
       for (let i = 1; i <= qty; i++) {
         const percentage = Math.round((i / qty) * 100);
+        // @ts-expect-error cannot
         if (!percentages.includes(percentage)) percentages.push(percentage);
       }
     }

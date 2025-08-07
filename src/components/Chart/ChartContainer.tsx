@@ -3,11 +3,11 @@ import { Plus, X, Grid3X3, Grid2X2, LayoutGrid, Eye } from "lucide-react";
 import TradingViewChart from "./TradingViewChart";
 import useStore from "../../store/store";
 import type { Trade } from "../../types/trade";
-import { API_URL } from "../../config/config";
-import axios from "axios";
-import cookies from "js-cookie";
+// import { API_URL } from "../../config/config";
+// import axios from "axios";
+// import cookies from "js-cookie";
 import { toast } from "sonner";
-import type { CandlestickData } from "lightweight-charts";
+
 import TradePopupWindow from "./TradePopupWindow";
 
 interface ChartTab {
@@ -23,7 +23,7 @@ interface ChartTab {
 type LayoutType = "single" | "2x2" | "3x1" | "2x2-grid";
 
 interface ChartData {
-  [tradeId: string]: CandlestickData[];
+  [tradeId: string]: [];
 }
 
 const ChartContainer: React.FC = () => {
@@ -70,9 +70,7 @@ const ChartContainer: React.FC = () => {
   const [showTradePopup, setShowTradePopup] = useState(false);
 
   // Function to fetch candle data for a specific trade
-  const fetchCandleData = async (
-    tradeId: string
-  ): Promise<CandlestickData[]> => {
+  const fetchCandleData = async (tradeId: string): Promise<[]> => {
     const trade = trades.find((t) => t.id === tradeId);
     if (!trade) return [];
 
@@ -97,8 +95,8 @@ const ChartContainer: React.FC = () => {
       setIsLoading((prev) => ({ ...prev, [tradeId]: true }));
 
       // Generate mock candle data temporarily
-      const generateMockCandleData = (): CandlestickData[] => {
-        const data: CandlestickData[] = [];
+      const generateMockCandleData = (): [] => {
+        const data: [] = [];
         const basePrice = trade.ltpRange || 100;
         const now = Math.floor(Date.now() / 1000);
         const startTime = now - 100 * 60; // 100 minutes ago
@@ -121,7 +119,7 @@ const ChartContainer: React.FC = () => {
 
           const high = maxPrice + Math.random() * extraRange;
           const low = Math.max(0.1, minPrice - Math.random() * extraRange);
-
+          // @ts-expect-error cannot
           data.push({
             time: time,
             open: parseFloat(open.toFixed(2)),

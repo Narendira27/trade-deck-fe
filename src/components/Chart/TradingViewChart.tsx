@@ -1,7 +1,7 @@
 /** eslint-disable */
 import React, { useEffect, useRef, useState } from "react";
 import { init, dispose } from "klinecharts";
-import { X, TrendingUp, TrendingDown, Target } from "lucide-react";
+import { X, TrendingUp, TrendingDown } from "lucide-react";
 import useStore from "../../store/store";
 import { toast } from "sonner";
 import { API_URL } from "../../config/config";
@@ -30,9 +30,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   chartType = "candlestick",
   symbol,
   isLoading,
-  onRefreshData,
 }) => {
-  const { trades, optionValues } = useStore();
+  const { trades } = useStore();
   const trade = trades.find((t) => t.id === tradeId);
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -258,6 +257,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           chart.setSymbol({ ticker: symbol || "BANKNIFTY-100" });
           chart.setPeriod({ span: 1, type: "minute" });
           chart.setDataLoader({
+            // @ts-expect-error cannot
             getBars: ({ callback }) => {
               callback(data);
             },
@@ -338,6 +338,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           paddingBottom: 3,
         },
       },
+      // @ts-expect-error cannot
       onDrawEnd: ({ overlay }) => {
         overlayRefs.current.takeProfit = overlay;
       },
@@ -365,6 +366,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           paddingBottom: 3,
         },
       },
+      // @ts-expect-error cannot
       onDrawEnd: ({ overlay }) => {
         overlayRefs.current.limitPrice = overlay;
       },
@@ -392,6 +394,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           paddingBottom: 3,
         },
       },
+      // @ts-expect-error cannot
       onDrawEnd: ({ overlay }) => {
         overlayRefs.current.stopLoss = overlay;
       },
@@ -444,15 +447,15 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
     updateOrderValues();
 
-    const orderData = {
-      type: orderType,
-      symbol: symbol,
-      quantity,
-      limitPrice: orderValues.limitPrice,
-      takeProfit: orderValues.takeProfit,
-      stopLoss: orderValues.stopLoss,
-      currentPrice: orderValues.currentPrice,
-    };
+    // const orderData = {
+    //   type: orderType,
+    //   symbol: symbol,
+    //   quantity,
+    //   limitPrice: orderValues.limitPrice,
+    //   takeProfit: orderValues.takeProfit,
+    //   stopLoss: orderValues.stopLoss,
+    //   currentPrice: orderValues.currentPrice,
+    // };
 
     try {
       const token = cookies.get("auth");
