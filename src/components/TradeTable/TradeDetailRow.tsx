@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Edit, Trash2, Check, X } from "lucide-react";
 import { type TradeDetail } from "../../types/trade";
 import { type TradeDetailColumn } from "../../types/instanceColumns";
@@ -22,7 +22,25 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(tradeDetail);
-  const { setInstances, optionLotSize } = useStore();
+  const [calculatedMtm, setCalculatedMtm] = useState(0);
+  const { setInstances, optionLotSize, positionMtm } = useStore();
+
+  useEffect(() => {
+    const positions = tradeDetail.liveTradePositions;
+
+    const filteredMtm = Object.fromEntries(
+      Object.entries(positionMtm).filter(([id]) =>
+        positions.some((pos) => pos.id === id)
+      )
+    );
+
+    const totalMtm = Object.values(filteredMtm).reduce(
+      (sum, value) => sum + value,
+      0
+    );
+
+    setCalculatedMtm(totalMtm);
+  }, [tradeDetail, positionMtm]);
 
   const handleSave = async () => {
     const auth = cookies.get("auth");
@@ -221,12 +239,25 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               type="number"
               step="1"
               value={editData.stopLossPoints}
-              onChange={(e) =>
-                setEditData({
-                  ...editData,
-                  stopLossPoints: parseFloat(e.target.value) || 0,
-                })
-              }
+              onChange={(e) => {
+                const points = parseFloat(e.target.value) || 0;
+
+                setEditData((prev) => {
+                  let premium = prev.stopLossPremium;
+
+                  if (prev.entrySide === "BUY") {
+                    premium = prev.entryPrice - points;
+                  } else if (prev.entrySide === "SELL") {
+                    premium = prev.entryPrice + points;
+                  }
+
+                  return {
+                    ...prev,
+                    stopLossPoints: points,
+                    stopLossPremium: premium,
+                  };
+                });
+              }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
@@ -236,12 +267,28 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               type="number"
               step="1"
               value={editData.stopLossPremium}
-              onChange={(e) =>
-                setEditData({
-                  ...editData,
-                  stopLossPremium: parseFloat(e.target.value) || 0,
-                })
-              }
+              disabled={editData.entryType === "MARKET"}
+              onChange={(e) => {
+                const premium = parseFloat(e.target.value) || 0;
+
+                setEditData((prev) => {
+                  let points = prev.stopLossPoints;
+
+                  if (prev.entryType === "LIMIT") {
+                    if (prev.entrySide === "BUY") {
+                      points = prev.entryPrice - premium;
+                    } else if (prev.entrySide === "SELL") {
+                      points = premium - prev.entryPrice;
+                    }
+                  }
+
+                  return {
+                    ...prev,
+                    stopLossPremium: premium,
+                    stopLossPoints: points,
+                  };
+                });
+              }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
@@ -251,12 +298,25 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               type="number"
               step="1"
               value={editData.takeProfitPoints}
-              onChange={(e) =>
-                setEditData({
-                  ...editData,
-                  takeProfitPoints: parseFloat(e.target.value) || 0,
-                })
-              }
+              onChange={(e) => {
+                const points = parseFloat(e.target.value) || 0;
+
+                setEditData((prev) => {
+                  let premium = prev.takeProfitPremium;
+
+                  if (prev.entrySide === "BUY") {
+                    premium = prev.entryPrice + points;
+                  } else if (prev.entrySide === "SELL") {
+                    premium = prev.entryPrice - points;
+                  }
+
+                  return {
+                    ...prev,
+                    takeProfitPoints: points,
+                    takeProfitPremium: premium,
+                  };
+                });
+              }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
@@ -266,12 +326,28 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               type="number"
               step="1"
               value={editData.takeProfitPremium}
-              onChange={(e) =>
-                setEditData({
-                  ...editData,
-                  takeProfitPremium: parseFloat(e.target.value) || 0,
-                })
-              }
+              disabled={editData.entryType === "MARKET"}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value) || 0;
+
+                setEditData((prev) => {
+                  let diff = prev.takeProfitPoints;
+
+                  if (prev.entryType === "LIMIT") {
+                    if (prev.entrySide === "BUY") {
+                      diff = value - prev.entryPrice;
+                    } else if (prev.entrySide === "SELL") {
+                      diff = prev.entryPrice - value;
+                    }
+                  }
+
+                  return {
+                    ...prev,
+                    takeProfitPremium: value,
+                    takeProfitPoints: diff,
+                  };
+                });
+              }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
@@ -345,7 +421,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
             </div>
           );
         case "mtm":
-          return formatCurrency(tradeDetail.mtm);
+          return formatCurrency(calculatedMtm);
         case "updatedAt":
           return formatDate(tradeDetail.updatedAt);
         default:
@@ -407,7 +483,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
           </div>
         );
       case "mtm":
-        return formatCurrency(tradeDetail.mtm);
+        return formatCurrency(calculatedMtm);
       case "updatedAt":
         return formatDate(tradeDetail.updatedAt);
       default:
