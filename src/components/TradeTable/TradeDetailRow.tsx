@@ -567,19 +567,6 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
         case "mtm":
           return formatCurrency(calculatedMtm);
 
-        case "position":
-          return (
-            <button
-              onClick={() => setIsPositionModalOpen(true)}
-              className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
-            >
-              <Eye size={12} />
-              <span>View</span>
-            </button>
-          );
-
-
-
         case "updatedAt":
           return formatDate(tradeDetail.updatedAt);
 
@@ -643,15 +630,15 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
         );
 
       case "position":
-          return (
-            <button
-              onClick={() => setIsPositionModalOpen(true)}
-              className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
-            >
-              <Eye size={12} />
-              <span>View</span>
-            </button>
-          );
+        return (
+          <button
+            onClick={() => setIsPositionModalOpen(true)}
+            className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+          >
+            <Eye size={12} />
+            <span>View</span>
+          </button>
+        );
       case "mtm":
         return formatCurrency(calculatedMtm);
       case "updatedAt":

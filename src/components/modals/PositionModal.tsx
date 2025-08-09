@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X, GripHorizontal, Eye } from "lucide-react";
-import { formatNumber, formatCurrency } from "../../utils/formatters";
+import { X, GripHorizontal } from "lucide-react";
+import { formatCurrency, formatNumber } from "../../utils/formatters";
 import axios from "axios";
 import { API_URL } from "../../config/config";
 import cookies from "js-cookie";
@@ -83,13 +83,17 @@ const PositionModal: React.FC<PositionModalProps> = ({
     const auth = cookies.get("auth");
 
     try {
-      const response = await axios.get(`${API_URL}/user/position?id=${tradeDetailId}`, {
-        headers: { Authorization: `Bearer ${auth}` },
-      });
+      const response = await axios.get(
+        `${API_URL}/user/position?id=${tradeDetailId}`,
+        {
+          headers: { Authorization: `Bearer ${auth}` },
+        }
+      );
 
       // Sort by updatedAt (latest on top)
-      const sortedPositions = response.data.data.sort((a: Position, b: Position) => 
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      const sortedPositions = response.data.data.sort(
+        (a: Position, b: Position) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
 
       setPositions(sortedPositions);
@@ -116,10 +120,10 @@ const PositionModal: React.FC<PositionModalProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      <div className="fixed inset-0  bg-opacity-50" onClick={onClose} />
       <div
         ref={modalRef}
-        className={`bg-gray-800 border border-gray-400 rounded-lg p-4 w-full max-w-6xl cursor-move select-none max-h-[90vh] overflow-hidden relative z-10 ${
+        className={`bg-gray-800 border border-gray-400 rounded-lg p-4 w-full max-w-7xl cursor-move select-none max-h-[90vh] overflow-hidden relative z-10 ${
           isDragging ? "opacity-90" : ""
         }`}
         style={{
@@ -134,7 +138,9 @@ const PositionModal: React.FC<PositionModalProps> = ({
             onMouseDown={handleMouseDown}
           >
             <GripHorizontal size={16} className="text-gray-400" />
-            <h3 className="text-lg font-semibold text-white">Position Details</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Position Details
+            </h3>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X size={20} />
@@ -175,7 +181,7 @@ const PositionModal: React.FC<PositionModalProps> = ({
                     Close Price
                   </th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-300 border-b border-gray-600">
-                    Exchange ID
+                    MTM
                   </th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-300 border-b border-gray-600">
                     Trade Details ID
@@ -194,7 +200,10 @@ const PositionModal: React.FC<PositionModalProps> = ({
               <tbody>
                 {positions.length > 0 ? (
                   positions.map((pos) => (
-                    <tr key={pos.id} className="hover:bg-gray-700/50 transition-colors">
+                    <tr
+                      key={pos.id}
+                      className="hover:bg-gray-700/50 transition-colors"
+                    >
                       <td className="px-3 py-2 text-xs text-white border-b border-gray-700">
                         {pos.optionName}
                       </td>
@@ -216,8 +225,8 @@ const PositionModal: React.FC<PositionModalProps> = ({
                       <td className="px-3 py-2 text-xs text-white border-b border-gray-700">
                         {pos.closePrice ? formatNumber(pos.closePrice) : "-"}
                       </td>
-                      <td className="px-3 py-2 text-xs text-white border-b border-gray-700">
-                        {pos.exchangeId}
+                      <td className="px-3 py-2 text-xs text-gray-400 border-b border-gray-700">
+                        {formatCurrency(0)}
                       </td>
                       <td className="px-3 py-2 text-xs text-white border-b border-gray-700">
                         {pos.tradeDetailsId}
@@ -253,10 +262,18 @@ const PositionModal: React.FC<PositionModalProps> = ({
                 )}
               </tbody>
             </table>
+            <div className="w-full flex justify-between ">
+              <div className="px-5 ">
+                <h1 className="text-white">Total MTM</h1>
+              </div>
+              <div className="px-5 ">
+                <p>{formatCurrency(0)}</p>
+              </div>
+            </div>
           </div>
         )}
 
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end mt-2">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition-colors"

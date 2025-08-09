@@ -12,7 +12,10 @@ interface TradePopupWindowProps {
   onClose: () => void;
 }
 
-const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) => {
+const TradePopupWindow: React.FC<TradePopupWindowProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -111,7 +114,7 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
 
   const saveChanges = async (tradeId: string) => {
     const auth = cookies.get("auth");
-    
+
     try {
       await axios.put(
         `${API_URL}/user/tradeInfo?id=${tradeId}`,
@@ -145,7 +148,7 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
 
   const handleCloseAll = async () => {
     const auth = cookies.get("auth");
-    
+
     toast.warning("Are you sure you want to close all positions?", {
       action: {
         label: "Yes, Close All",
@@ -154,13 +157,13 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
             await axios.get(`${API_URL}/user/squareOffAll`, {
               headers: { Authorization: `Bearer ${auth}` },
             });
-            
+
             // Refresh instances data
             const response = await axios.get(`${API_URL}/user/instances`, {
               headers: { Authorization: `Bearer ${auth}` },
             });
             setInstances(response.data.data);
-            
+
             toast.success("All positions closed successfully");
           } catch (error) {
             console.error(error);
@@ -174,8 +177,8 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
   if (!isOpen) return null;
 
   // Get all active trades from instances
-  const allTrades = instances.flatMap(instance => 
-    instance.tradeDetails.map(trade => ({
+  const allTrades = instances.flatMap((instance) =>
+    instance.tradeDetails.map((trade) => ({
       ...trade,
       instanceId: instance.id,
       indexName: instance.indexName,
@@ -208,12 +211,6 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={handleCloseAll}
-            className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-          >
-            Close All
-          </button>
-          <button
             onClick={onClose}
             className="text-gray-400 hover:text-white transition-colors"
           >
@@ -231,7 +228,10 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
         ) : (
           <div className="p-2 space-y-2">
             {allTrades.map((trade) => (
-              <div key={trade.id} className="bg-gray-800 rounded-lg border border-gray-700">
+              <div
+                key={trade.id}
+                className="bg-gray-800 rounded-lg border border-gray-700"
+              >
                 {/* Main Trade Info */}
                 <div className="p-3">
                   <div className="flex items-center justify-between">
@@ -251,14 +251,17 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
                           {trade.indexName} - {trade.expiry} - {trade.ltpRange}
                         </div>
                         <div className="text-xs text-gray-400">
-                          {trade.entrySide} • {trade.entryType} • Qty: {trade.qty}
+                          {trade.entrySide} • {trade.entryType} • Qty:{" "}
+                          {trade.qty}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-sm font-medium ${
-                        trade.mtm >= 0 ? "text-green-400" : "text-red-400"
-                      }`}>
+                      <div
+                        className={`text-sm font-medium ${
+                          trade.mtm >= 0 ? "text-green-400" : "text-red-400"
+                        }`}
+                      >
                         {formatCurrency(trade.mtm)}
                       </div>
                       <div className="text-xs text-gray-400">MTM</div>
@@ -317,7 +320,8 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
                               onChange={(e) =>
                                 setEditValues({
                                   ...editValues,
-                                  stopLossPremium: parseFloat(e.target.value) || 0,
+                                  stopLossPremium:
+                                    parseFloat(e.target.value) || 0,
                                 })
                               }
                               className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -334,7 +338,8 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
                               onChange={(e) =>
                                 setEditValues({
                                   ...editValues,
-                                  takeProfitPremium: parseFloat(e.target.value) || 0,
+                                  takeProfitPremium:
+                                    parseFloat(e.target.value) || 0,
                                 })
                               }
                               className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-green-500"
@@ -351,7 +356,8 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
                               onChange={(e) =>
                                 setEditValues({
                                   ...editValues,
-                                  stopLossPoints: parseFloat(e.target.value) || 0,
+                                  stopLossPoints:
+                                    parseFloat(e.target.value) || 0,
                                 })
                               }
                               className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -368,7 +374,8 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({ isOpen, onClose }) 
                               onChange={(e) =>
                                 setEditValues({
                                   ...editValues,
-                                  takeProfitPoints: parseFloat(e.target.value) || 0,
+                                  takeProfitPoints:
+                                    parseFloat(e.target.value) || 0,
                                 })
                               }
                               className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-green-500"
