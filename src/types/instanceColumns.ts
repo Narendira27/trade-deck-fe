@@ -67,5 +67,6 @@ export const defaultTradeDetailColumns: TradeDetailColumn[] = [
   { id: "reason", label: "Reason", visible: true, width: "100px" },
   { id: "userExit", label: "User Exit", visible: true, width: "100px" },
   { id: "mtm", label: "MTM", visible: true, width: "100px" },
+  { id: "position", label: "Position", visible: true, width: "100px" },
   { id: "updatedAt", label: "Updated At", visible: true, width: "140px" },
 ];

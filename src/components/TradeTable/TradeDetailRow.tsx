@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Edit, Trash2, Check, X } from "lucide-react";
+import { Edit, Trash2, Check, X, Eye } from "lucide-react";
 import { type TradeDetail } from "../../types/trade";
 import { type TradeDetailColumn } from "../../types/instanceColumns";
 import { formatNumber, formatCurrency } from "../../utils/formatters";
@@ -8,6 +8,7 @@ import axios from "axios";
 import { API_URL } from "../../config/config";
 import cookies from "js-cookie";
 import useStore from "../../store/store";
+import PositionModal from "../modals/PositionModal";
 
 interface TradeDetailRowProps {
   tradeDetail: TradeDetail;
@@ -24,6 +25,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
   const [editData, setEditData] = useState(tradeDetail);
   const [calculatedMtm, setCalculatedMtm] = useState(0);
   const { setInstances, optionLotSize, positionMtm } = useStore();
+  const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
 
   useEffect(() => {
     const positions = tradeDetail.liveTradePositions;
@@ -565,6 +567,28 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
         case "mtm":
           return formatCurrency(calculatedMtm);
 
+        case "position":
+          return (
+            <button
+              onClick={() => setIsPositionModalOpen(true)}
+              className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+            >
+              <Eye size={12} />
+              <span>View</span>
+            </button>
+          );
+
+        case "position":
+          return (
+            <button
+              onClick={() => setIsPositionModalOpen(true)}
+              className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+            >
+              <Eye size={12} />
+              <span>View</span>
+            </button>
+          );
+
         case "updatedAt":
           return formatDate(tradeDetail.updatedAt);
 
@@ -690,55 +714,63 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
   };
 
   return (
-    <tr className="hover:bg-gray-600/30 transition-colors">
-      {visibleColumns.map((column) => (
-        <td key={column.id} className={getCellClassName(column.id)}>
-          {getCellValue(column.id)}
+    <>
+      <tr className="hover:bg-gray-600/30 transition-colors">
+        {visibleColumns.map((column) => (
+          <td key={column.id} className={getCellClassName(column.id)}>
+            {getCellValue(column.id)}
+          </td>
+        ))}
+        <td className="px-2 py-1">
+          <div className="flex space-x-1">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={handleSave}
+                  className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                  title="Save or Place"
+                >
+                  <Check size={10} />
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                  title="Cancel"
+                >
+                  <X size={10} />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setIsEditing(true);
+                    setEditData(tradeDetail);
+                  }}
+                  className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                  title="Edit"
+                >
+                  <Edit size={10} />
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="p-1 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={10} />
+                </button>
+              </>
+            )}
+          </div>
         </td>
-      ))}
-      <td className="px-2 py-1">
-        <div className="flex space-x-1">
-          {isEditing ? (
-            <>
-              <button
-                onClick={handleSave}
-                className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                title="Save or Place"
-              >
-                <Check size={10} />
-              </button>
-              <button
-                onClick={handleCancel}
-                className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-                title="Cancel"
-              >
-                <X size={10} />
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => {
-                  setIsEditing(true);
-                  setEditData(tradeDetail);
-                }}
-                className="p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
-                title="Edit"
-              >
-                <Edit size={10} />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-1 bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
-                title="Delete"
-              >
-                <Trash2 size={10} />
-              </button>
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
+      </tr>
+
+      <PositionModal
+        isOpen={isPositionModalOpen}
+        onClose={() => setIsPositionModalOpen(false)}
+        tradeDetailId={tradeDetail.id}
+      />
+    </>
   );
 };
 
