@@ -19,7 +19,8 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [expandedTrades, setExpandedTrades] = useState<Set<string>>(new Set());
+  const [expandedInstances, setExpandedInstances] = useState<Set<string>>(new Set());
+  const [selectedTrades, setSelectedTrades] = useState<Set<string>>(new Set());
   const [editingTrade, setEditingTrade] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{
     entryPrice: number;
@@ -78,14 +79,24 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  const toggleExpanded = (tradeId: string) => {
-    const newExpanded = new Set(expandedTrades);
-    if (newExpanded.has(tradeId)) {
-      newExpanded.delete(tradeId);
+  const toggleExpanded = (instanceId: string) => {
+    const newExpanded = new Set(expandedInstances);
+    if (newExpanded.has(instanceId)) {
+      newExpanded.delete(instanceId);
     } else {
-      newExpanded.add(tradeId);
+      newExpanded.add(instanceId);
     }
-    setExpandedTrades(newExpanded);
+    setExpandedInstances(newExpanded);
+  };
+
+  const toggleTradeSelection = (tradeId: string) => {
+    const newSelected = new Set(selectedTrades);
+    if (newSelected.has(tradeId)) {
+      newSelected.delete(tradeId);
+    } else {
+      newSelected.add(tradeId);
+    }
+    setSelectedTrades(newSelected);
   };
 
   const startEditing = (trade: any) => {
@@ -146,15 +157,15 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({
     }
   };
 
-  const handleCloseAll = async () => {
+  const handleCloseAllInstance = async (instanceId: string) => {
     const auth = cookies.get("auth");
 
-    toast.warning("Are you sure you want to close all positions?", {
+    toast.warning("Are you sure you want to close all positions in this instance?", {
       action: {
         label: "Yes, Close All",
         onClick: async () => {
           try {
-            await axios.get(`${API_URL}/user/squareOffAll`, {
+            await axios.post(`${API_URL}/user/instances/${instanceId}/closeAll`, {}, {
               headers: { Authorization: `Bearer ${auth}` },
             });
 
@@ -164,7 +175,7 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({
             });
             setInstances(response.data.data);
 
-            toast.success("All positions closed successfully");
+            toast.success("All positions in instance closed successfully");
           } catch (error) {
             console.error(error);
             toast.error("Failed to close all positions");
@@ -174,18 +185,35 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({
     });
   };
 
-  if (!isOpen) return null;
+  const handleCloseTrade = async (tradeId: string) => {
+    const auth = cookies.get("auth");
 
-  // Get all active trades from instances
-  const allTrades = instances.flatMap((instance) =>
-    instance.tradeDetails.map((trade) => ({
-      ...trade,
-      instanceId: instance.id,
-      indexName: instance.indexName,
-      expiry: instance.expiry,
-      ltpRange: instance.ltpRange,
-    }))
-  );
+    toast.warning("Are you sure you want to close this trade?", {
+      action: {
+        label: "Yes, Close",
+        onClick: async () => {
+          try {
+            await axios.post(`${API_URL}/user/tradeInfo/${tradeId}/close`, {}, {
+              headers: { Authorization: `Bearer ${auth}` },
+            });
+
+            // Refresh instances data
+            const response = await axios.get(`${API_URL}/user/instances`, {
+              headers: { Authorization: `Bearer ${auth}` },
+            });
+            setInstances(response.data.data);
+
+            toast.success("Trade closed successfully");
+          } catch (error) {
+            console.error(error);
+            toast.error("Failed to close trade");
+          }
+        },
+      },
+    });
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -196,258 +224,233 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        width: "600px",
-        maxHeight: "80vh",
+        width: "500px",
+        maxHeight: "70vh",
       }}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700 rounded-t-lg cursor-move"
+        className="flex items-center justify-between p-2 bg-gray-800 border-b border-gray-700 rounded-t-lg cursor-move"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center space-x-2">
-          <GripHorizontal size={16} className="text-gray-400" />
+          <GripHorizontal size={14} className="text-gray-400" />
           <h3 className="text-sm font-semibold text-white">Trade Manager</h3>
         </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          <X size={14} />
+        </button>
       </div>
 
       {/* Content */}
       <div className="max-h-96 overflow-y-auto">
-        {allTrades.length === 0 ? (
-          <div className="p-4 text-center text-gray-400">
-            No active trades found
+        {instances.length === 0 ? (
+          <div className="p-4 text-center text-gray-400 text-sm">
+            No instances found
           </div>
         ) : (
-          <div className="p-2 space-y-2">
-            {allTrades.map((trade) => (
-              <div
-                key={trade.id}
-                className="bg-gray-800 rounded-lg border border-gray-700"
-              >
-                {/* Main Trade Info */}
-                <div className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => toggleExpanded(trade.id)}
-                        className="text-gray-400 hover:text-white transition-colors"
-                      >
-                        {expandedTrades.has(trade.id) ? (
-                          <ChevronDown size={16} />
-                        ) : (
-                          <ChevronRight size={16} />
-                        )}
-                      </button>
-                      <div>
-                        <div className="text-sm font-medium text-white">
-                          {trade.indexName} - {trade.expiry} - {trade.ltpRange}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {trade.entrySide} • {trade.entryType} • Qty:{" "}
-                          {trade.qty}
-                        </div>
+          <div className="space-y-1">
+            {instances.map((instance) => (
+              <div key={instance.id} className="border-b border-gray-800 last:border-b-0">
+                {/* Instance Header */}
+                <div className="flex items-center justify-between p-2 bg-gray-800/50 hover:bg-gray-800/70 transition-colors">
+                  <div className="flex items-center space-x-2 flex-1">
+                    <button
+                      onClick={() => toggleExpanded(instance.id)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      {expandedInstances.has(instance.id) ? (
+                        <ChevronDown size={12} />
+                      ) : (
+                        <ChevronRight size={12} />
+                      )}
+                    </button>
+                    <div className="flex-1">
+                      <div className="text-xs font-medium text-white">
+                        {instance.indexName} - {instance.expiry} - {instance.ltpRange}
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div
-                        className={`text-sm font-medium ${
-                          trade.mtm >= 0 ? "text-green-400" : "text-red-400"
-                        }`}
-                      >
-                        {formatCurrency(trade.mtm)}
+                      <div className="text-xs text-gray-400">
+                        {instance.tradeDetails.length} trades
                       </div>
-                      <div className="text-xs text-gray-400">MTM</div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => handleCloseAllInstance(instance.id)}
+                    className="px-2 py-1 text-xs bg-red-500/80 text-white rounded hover:bg-red-600 transition-colors"
+                  >
+                    Close All
+                  </button>
                 </div>
 
-                {/* Expanded Details */}
-                {expandedTrades.has(trade.id) && (
-                  <div className="px-3 pb-3 border-t border-gray-700">
-                    <div className="mt-3 space-y-3">
-                      {editingTrade === trade.id ? (
-                        // Edit Mode
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">
-                              Entry Price
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={editValues.entryPrice}
-                              onChange={(e) =>
-                                setEditValues({
-                                  ...editValues,
-                                  entryPrice: parseFloat(e.target.value) || 0,
-                                })
-                              }
-                              className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">
-                              Quantity
-                            </label>
-                            <input
-                              type="number"
-                              value={editValues.qty}
-                              onChange={(e) =>
-                                setEditValues({
-                                  ...editValues,
-                                  qty: parseInt(e.target.value) || 0,
-                                })
-                              }
-                              className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">
-                              SL Premium
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={editValues.stopLossPremium}
-                              onChange={(e) =>
-                                setEditValues({
-                                  ...editValues,
-                                  stopLossPremium:
-                                    parseFloat(e.target.value) || 0,
-                                })
-                              }
-                              className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-red-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">
+                {/* Expanded Trade Details */}
+                {expandedInstances.has(instance.id) && instance.tradeDetails.length > 0 && (
+                  <div className="bg-gray-900/50">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-700">
+                          <tr>
+                            <th className="px-1 py-1 text-left text-xs font-medium text-gray-300 w-8">
+                              Select
+                            </th>
+                            <th className="px-1 py-1 text-left text-xs font-medium text-gray-300">
+                              Entry/Qty
+                            </th>
+                            <th className="px-1 py-1 text-left text-xs font-medium text-gray-300">
                               TP Premium
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={editValues.takeProfitPremium}
-                              onChange={(e) =>
-                                setEditValues({
-                                  ...editValues,
-                                  takeProfitPremium:
-                                    parseFloat(e.target.value) || 0,
-                                })
-                              }
-                              className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-green-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">
-                              SL Points
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={editValues.stopLossPoints}
-                              onChange={(e) =>
-                                setEditValues({
-                                  ...editValues,
-                                  stopLossPoints:
-                                    parseFloat(e.target.value) || 0,
-                                })
-                              }
-                              className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-red-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-400 mb-1">
+                            </th>
+                            <th className="px-1 py-1 text-left text-xs font-medium text-gray-300">
                               TP Points
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={editValues.takeProfitPoints}
-                              onChange={(e) =>
-                                setEditValues({
-                                  ...editValues,
-                                  takeProfitPoints:
-                                    parseFloat(e.target.value) || 0,
-                                })
-                              }
-                              className="w-full px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-green-500"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        // View Mode
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <span className="text-gray-400">Entry Price:</span>
-                            <span className="text-white ml-2">
-                              {formatNumber(trade.entryPrice)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-400">Quantity:</span>
-                            <span className="text-white ml-2">{trade.qty}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-400">SL Premium:</span>
-                            <span className="text-red-400 ml-2">
-                              {formatNumber(trade.stopLossPremium)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-400">TP Premium:</span>
-                            <span className="text-green-400 ml-2">
-                              {formatNumber(trade.takeProfitPremium)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-400">SL Points:</span>
-                            <span className="text-red-400 ml-2">
-                              {formatNumber(trade.stopLossPoints)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-400">TP Points:</span>
-                            <span className="text-green-400 ml-2">
-                              {formatNumber(trade.takeProfitPoints)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="flex justify-end space-x-2 pt-2 border-t border-gray-700">
-                        {editingTrade === trade.id ? (
-                          <>
-                            <button
-                              onClick={cancelEditing}
-                              className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={() => saveChanges(trade.id)}
-                              className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                            >
-                              Save
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => startEditing(trade)}
-                            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </div>
+                            </th>
+                            <th className="px-1 py-1 text-left text-xs font-medium text-gray-300">
+                              SL Premium
+                            </th>
+                            <th className="px-1 py-1 text-left text-xs font-medium text-gray-300">
+                              SL Points
+                            </th>
+                            <th className="px-1 py-1 text-left text-xs font-medium text-gray-300 w-12">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {instance.tradeDetails.map((trade) => (
+                            <tr key={trade.id} className="hover:bg-gray-800/30 transition-colors border-b border-gray-800">
+                              <td className="px-1 py-1">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedTrades.has(trade.id)}
+                                  onChange={() => toggleTradeSelection(trade.id)}
+                                  className="w-3 h-3 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                />
+                              </td>
+                              <td className="px-1 py-1">
+                                <div className="text-white">
+                                  <p className="text-xs">Entry: {formatNumber(trade.entryPrice)}</p>
+                                  <p className="text-xs text-gray-400">Qty: {trade.qty}</p>
+                                </div>
+                              </td>
+                              <td className="px-1 py-1">
+                                {editingTrade === trade.id ? (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editValues.takeProfitPremium}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        takeProfitPremium: parseFloat(e.target.value) || 0,
+                                      })
+                                    }
+                                    className="w-16 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  />
+                                ) : (
+                                  <span className="text-green-400 text-xs">
+                                    {formatNumber(trade.takeProfitPremium)}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-1 py-1">
+                                {editingTrade === trade.id ? (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editValues.takeProfitPoints}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        takeProfitPoints: parseFloat(e.target.value) || 0,
+                                      })
+                                    }
+                                    className="w-16 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  />
+                                ) : (
+                                  <span className="text-green-400 text-xs">
+                                    {formatNumber(trade.takeProfitPoints)}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-1 py-1">
+                                {editingTrade === trade.id ? (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editValues.stopLossPremium}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        stopLossPremium: parseFloat(e.target.value) || 0,
+                                      })
+                                    }
+                                    className="w-16 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  />
+                                ) : (
+                                  <span className="text-red-400 text-xs">
+                                    {formatNumber(trade.stopLossPremium)}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-1 py-1">
+                                {editingTrade === trade.id ? (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editValues.stopLossPoints}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        stopLossPoints: parseFloat(e.target.value) || 0,
+                                      })
+                                    }
+                                    className="w-16 px-1 py-0.5 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+                                  />
+                                ) : (
+                                  <span className="text-red-400 text-xs">
+                                    {formatNumber(trade.stopLossPoints)}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-1 py-1">
+                                <div className="flex space-x-1">
+                                  {editingTrade === trade.id ? (
+                                    <>
+                                      <button
+                                        onClick={() => saveChanges(trade.id)}
+                                        className="px-1 py-0.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={cancelEditing}
+                                        className="px-1 py-0.5 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => startEditing(trade)}
+                                        className="px-1 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        onClick={() => handleCloseTrade(trade.id)}
+                                        className="px-1 py-0.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                                      >
+                                        Close
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 )}
@@ -456,6 +459,23 @@ const TradePopupWindow: React.FC<TradePopupWindowProps> = ({
           </div>
         )}
       </div>
+
+      {/* Footer with selected trades info */}
+      {selectedTrades.size > 0 && (
+        <div className="p-2 border-t border-gray-700 bg-gray-800/50">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">
+              {selectedTrades.size} trade(s) selected
+            </span>
+            <button
+              onClick={() => setSelectedTrades(new Set())}
+              className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+            >
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
