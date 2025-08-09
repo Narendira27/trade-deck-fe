@@ -73,13 +73,61 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
       pointOfAdjustmentUpperLimit,
     };
 
+    if (!qty || qty < 0) {
+      toast.error("📦 Quantity is required and must be greater than 0.");
+      return;
+    }
+
+    if (entrySide === "UNDEFINED") {
+      toast.error("📈 Please select an Entry Side (BUY or SELL).");
+      return;
+    }
+
+    if (entryType === "UNDEFINED") {
+      toast.error("🛒 Please select an Entry Type (MARKET or LIMIT).");
+      return;
+    }
+
+    if (entryPrice === 0 && entryType === "LIMIT") {
+      toast.error("💰 For a LIMIT order, an Entry Price is required.");
+      return;
+    }
+
+    if (entrySide === "BUY" && stopLossPremium > entryPrice) {
+      toast.error(
+        "🚫 Oops! For a BUY order, your Stop Loss must be lower than the Entry Price."
+      );
+      return;
+    }
+
+    if (entrySide === "BUY" && takeProfitPremium < entryPrice) {
+      toast.error(
+        "🚫 Oops! For a BUY order, your Take Profit must be greater than the Entry Price."
+      );
+      return;
+    }
+
+    if (entrySide === "SELL" && stopLossPremium < entryPrice) {
+      toast.error(
+        "🚫 Oops! For a SELL order, your Stop Loss must be greater than the Entry Price."
+      );
+      return;
+    }
+
+    if (entrySide === "SELL" && takeProfitPremium > entryPrice) {
+      toast.error(
+        "🚫 Oops! For a SELL order, your Take Profit must be lower than the Entry Price."
+      );
+      return;
+    }
+
     try {
       const url = `${API_URL}/user/tradeInfo?id=${tradeDetail.id}`;
 
       await axios.put(url, putData, {
         headers: { Authorization: `Bearer ${auth}` },
       });
-      toast.success("Trade detail updated successfully");
+      toast.success("Detail updated successfully");
 
       setIsEditing(false);
     } catch (error) {
@@ -158,13 +206,61 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
     return lotData?.lotSize || 1;
   };
 
+  const calculatePremiums = (
+    entryPrice: number,
+    entrySide: string,
+    slPoints: number,
+    tpPoints: number
+  ) => {
+    if (entryPrice <= 0) {
+      return { stopLossPremium: 0, takeProfitPremium: 0 };
+    }
+
+    if (entrySide === "BUY") {
+      return {
+        stopLossPremium: entryPrice - slPoints,
+        takeProfitPremium: entryPrice + tpPoints,
+      };
+    }
+
+    if (entrySide === "SELL") {
+      return {
+        stopLossPremium: entryPrice + slPoints,
+        takeProfitPremium: entryPrice - tpPoints,
+      };
+    }
+
+    // default if side is UNDEFINED
+    return { stopLossPremium: 0, takeProfitPremium: 0 };
+  };
+
+  const recalcFromPoints = (
+    prev: any,
+    newPoints: { slPoints?: number; tpPoints?: number }
+  ) => {
+    const { stopLossPremium, takeProfitPremium } = calculatePremiums(
+      prev.entryPrice,
+      prev.entrySide,
+      newPoints.slPoints ?? prev.stopLossPoints,
+      newPoints.tpPoints ?? prev.takeProfitPoints
+    );
+    return {
+      ...prev,
+      ...newPoints,
+      stopLossPremium,
+      takeProfitPremium,
+    };
+  };
+
   const getCellValue = (columnId: string) => {
     if (isEditing) {
       switch (columnId) {
         case "currentQty":
           return tradeDetail.currentQty;
+
         case "humanId":
           return tradeDetail.humanId;
+
         case "legCount":
           return tradeDetail.legCount;
 
@@ -176,7 +272,9 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               </span>
               <input
                 type="number"
+                min="0"
                 value={Math.floor(editData.qty)}
+                disabled={editData.entryTriggered}
                 onChange={(e) => {
                   const lots = parseInt(e.target.value) || 0;
                   setEditData({ ...editData, qty: lots });
@@ -185,13 +283,21 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               />
             </div>
           );
+
         case "entrySide":
           return (
             <select
               value={editData.entrySide}
-              onChange={(e) =>
-                setEditData({ ...editData, entrySide: e.target.value })
-              }
+              onChange={(e) => {
+                const side = e.target.value;
+                setEditData((prev) => {
+                  if (prev.entryType === "LIMIT" && prev.entryPrice > 0) {
+                    return recalcFromPoints({ ...prev, entrySide: side }, {});
+                  }
+                  return { ...prev, entrySide: side };
+                });
+              }}
+              disabled={editData.entryTriggered}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             >
               <option value="UNDEFINED">UNDEFINED</option>
@@ -199,163 +305,188 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               <option value="SELL">SELL</option>
             </select>
           );
+
         case "entryType":
           return (
             <select
               value={editData[columnId]}
-              onChange={(e) =>
-                setEditData({ ...editData, [columnId]: e.target.value })
-              }
+              onChange={(e) => {
+                const type = e.target.value;
+                if (e.target.value === "MARKET") {
+                  setEditData((prev) => ({
+                    ...prev,
+                    entryPrice: 0,
+                    stopLossPremium: 0,
+                    takeProfitPremium: 0,
+                  }));
+                }
+                setEditData((prev) => {
+                  if (type === "LIMIT" && prev.entryPrice > 0) {
+                    return recalcFromPoints({ ...prev, entryType: type }, {});
+                  }
+                  return { ...prev, entryType: type };
+                });
+              }}
+              disabled={editData.entryTriggered}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             >
-              <>
-                <option value="UNDEFINED">UNDEFINED</option>
-                <option value="MARKET">MARKET</option>
-                <option value="LIMIT">LIMIT</option>
-              </>
+              <option value="UNDEFINED">UNDEFINED</option>
+              <option value="MARKET">MARKET</option>
+              <option value="LIMIT">LIMIT</option>
             </select>
           );
+
         case "entryPrice":
           return editData.entryType === "LIMIT" ||
             editData.entryType === "UNDEFINED" ? (
             <input
               type="number"
               step="1"
+              min="0"
               value={editData.entryPrice}
-              onChange={(e) =>
-                setEditData({
-                  ...editData,
-                  entryPrice: parseFloat(e.target.value) || 0,
-                })
-              }
+              disabled={editData.entryTriggered}
+              onChange={(e) => {
+                const price = parseFloat(e.target.value) || 0;
+                setEditData((prev) => {
+                  if (prev.entryType === "LIMIT" && price > 0) {
+                    return recalcFromPoints({ ...prev, entryPrice: price }, {});
+                  }
+                  return { ...prev, entryPrice: price };
+                });
+              }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           ) : (
             <span className="text-xs text-gray-400">Market</span>
           );
+
         case "stopLossPoints":
           return (
             <input
               type="number"
+              min="0"
               step="1"
               value={editData.stopLossPoints}
               onChange={(e) => {
+                console.log(e.target.value);
                 const points = parseFloat(e.target.value) || 0;
-
                 setEditData((prev) => {
-                  let premium = prev.stopLossPremium;
-
-                  if (prev.entrySide === "BUY") {
-                    premium = prev.entryPrice - points;
-                  } else if (prev.entrySide === "SELL") {
-                    premium = prev.entryPrice + points;
+                  if (prev.entryType === "LIMIT" && prev.entryPrice > 0) {
+                    const { stopLossPremium } = calculatePremiums(
+                      prev.entryPrice,
+                      prev.entrySide,
+                      points,
+                      prev.takeProfitPoints
+                    );
+                    return {
+                      ...prev,
+                      stopLossPoints: points,
+                      stopLossPremium,
+                    };
                   }
-
-                  return {
-                    ...prev,
-                    stopLossPoints: points,
-                    stopLossPremium: premium,
-                  };
+                  return { ...prev, stopLossPoints: points };
                 });
               }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
+
         case "stopLossPremium":
           return (
             <input
               type="number"
               step="1"
+              min="0"
               value={editData.stopLossPremium}
               disabled={editData.entryType === "MARKET"}
               onChange={(e) => {
                 const premium = parseFloat(e.target.value) || 0;
+                let slPoints = 0;
 
-                setEditData((prev) => {
-                  let points = prev.stopLossPoints;
+                if (editData.entrySide === "BUY") {
+                  slPoints = editData.entryPrice - premium;
+                }
+                if (editData.entrySide === "SELL") {
+                  slPoints = premium - editData.entryPrice;
+                }
 
-                  if (prev.entryType === "LIMIT") {
-                    if (prev.entrySide === "BUY") {
-                      points = prev.entryPrice - premium;
-                    } else if (prev.entrySide === "SELL") {
-                      points = premium - prev.entryPrice;
-                    }
-                  }
-
-                  return {
-                    ...prev,
-                    stopLossPremium: premium,
-                    stopLossPoints: points,
-                  };
-                });
+                setEditData((prev) => ({
+                  ...prev,
+                  stopLossPoints: slPoints,
+                  stopLossPremium: premium,
+                }));
               }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
+
         case "takeProfitPoints":
           return (
             <input
               type="number"
               step="1"
+              min="0"
               value={editData.takeProfitPoints}
               onChange={(e) => {
+                console.log(e.target.value);
                 const points = parseFloat(e.target.value) || 0;
-
                 setEditData((prev) => {
-                  let premium = prev.takeProfitPremium;
-
-                  if (prev.entrySide === "BUY") {
-                    premium = prev.entryPrice + points;
-                  } else if (prev.entrySide === "SELL") {
-                    premium = prev.entryPrice - points;
+                  if (prev.entryType === "LIMIT" && prev.entryPrice > 0) {
+                    const { takeProfitPremium } = calculatePremiums(
+                      prev.entryPrice,
+                      prev.entrySide,
+                      prev.stopLossPoints,
+                      points
+                    );
+                    return {
+                      ...prev,
+                      takeProfitPoints: points,
+                      takeProfitPremium,
+                    };
                   }
-
-                  return {
-                    ...prev,
-                    takeProfitPoints: points,
-                    takeProfitPremium: premium,
-                  };
+                  return { ...prev, stopLossPoints: points };
                 });
               }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
+
         case "takeProfitPremium":
           return (
             <input
               type="number"
               step="1"
+              min="0"
               value={editData.takeProfitPremium}
               disabled={editData.entryType === "MARKET"}
               onChange={(e) => {
-                const value = parseFloat(e.target.value) || 0;
+                const premium = parseFloat(e.target.value) || 0;
 
-                setEditData((prev) => {
-                  let diff = prev.takeProfitPoints;
+                let tpPoints = 0;
 
-                  if (prev.entryType === "LIMIT") {
-                    if (prev.entrySide === "BUY") {
-                      diff = value - prev.entryPrice;
-                    } else if (prev.entrySide === "SELL") {
-                      diff = prev.entryPrice - value;
-                    }
-                  }
+                if (editData.entrySide === "BUY") {
+                  tpPoints = premium - editData.entryPrice;
+                }
+                if (editData.entrySide === "SELL") {
+                  tpPoints = editData.entryPrice - premium;
+                }
 
-                  return {
-                    ...prev,
-                    takeProfitPremium: value,
-                    takeProfitPoints: diff,
-                  };
-                });
+                setEditData((prev) => ({
+                  ...prev,
+                  takeProfitPoints: tpPoints,
+                  takeProfitPremium: premium,
+                }));
               }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
+
         case "pointOfAdjustment":
           return (
             <input
               type="number"
               step="1"
+              min="0"
               value={editData.pointOfAdjustment}
               onChange={(e) =>
                 setEditData({
@@ -366,10 +497,12 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
+
         case "pointOfAdjustmentLowerLimit":
           return (
             <input
               type="number"
+              min="0"
               step="1"
               value={editData.pointOfAdjustmentLowerLimit}
               onChange={(e) =>
@@ -381,10 +514,12 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
+
         case "pointOfAdjustmentUpperLimit":
           return (
             <input
               type="number"
+              min="0"
               step="1"
               value={editData[columnId]}
               onChange={(e) =>
@@ -396,16 +531,22 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
             />
           );
+
         case "entrySpotPrice":
           return formatNumber(tradeDetail.entrySpotPrice);
+
         case "entryTriggered":
           return getBooleanDisplay(tradeDetail.entryTriggered);
+
         case "slTriggered":
           return getBooleanDisplay(tradeDetail.slTriggered);
+
         case "tpTriggered":
           return getBooleanDisplay(tradeDetail[columnId]);
+
         case "reason":
           return tradeDetail.reason || "-";
+
         case "userExit":
           return (
             <div className="flex flex-wrap gap-1">
@@ -420,10 +561,13 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
               ))}
             </div>
           );
+
         case "mtm":
           return formatCurrency(calculatedMtm);
+
         case "updatedAt":
           return formatDate(tradeDetail.updatedAt);
+
         default:
           return "-";
       }

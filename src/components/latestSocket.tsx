@@ -27,7 +27,7 @@ const LatestSocket = () => {
 
   const handleUpdateTradeInfo = (data: WsTradeInfo) => {
     setInstances(data.data);
-    toast.success("Trade information updated successfully");
+    // toast.success("Trade information updated successfully");
   };
 
   const handleOrder = (data: OrderInfo) => {
