@@ -642,7 +642,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
           </div>
         );
 
-                case "position":
+      case "position":
           return (
             <button
               onClick={() => setIsPositionModalOpen(true)}
