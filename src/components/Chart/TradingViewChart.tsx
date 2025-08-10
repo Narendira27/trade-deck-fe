@@ -72,204 +72,212 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     const observer = new IntersectionObserver(
       async ([entry]) => {
         if (entry.isIntersecting) {
-          // Add delay to ensure DOM element has proper dimensions
-          setTimeout(() => {
-            try {
-              chart = init(container);
+          // Wait for container to have valid dimensions before initializing chart
+          const checkDimensions = () => {
+            if (container.offsetWidth > 0 && container.offsetHeight > 0) {
+              try {
+                chart = init(container);
 
-              // Validate that chart is a proper KLineChart instance
-              if (!chart || typeof chart.setData !== 'function') {
-                console.error("Failed to create chart instance");
-                chartRef.current = null;
-                setChartReady(false);
-                return;
-              }
+                // Validate that chart is a proper KLineChart instance
+                if (!chart || typeof chart.setData !== 'function') {
+                  console.error("Failed to create chart instance");
+                  chartRef.current = null;
+                  setChartReady(false);
+                  return;
+                }
 
-              chartRef.current = chart;
+                chartRef.current = chart;
 
-              // Disable right-click context menu
-              container.addEventListener("contextmenu", (e) => {
-                e.preventDefault();
-              });
+                // Disable right-click context menu
+                container.addEventListener("contextmenu", (e) => {
+                  e.preventDefault();
+                });
 
-              // Apply chart styles
-              chart.setStyles({
-                grid: {
-                  show: false,
-                },
-                xAxis: {
-                  show: true,
-                  axisLine: {
-                    show: true,
-                    color: "#4a5568",
-                    size: 1,
+                // Apply chart styles
+                chart.setStyles({
+                  grid: {
+                    show: false,
                   },
-                  tickText: {
+                  xAxis: {
                     show: true,
-                    color: "#a0aec0",
-                    size: 12,
-                    weight: "normal",
-                  },
-                  tickLine: {
-                    show: true,
-                    color: "#4a5568",
-                    size: 1,
-                    length: 3,
-                  },
-                },
-                yAxis: {
-                  show: true,
-                  axisLine: {
-                    show: true,
-                    color: "#4a5568",
-                    size: 1,
-                  },
-                  tickText: {
-                    show: true,
-                    color: "#a0aec0",
-                    size: 12,
-                    weight: "normal",
-                  },
-                  tickLine: {
-                    show: true,
-                    color: "#4a5568",
-                    size: 1,
-                    length: 3,
-                  },
-                },
-                crosshair: {
-                  show: true,
-                  horizontal: {
-                    show: true,
-                    line: {
+                    axisLine: {
                       show: true,
-                      style: "dash",
-                      dashValue: [4, 2],
+                      color: "#4a5568",
                       size: 1,
-                      color: "#718096",
                     },
-                    text: {
+                    tickText: {
                       show: true,
-                      color: "#ffffff",
-                      size: 12,
-                      backgroundColor: "#2d3748",
-                      borderColor: "#4a5568",
-                      borderSize: 1,
-                      borderRadius: 2,
-                      paddingLeft: 4,
-                      paddingRight: 4,
-                      paddingTop: 2,
-                      paddingBottom: 2,
-                    },
-                  },
-                  vertical: {
-                    show: true,
-                    line: {
-                      show: true,
-                      style: "dash",
-                      dashValue: [4, 2],
-                      size: 1,
-                      color: "#718096",
-                    },
-                    text: {
-                      show: true,
-                      color: "#ffffff",
-                      size: 12,
-                      backgroundColor: "#2d3748",
-                      borderColor: "#4a5568",
-                      borderSize: 1,
-                      borderRadius: 2,
-                      paddingLeft: 4,
-                      paddingRight: 4,
-                      paddingTop: 2,
-                      paddingBottom: 2,
-                    },
-                  },
-                },
-                separator: {
-                  size: 1,
-                  color: "#4a5568",
-                  fill: true,
-                  activeBackgroundColor: "#2d3748",
-                },
-                candle: {
-                  type: chartType === "line" ? "area" : "candle_solid",
-                  area: {
-                    lineSize: 2,
-                    lineColor: "#4299e1",
-                    smooth: true,
-                    value: "close",
-                    backgroundColor: [
-                      {
-                        offset: 0,
-                        color: "rgba(255, 255, 255, 0)",
-                      },
-                      {
-                        offset: 1,
-                        color: "rgba(255, 255, 255, 0)",
-                      },
-                    ],
-                  },
-                  bar: {
-                    upColor: "#10b981",
-                    downColor: "#ef4444",
-                    noChangeColor: "#888888",
-                  },
-                },
-                indicator: {
-                  ohlc: {
-                    show: true,
-                    upColor: "#48bb78",
-                    downColor: "#f56565",
-                    noChangeColor: "#a0aec0",
-                  },
-                  lastValueMark: {
-                    show: true,
-                    text: {
-                      show: true,
-                      color: "#ffffff",
+                      color: "#a0aec0",
                       size: 12,
                       weight: "normal",
-                      backgroundColor: "#4299e1",
-                      borderColor: "#2b6cb0",
-                      borderSize: 1,
-                      borderRadius: 2,
-                      paddingLeft: 4,
-                      paddingRight: 4,
-                      paddingTop: 2,
-                      paddingBottom: 2,
+                    },
+                    tickLine: {
+                      show: true,
+                      color: "#4a5568",
+                      size: 1,
+                      length: 3,
                     },
                   },
-                },
-              });
+                  yAxis: {
+                    show: true,
+                    axisLine: {
+                      show: true,
+                      color: "#4a5568",
+                      size: 1,
+                    },
+                    tickText: {
+                      show: true,
+                      color: "#a0aec0",
+                      size: 12,
+                      weight: "normal",
+                    },
+                    tickLine: {
+                      show: true,
+                      color: "#4a5568",
+                      size: 1,
+                      length: 3,
+                    },
+                  },
+                  crosshair: {
+                    show: true,
+                    horizontal: {
+                      show: true,
+                      line: {
+                        show: true,
+                        style: "dash",
+                        dashValue: [4, 2],
+                        size: 1,
+                        color: "#718096",
+                      },
+                      text: {
+                        show: true,
+                        color: "#ffffff",
+                        size: 12,
+                        backgroundColor: "#2d3748",
+                        borderColor: "#4a5568",
+                        borderSize: 1,
+                        borderRadius: 2,
+                        paddingLeft: 4,
+                        paddingRight: 4,
+                        paddingTop: 2,
+                        paddingBottom: 2,
+                      },
+                    },
+                    vertical: {
+                      show: true,
+                      line: {
+                        show: true,
+                        style: "dash",
+                        dashValue: [4, 2],
+                        size: 1,
+                        color: "#718096",
+                      },
+                      text: {
+                        show: true,
+                        color: "#ffffff",
+                        size: 12,
+                        backgroundColor: "#2d3748",
+                        borderColor: "#4a5568",
+                        borderSize: 1,
+                        borderRadius: 2,
+                        paddingLeft: 4,
+                        paddingRight: 4,
+                        paddingTop: 2,
+                        paddingBottom: 2,
+                      },
+                    },
+                  },
+                  separator: {
+                    size: 1,
+                    color: "#4a5568",
+                    fill: true,
+                    activeBackgroundColor: "#2d3748",
+                  },
+                  candle: {
+                    type: chartType === "line" ? "area" : "candle_solid",
+                    area: {
+                      lineSize: 2,
+                      lineColor: "#4299e1",
+                      smooth: true,
+                      value: "close",
+                      backgroundColor: [
+                        {
+                          offset: 0,
+                          color: "rgba(255, 255, 255, 0)",
+                        },
+                        {
+                          offset: 1,
+                          color: "rgba(255, 255, 255, 0)",
+                        },
+                      ],
+                    },
+                    bar: {
+                      upColor: "#10b981",
+                      downColor: "#ef4444",
+                      noChangeColor: "#888888",
+                    },
+                  },
+                  indicator: {
+                    ohlc: {
+                      show: true,
+                      upColor: "#48bb78",
+                      downColor: "#f56565",
+                      noChangeColor: "#a0aec0",
+                    },
+                    lastValueMark: {
+                      show: true,
+                      text: {
+                        show: true,
+                        color: "#ffffff",
+                        size: 12,
+                        weight: "normal",
+                        backgroundColor: "#4299e1",
+                        borderColor: "#2b6cb0",
+                        borderSize: 1,
+                        borderRadius: 2,
+                        paddingLeft: 4,
+                        paddingRight: 4,
+                        paddingTop: 2,
+                        paddingBottom: 2,
+                      },
+                    },
+                  },
+                });
 
-              chart.setSymbol({
-                ticker: `${indexName}-${expiry}-${range}` || "BANKNIFTY-100",
-              });
-              chart.setPeriod({ span: 1, type: "minute" });
+                chart.setSymbol({
+                  ticker: `${indexName}-${expiry}-${range}` || "BANKNIFTY-100",
+                });
+                chart.setPeriod({ span: 1, type: "minute" });
 
-              setChartReady(true);
+                setChartReady(true);
 
-              const resizeChart = () => {
-                if (chartRef.current && chartContainerRef.current) {
-                  const rect = chartContainerRef.current.getBoundingClientRect();
-                  chartRef.current.resize(rect.width, rect.height);
-                }
-              };
+                const resizeChart = () => {
+                  if (chartRef.current && chartContainerRef.current) {
+                    const rect = chartContainerRef.current.getBoundingClientRect();
+                    chartRef.current.resize(rect.width, rect.height);
+                  }
+                };
 
-              resizeObserverRef.current = new ResizeObserver(() =>
-                requestAnimationFrame(resizeChart)
-              );
-              resizeObserverRef.current.observe(container);
+                resizeObserverRef.current = new ResizeObserver(() =>
+                  requestAnimationFrame(resizeChart)
+                );
+                resizeObserverRef.current.observe(container);
 
-              setTimeout(resizeChart, 100);
-              observer.unobserve(container);
-            } catch (error) {
-              console.error("Failed to create chart instance:", error);
-              chartRef.current = null;
-              setChartReady(false);
+                setTimeout(resizeChart, 100);
+                observer.unobserve(container);
+              } catch (error) {
+                console.error("Failed to create chart instance:", error);
+                chartRef.current = null;
+                setChartReady(false);
+              }
+            } else {
+              // Container doesn't have valid dimensions yet, check again on next frame
+              requestAnimationFrame(checkDimensions);
             }
-          }, 50);
+          };
+
+          // Start checking for valid dimensions
+          checkDimensions();
         }
       },
       { threshold: 0.5 }
