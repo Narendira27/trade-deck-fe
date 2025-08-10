@@ -301,7 +301,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         // Sort by timestamp
         transformedData.sort((a, b) => a.timestamp - b.timestamp);
 
-        chartRef.current.applyNewData(transformedData);
+        chartRef.current.setData(transformedData);
 
         // Create overlays if instance exists and has trade details
         if (
