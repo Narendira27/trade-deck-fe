@@ -2,18 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Plus, X, Grid3X3, Grid2X2, LayoutGrid, Eye } from "lucide-react";
 import TradingViewChart from "./TradingViewChart";
 import useStore from "../../store/store";
-import type { Trade } from "../../types/trade";
-// import { API_URL } from "../../config/config";
-// import axios from "axios";
-// import cookies from "js-cookie";
+import { API_URL } from "../../config/config";
+import axios from "axios";
+import cookies from "js-cookie";
 import { toast } from "sonner";
 
 import TradePopupWindow from "./TradePopupWindow";
 
 interface ChartTab {
   id: string;
-  tradeId: string;
-  symbol: string;
+  instanceId: string;
+  indexName: string;
   expiry: string;
   range: number;
   timeframe: string;
@@ -23,30 +22,29 @@ interface ChartTab {
 type LayoutType = "single" | "2x2" | "3x1" | "2x2-grid";
 
 interface ChartData {
-  [tradeId: string]: [];
+  [instanceId: string]: any[];
 }
 
 const ChartContainer: React.FC = () => {
   const { instances } = useStore();
 
-  // Chart data state - no more caching, fresh data every time
+  // Chart data state
   const [chartData, setChartData] = useState<ChartData>({});
-  const [isLoading, setIsLoading] = useState<{ [tradeId: string]: boolean }>(
+  const [isLoading, setIsLoading] = useState<{ [instanceId: string]: boolean }>(
     {}
   );
 
-  // Initialize tabs with the first trade if available
+  // Initialize tabs with the first instance if available
   const [tabs, setTabs] = useState<ChartTab[]>(() => {
     if (instances.length > 0) {
-      const firstTrade = instances[0];
-      console.log(firstTrade);
+      const firstInstance = instances[0];
       return [
         {
           id: "1",
-          tradeId: firstTrade.id,
-          symbol: firstTrade.indexName,
-          expiry: firstTrade.expiry,
-          range: firstTrade.ltpRange,
+          instanceId: firstInstance.id,
+          indexName: firstInstance.indexName,
+          expiry: firstInstance.expiry,
+          range: firstInstance.ltpRange,
           timeframe: "1m",
           chartType: "candlestick",
         },
@@ -55,8 +53,8 @@ const ChartContainer: React.FC = () => {
     return [
       {
         id: "1",
-        tradeId: "",
-        symbol: "select",
+        instanceId: "",
+        indexName: "select",
         expiry: "",
         range: 0,
         timeframe: "1m",
@@ -69,166 +67,112 @@ const ChartContainer: React.FC = () => {
   const [layout, setLayout] = useState<LayoutType>("single");
   const [showTradePopup, setShowTradePopup] = useState(false);
 
-  // Function to fetch candle data for a specific trade
-  const fetchCandleData = async (tradeId: string): Promise<[]> => {
-    const trade = instances.find((t) => t.id === tradeId);
-    if (!trade) return [];
+  // Function to fetch candle data for a specific instance
+  const fetchCandleData = async (instanceId: string): Promise<any[]> => {
+    const instance = instances.find((i) => i.id === instanceId);
+    if (!instance) return [];
 
-    // Validate trade parameters before making API call
+    // Validate instance parameters before making API call
     if (
-      !trade.indexName ||
-      trade.indexName.trim() === "" ||
-      !trade.expiry ||
-      trade.expiry.trim() === "" ||
-      !trade.ltpRange ||
-      trade.ltpRange <= 0
+      !instance.indexName ||
+      instance.indexName.trim() === "" ||
+      !instance.expiry ||
+      instance.expiry.trim() === "" ||
+      !instance.ltpRange ||
+      instance.ltpRange <= 0
     ) {
-      console.warn("Invalid trade parameters, skipping API call:", {
-        indexName: trade.indexName,
-        expiry: trade.expiry,
-        ltpRange: trade.ltpRange,
+      console.warn("Invalid instance parameters, skipping API call:", {
+        indexName: instance.indexName,
+        expiry: instance.expiry,
+        ltpRange: instance.ltpRange,
       });
       return [];
     }
 
     try {
-      setIsLoading((prev) => ({ ...prev, [tradeId]: true }));
+      setIsLoading((prev) => ({ ...prev, [instanceId]: true }));
 
-      // Generate mock candle data temporarily
-      const generateMockCandleData = (): [] => {
-        const data: [] = [];
-        const basePrice = trade.ltpRange || 100;
-        const now = Math.floor(Date.now() / 1000);
-        const startTime = now - 100 * 60; // 100 minutes ago
+      const auth = cookies.get("auth");
+      const response = await axios.get(`${API_URL}/user/candle`, {
+        params: {
+          indexName: instance.indexName,
+          expiryDate: instance.expiry,
+          range: instance.ltpRange,
+        },
+        headers: { Authorization: `Bearer ${auth}` },
+        timeout: 10000,
+      });
 
-        let currentPrice = basePrice;
-
-        for (let i = 0; i < 100; i++) {
-          const time = startTime + i * 60; // 1 minute intervals
-
-          // Generate realistic price movement
-          const volatility = basePrice * 0.02; // 2% volatility
-          const change = (Math.random() - 0.5) * volatility;
-          const open = currentPrice;
-          const close = Math.max(0.1, open + change);
-
-          // Generate high and low based on open and close
-          const minPrice = Math.min(open, close);
-          const maxPrice = Math.max(open, close);
-          const extraRange = volatility * 0.5;
-
-          const high = maxPrice + Math.random() * extraRange;
-          const low = Math.max(0.1, minPrice - Math.random() * extraRange);
-          // @ts-expect-error cannot
-          data.push({
-            time: time,
-            open: parseFloat(open.toFixed(2)),
-            high: parseFloat(high.toFixed(2)),
-            low: parseFloat(low.toFixed(2)),
-            close: parseFloat(close.toFixed(2)),
-          });
-
-          currentPrice = close;
-        }
-
-        return data;
-      };
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const candleData = generateMockCandleData();
-      return candleData;
+      return response.data.data || [];
     } catch (error) {
       console.error("Error fetching chart data:", error);
       toast.error("Failed to fetch chart data");
       return [];
     } finally {
-      setIsLoading((prev) => ({ ...prev, [tradeId]: false }));
+      setIsLoading((prev) => ({ ...prev, [instanceId]: false }));
     }
   };
 
-  // Function to update chart data for a specific trade
-  const updateChartData = async (tradeId: string) => {
-    if (!tradeId) return;
+  // Function to update chart data for a specific instance
+  const updateChartData = async (instanceId: string) => {
+    if (!instanceId) return;
 
-    const data = await fetchCandleData(tradeId);
+    const data = await fetchCandleData(instanceId);
     setChartData((prev) => ({
       ...prev,
-      [tradeId]: data,
+      [instanceId]: data,
     }));
   };
 
   // Update tabs when instances change
-  // useEffect(() => {
-  //   const filteredTrade = instances.filter((each) => each.alive === true);
-  //   if (filteredTrade.length > 0 && tabs.length > 0 && tabs[0].tradeId === "") {
-  //     const firstTrade = filteredTrade[0];
-  //     const newTab = {
-  //       id: "1",
-  //       tradeId: firstTrade.id,
-  //       symbol: firstTrade.indexName,
-  //       expiry: firstTrade.expiry,
-  //       range: firstTrade.ltpRange,
-  //       timeframe: "1m",
-  //       chartType: "candlestick" as const,
-  //     };
-  //     setTabs([newTab]);
-  //     // Fetch data for the new trade
-  //     updateChartData(firstTrade.id);
-  //   }
-  // }, [instances]);
-
-  // Periodic data refresh every 5 minutes
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     // Get all unique trade IDs from visible tabs
-  //     const visibleTabs = getVisibleTabs();
-  //     const uniqueTradeIds = [
-  //       ...new Set(visibleTabs.map((tab) => tab.tradeId).filter((id) => id)),
-  //     ];
-
-  //     // Fetch fresh data for all visible instances
-  //     uniqueTradeIds.forEach((tradeId) => {
-  //       updateChartData(tradeId);
-  //     });
-  //   }, 5 * 60 * 1000); // 5 minutes
-
-  //   return () => clearInterval(interval);
-  // }, [tabs, layout]);
+  useEffect(() => {
+    if (instances.length > 0 && tabs.length > 0 && tabs[0].instanceId === "") {
+      const firstInstance = instances[0];
+      const newTab = {
+        id: "1",
+        instanceId: firstInstance.id,
+        indexName: firstInstance.indexName,
+        expiry: firstInstance.expiry,
+        range: firstInstance.ltpRange,
+        timeframe: "1m",
+        chartType: "candlestick" as const,
+      };
+      setTabs([newTab]);
+      // Fetch data for the new instance
+      updateChartData(firstInstance.id);
+    }
+  }, [instances]);
 
   // Initial data fetch when tabs change
   useEffect(() => {
     const visibleTabs = getVisibleTabs();
-    const uniqueTradeIds = [
-      ...new Set(visibleTabs.map((tab) => tab.tradeId).filter((id) => id)),
+    const uniqueInstanceIds = [
+      ...new Set(visibleTabs.map((tab) => tab.instanceId).filter((id) => id)),
     ];
 
-    uniqueTradeIds.forEach((tradeId) => {
-      if (!chartData[tradeId]) {
-        updateChartData(tradeId);
+    uniqueInstanceIds.forEach((instanceId) => {
+      if (!chartData[instanceId]) {
+        updateChartData(instanceId);
       }
     });
   }, [tabs, layout]);
 
   const addNewTab = () => {
-    const filteredTrade = instances.filter((each) => each.alive === true);
-
     const newTab: ChartTab = {
       id: Date.now().toString(),
-      tradeId: filteredTrade.length > 0 ? filteredTrade[0].id : "",
-      symbol: filteredTrade.length > 0 ? filteredTrade[0].indexName : "select",
-      expiry: filteredTrade.length > 0 ? filteredTrade[0].expiry : "",
-      range: filteredTrade.length > 0 ? filteredTrade[0].ltpRange : 0,
+      instanceId: instances.length > 0 ? instances[0].id : "",
+      indexName: instances.length > 0 ? instances[0].indexName : "select",
+      expiry: instances.length > 0 ? instances[0].expiry : "",
+      range: instances.length > 0 ? instances[0].ltpRange : 0,
       timeframe: "1m",
       chartType: "candlestick",
     };
     setTabs([...tabs, newTab]);
     setActiveTab(newTab.id);
 
-    // Fetch data for the new tab if it has a valid trade
-    if (newTab.tradeId) {
-      updateChartData(newTab.tradeId);
+    // Fetch data for the new tab if it has a valid instance
+    if (newTab.instanceId) {
+      updateChartData(newTab.instanceId);
     }
   };
 
@@ -249,18 +193,18 @@ const ChartContainer: React.FC = () => {
     );
   };
 
-  const handleTradeChange = (tabId: string, tradeId: string) => {
-    const selectedTrade = instances.find((trade) => trade.id === tradeId);
-    if (selectedTrade) {
+  const handleInstanceChange = (tabId: string, instanceId: string) => {
+    const selectedInstance = instances.find((instance) => instance.id === instanceId);
+    if (selectedInstance) {
       updateTab(tabId, {
-        tradeId: selectedTrade.id,
-        symbol: selectedTrade.indexName,
-        expiry: selectedTrade.expiry,
-        range: selectedTrade.ltpRange,
+        instanceId: selectedInstance.id,
+        indexName: selectedInstance.indexName,
+        expiry: selectedInstance.expiry,
+        range: selectedInstance.ltpRange,
       });
 
-      // Fetch data for the newly selected trade
-      updateChartData(selectedTrade.id);
+      // Fetch data for the newly selected instance
+      updateChartData(selectedInstance.id);
     }
   };
 
@@ -294,13 +238,13 @@ const ChartContainer: React.FC = () => {
     }
   };
 
-  const formatTradeOption = (trade: Trade) => {
-    return `${trade.indexName}-${trade.expiry}-${trade.ltpRange}-${trade.entrySide}-${trade.narration}`;
+  const formatInstanceOption = (instance: any) => {
+    return `${instance.indexName} - ${instance.expiry} - ${instance.ltpRange}`;
   };
 
   const getTabTitle = (tab: ChartTab) => {
-    if (!tab.symbol || tab.symbol === "select") return "Select Symbol";
-    return `${tab.symbol}-${tab.expiry}-${tab.range}`;
+    if (!tab.indexName || tab.indexName === "select") return "Select Instance";
+    return `${tab.indexName} - ${tab.expiry} - ${tab.range}`;
   };
 
   return (
@@ -322,7 +266,7 @@ const ChartContainer: React.FC = () => {
                 <span className="text-sm font-medium truncate">
                   {getTabTitle(tab)}
                 </span>
-                {isLoading[tab.tradeId] && (
+                {isLoading[tab.instanceId] && (
                   <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                 )}
                 {tabs.length > 1 && (
@@ -404,17 +348,16 @@ const ChartContainer: React.FC = () => {
         <div className="flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
           <div className="flex items-center space-x-4">
             <select
-              value={tabs.find((tab) => tab.id === activeTab)?.tradeId || ""}
-              onChange={(e) => handleTradeChange(activeTab, e.target.value)}
+              value={tabs.find((tab) => tab.id === activeTab)?.instanceId || ""}
+              onChange={(e) => handleInstanceChange(activeTab, e.target.value)}
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {instances.map((trade) =>
-                trade.alive ? (
-                  <option key={trade.id} value={trade.id}>
-                    {formatTradeOption(trade)}
-                  </option>
-                ) : null
-              )}
+              <option value="">Select Instance</option>
+              {instances.map((instance) => (
+                <option key={instance.id} value={instance.id}>
+                  {formatInstanceOption(instance)}
+                </option>
+              ))}
             </select>
 
             <select
@@ -456,19 +399,19 @@ const ChartContainer: React.FC = () => {
             <button
               onClick={() => {
                 const currentTab = tabs.find((tab) => tab.id === activeTab);
-                if (currentTab?.tradeId) {
-                  updateChartData(currentTab.tradeId);
+                if (currentTab?.instanceId) {
+                  updateChartData(currentTab.instanceId);
                 }
               }}
               className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
               disabled={
                 isLoading[
-                  tabs.find((tab) => tab.id === activeTab)?.tradeId || ""
+                  tabs.find((tab) => tab.id === activeTab)?.instanceId || ""
                 ]
               }
             >
               {isLoading[
-                tabs.find((tab) => tab.id === activeTab)?.tradeId || ""
+                tabs.find((tab) => tab.id === activeTab)?.instanceId || ""
               ]
                 ? "Refreshing..."
                 : "Refresh"}
@@ -491,20 +434,22 @@ const ChartContainer: React.FC = () => {
           {getVisibleTabs().map((tab) => (
             <div key={tab.id} className="relative">
               {layout !== "single" && (
-                <div className="absolute top-2 left-2 z-10  px-2 py-1 rounded text-xs text-white flex items-center space-x-2">
-                  {isLoading[tab.tradeId] && (
+                <div className="absolute top-2 left-2 z-10 px-2 py-1 rounded text-xs text-white flex items-center space-x-2">
+                  {isLoading[tab.instanceId] && (
                     <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                   )}
                 </div>
               )}
               <TradingViewChart
-                symbol={tab.symbol}
+                indexName={tab.indexName}
+                expiry={tab.expiry}
+                range={tab.range}
                 timeframe={tab.timeframe}
                 chartType={tab.chartType}
-                tradeId={tab.tradeId}
-                chartData={chartData[tab.tradeId] || []}
-                isLoading={isLoading[tab.tradeId] || false}
-                onRefreshData={() => updateChartData(tab.tradeId)}
+                instanceId={tab.instanceId}
+                chartData={chartData[tab.instanceId] || []}
+                isLoading={isLoading[tab.instanceId] || false}
+                onRefreshData={() => updateChartData(tab.instanceId)}
               />
             </div>
           ))}
