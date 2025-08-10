@@ -27,7 +27,7 @@ interface ChartData {
 }
 
 const ChartContainer: React.FC = () => {
-  const { trades } = useStore();
+  const { instances } = useStore();
 
   // Chart data state - no more caching, fresh data every time
   const [chartData, setChartData] = useState<ChartData>({});
@@ -37,9 +37,9 @@ const ChartContainer: React.FC = () => {
 
   // Initialize tabs with the first trade if available
   const [tabs, setTabs] = useState<ChartTab[]>(() => {
-    const filteredTrade = trades.filter((each) => each.alive === true);
-    if (filteredTrade.length > 0) {
-      const firstTrade = filteredTrade[0];
+    if (instances.length > 0) {
+      const firstTrade = instances[0];
+      console.log(firstTrade);
       return [
         {
           id: "1",
@@ -71,7 +71,7 @@ const ChartContainer: React.FC = () => {
 
   // Function to fetch candle data for a specific trade
   const fetchCandleData = async (tradeId: string): Promise<[]> => {
-    const trade = trades.find((t) => t.id === tradeId);
+    const trade = instances.find((t) => t.id === tradeId);
     if (!trade) return [];
 
     // Validate trade parameters before making API call
@@ -159,9 +159,9 @@ const ChartContainer: React.FC = () => {
     }));
   };
 
-  // Update tabs when trades change
+  // Update tabs when instances change
   // useEffect(() => {
-  //   const filteredTrade = trades.filter((each) => each.alive === true);
+  //   const filteredTrade = instances.filter((each) => each.alive === true);
   //   if (filteredTrade.length > 0 && tabs.length > 0 && tabs[0].tradeId === "") {
   //     const firstTrade = filteredTrade[0];
   //     const newTab = {
@@ -177,7 +177,7 @@ const ChartContainer: React.FC = () => {
   //     // Fetch data for the new trade
   //     updateChartData(firstTrade.id);
   //   }
-  // }, [trades]);
+  // }, [instances]);
 
   // Periodic data refresh every 5 minutes
   // useEffect(() => {
@@ -188,7 +188,7 @@ const ChartContainer: React.FC = () => {
   //       ...new Set(visibleTabs.map((tab) => tab.tradeId).filter((id) => id)),
   //     ];
 
-  //     // Fetch fresh data for all visible trades
+  //     // Fetch fresh data for all visible instances
   //     uniqueTradeIds.forEach((tradeId) => {
   //       updateChartData(tradeId);
   //     });
@@ -212,7 +212,7 @@ const ChartContainer: React.FC = () => {
   }, [tabs, layout]);
 
   const addNewTab = () => {
-    const filteredTrade = trades.filter((each) => each.alive === true);
+    const filteredTrade = instances.filter((each) => each.alive === true);
 
     const newTab: ChartTab = {
       id: Date.now().toString(),
@@ -250,7 +250,7 @@ const ChartContainer: React.FC = () => {
   };
 
   const handleTradeChange = (tabId: string, tradeId: string) => {
-    const selectedTrade = trades.find((trade) => trade.id === tradeId);
+    const selectedTrade = instances.find((trade) => trade.id === tradeId);
     if (selectedTrade) {
       updateTab(tabId, {
         tradeId: selectedTrade.id,
@@ -408,7 +408,7 @@ const ChartContainer: React.FC = () => {
               onChange={(e) => handleTradeChange(activeTab, e.target.value)}
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {trades.map((trade) =>
+              {instances.map((trade) =>
                 trade.alive ? (
                   <option key={trade.id} value={trade.id}>
                     {formatTradeOption(trade)}
