@@ -100,7 +100,7 @@ const ChartContainer: React.FC = () => {
           range: instance.ltpRange,
         },
         headers: { Authorization: `Bearer ${auth}` },
-        timeout: 10000,
+        timeout: 30000,
       });
 
       return response.data.data || [];

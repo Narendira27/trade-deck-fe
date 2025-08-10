@@ -284,6 +284,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
   // Update chart data when chartData changes
   useEffect(() => {
+    if (!chartReady) return;
+    
     if (chartRef.current && chartData && chartData.length > 0) {
       try {
         // Transform API data to chart format
@@ -315,7 +317,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         console.error("Error updating chart data:", error);
       }
     }
-  }, [chartData, instance]);
+  }, [chartData, instance, chartReady]);
 
   const createOverlays = (chart: any, currentPrice: number) => {
     if (
