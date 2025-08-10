@@ -236,7 +236,9 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
             },
           });
 
-          chart.setSymbol({ ticker: `${indexName}-${expiry}-${range}` || "BANKNIFTY-100" });
+          chart.setSymbol({
+            ticker: `${indexName}-${expiry}-${range}` || "BANKNIFTY-100",
+          });
           chart.setPeriod({ span: 1, type: "minute" });
 
           setChartReady(true);
@@ -300,8 +302,13 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         chartRef.current.applyNewData(transformedData);
 
         // Create overlays if instance exists and has trade details
-        if (instance && instance.tradeDetails && instance.tradeDetails.length > 0) {
-          const currentPrice = transformedData[transformedData.length - 1]?.close || 0;
+        if (
+          instance &&
+          instance.tradeDetails &&
+          instance.tradeDetails.length > 0
+        ) {
+          const currentPrice =
+            transformedData[transformedData.length - 1]?.close || 0;
           createOverlays(chartRef.current, currentPrice);
         }
       } catch (error) {
@@ -311,11 +318,16 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, [chartData, instance]);
 
   const createOverlays = (chart: any, currentPrice: number) => {
-    if (!instance || !instance.tradeDetails || instance.tradeDetails.length === 0) return;
+    if (
+      !instance ||
+      !instance.tradeDetails ||
+      instance.tradeDetails.length === 0
+    )
+      return;
 
     // Use the first trade detail for overlay creation
     const tradeDetail = instance.tradeDetails[0];
-    
+
     const limitPrice = tradeDetail.entryPrice || currentPrice;
     const takeProfit = tradeDetail.takeProfitPremium || currentPrice + 1;
     const stopLoss = tradeDetail.stopLossPremium || currentPrice - 1;
