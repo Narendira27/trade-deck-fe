@@ -9,10 +9,12 @@ import axios from "axios";
 import cookies from "js-cookie";
 
 interface TradingViewChartProps {
-  symbol: string;
+  indexName: string;
+  expiry: string;
+  range: number;
   timeframe: string;
   chartType: "line" | "candlestick";
-  tradeId: string;
+  instanceId: string;
   chartData: any[];
   isLoading: boolean;
   onRefreshData: () => void;
@@ -26,13 +28,17 @@ interface OrderValues {
 }
 
 const TradingViewChart: React.FC<TradingViewChartProps> = ({
-  tradeId,
+  instanceId,
   chartType = "candlestick",
-  symbol,
+  indexName,
+  expiry,
+  range,
   isLoading,
+  chartData,
+  onRefreshData,
 }) => {
-  const { trades } = useStore();
-  const trade = trades.find((t) => t.id === tradeId);
+  const { instances } = useStore();
+  const instance = instances.find((i) => i.id === instanceId);
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
@@ -55,26 +61,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }>({});
 
   const [chartReady, setChartReady] = useState(false);
-
-  // Generate random chart data
-  const generateRandomData = () => {
-    const data = Array.from({ length: 200 }, (_, i) => {
-      const base = 50 + i * 0.1;
-      const open = base + (Math.random() - 0.5) * 2;
-      const close = open + (Math.random() - 0.5) * 2;
-      const high = Math.max(open, close) + Math.random() * 1.2;
-      const low = Math.min(open, close) - Math.random() * 1.2;
-      return {
-        timestamp: Date.now() + i * 60000,
-        open: parseFloat(open.toFixed(2)),
-        high: parseFloat(high.toFixed(2)),
-        low: parseFloat(low.toFixed(2)),
-        close: parseFloat(close.toFixed(2)),
-        volume: Math.random() * 1000,
-      };
-    });
-    return data;
-  };
 
   // Chart initialization
   useEffect(() => {
@@ -250,23 +236,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
             },
           });
 
-          // Generate and load data
-          const data = generateRandomData();
-          const currentPrice = data[data.length - 1].close;
-
-          chart.setSymbol({ ticker: symbol || "BANKNIFTY-100" });
+          chart.setSymbol({ ticker: `${indexName}-${expiry}-${range}` || "BANKNIFTY-100" });
           chart.setPeriod({ span: 1, type: "minute" });
-          chart.setDataLoader({
-            // @ts-expect-error cannot
-            getBars: ({ callback }) => {
-              callback(data);
-            },
-          });
-
-          // Create overlays if trade exists
-          if (trade && trade.entryType !== "UNDEFINED") {
-            createOverlays(chart, currentPrice);
-          }
 
           setChartReady(true);
 
@@ -307,14 +278,50 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       chartRef.current = null;
       setChartReady(false);
     };
-  }, [chartContainerRef.current, symbol, chartType]);
+  }, [chartContainerRef.current, indexName, expiry, range, chartType]);
+
+  // Update chart data when chartData changes
+  useEffect(() => {
+    if (chartRef.current && chartData && chartData.length > 0) {
+      try {
+        // Transform API data to chart format
+        const transformedData = chartData.map((item: any) => ({
+          timestamp: new Date(item.timestamp || item.time).getTime() / 1000,
+          open: parseFloat(item.open),
+          high: parseFloat(item.high),
+          low: parseFloat(item.low),
+          close: parseFloat(item.close),
+          volume: parseFloat(item.volume || 0),
+        }));
+
+        // Sort by timestamp
+        transformedData.sort((a, b) => a.timestamp - b.timestamp);
+
+        chartRef.current.applyNewData(transformedData);
+
+        // Create overlays if instance exists and has trade details
+        if (instance && instance.tradeDetails && instance.tradeDetails.length > 0) {
+          const currentPrice = transformedData[transformedData.length - 1]?.close || 0;
+          createOverlays(chartRef.current, currentPrice);
+        }
+      } catch (error) {
+        console.error("Error updating chart data:", error);
+      }
+    }
+  }, [chartData, instance]);
 
   const createOverlays = (chart: any, currentPrice: number) => {
-    if (!trade) return;
+    if (!instance || !instance.tradeDetails || instance.tradeDetails.length === 0) return;
 
-    const limitPrice = trade.entryPrice || currentPrice;
-    const takeProfit = trade.takeProfitPremium || currentPrice + 1;
-    const stopLoss = trade.stopLossPremium || currentPrice - 1;
+    // Use the first trade detail for overlay creation
+    const tradeDetail = instance.tradeDetails[0];
+    
+    const limitPrice = tradeDetail.entryPrice || currentPrice;
+    const takeProfit = tradeDetail.takeProfitPremium || currentPrice + 1;
+    const stopLoss = tradeDetail.stopLossPremium || currentPrice - 1;
+
+    // Clear existing overlays
+    chart.removeOverlay();
 
     // Create Take Profit overlay
     const tpOverlay = chart.createOverlay({
@@ -443,19 +450,9 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   };
 
   const handlePlaceOrder = async () => {
-    if (!trade) return;
+    if (!instance) return;
 
     updateOrderValues();
-
-    // const orderData = {
-    //   type: orderType,
-    //   symbol: symbol,
-    //   quantity,
-    //   limitPrice: orderValues.limitPrice,
-    //   takeProfit: orderValues.takeProfit,
-    //   stopLoss: orderValues.stopLoss,
-    //   currentPrice: orderValues.currentPrice,
-    // };
 
     try {
       const token = cookies.get("auth");
@@ -477,7 +474,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         },
         {
           headers: { Authorization: "Bearer " + token },
-          params: { id: trade.id },
+          params: { id: instance.tradeDetails[0]?.id },
         }
       );
 
@@ -488,14 +485,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       toast.error("Error placing order");
     }
   };
-
-  // if (!trade) {
-  //   return (
-  //     <div className="flex items-center justify-center h-full text-gray-400">
-  //       Trade not found
-  //     </div>
-  //   );
-  // }
 
   if (isLoading && !chartReady) {
     return (
@@ -508,6 +497,14 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     );
   }
 
+  if (!indexName || indexName === "select") {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <span>Select an instance to view chart</span>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full relative bg-gray-900">
       <div
@@ -515,19 +512,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         className="w-full h-full border border-gray-400"
       />
 
-      {/* Order Panel Toggle Button
-      {trade.entryType === "UNDEFINED" && (
-        <button
-          onClick={() => {
-            updateOrderValues();
-            setShowOrderPanel(true);
-          }}
-          className="absolute top-2 left-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow-lg transition-colors duration-200 flex items-center gap-2 z-10 text-xs"
-        >
-          <Target size={14} />
-          Place Order
-        </button>
-      )} */}
       {/* Order Panel Overlay */}
       {showOrderPanel && (
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
