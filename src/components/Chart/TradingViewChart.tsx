@@ -73,12 +73,16 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       async ([entry]) => {
         if (entry.isIntersecting) {
           chart = init(container);
-          chartRef.current = chart;
 
-          if (!chart) {
+          // Validate that chart is a proper KLineChart instance
+          if (!chart || typeof chart.setData !== 'function') {
             console.error("Failed to create chart instance");
+            chartRef.current = null;
+            setChartReady(false);
             return;
           }
+
+          chartRef.current = chart;
 
           // Disable right-click context menu
           container.addEventListener("contextmenu", (e) => {
