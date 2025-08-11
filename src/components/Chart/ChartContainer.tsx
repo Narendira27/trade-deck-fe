@@ -16,7 +16,7 @@ interface ChartTab {
   expiry: string;
   range: number;
   timeframe: string;
-  chartType: "candlestick" | "line";
+  chartType: "candle_solid" | "area";
 }
 
 type LayoutType = "single" | "2x2" | "3x1" | "2x2-grid";
@@ -46,7 +46,7 @@ const ChartContainer: React.FC = () => {
           expiry: firstInstance.expiry,
           range: firstInstance.ltpRange,
           timeframe: "1m",
-          chartType: "candlestick",
+          chartType: "candle_solid",
         },
       ];
     }
@@ -58,7 +58,7 @@ const ChartContainer: React.FC = () => {
         expiry: "",
         range: 0,
         timeframe: "1m",
-        chartType: "candlestick",
+        chartType: "candle_solid",
       },
     ];
   });
@@ -136,7 +136,7 @@ const ChartContainer: React.FC = () => {
         expiry: firstInstance.expiry,
         range: firstInstance.ltpRange,
         timeframe: "1m",
-        chartType: "candlestick" as const,
+        chartType: "candle_solid" as const,
       };
       setTabs([newTab]);
       // Fetch data for the new instance
@@ -166,7 +166,7 @@ const ChartContainer: React.FC = () => {
       expiry: instances.length > 0 ? instances[0].expiry : "",
       range: instances.length > 0 ? instances[0].ltpRange : 0,
       timeframe: "1m",
-      chartType: "candlestick",
+      chartType: "candle_solid",
     };
     setTabs([...tabs, newTab]);
     setActiveTab(newTab.id);
@@ -195,7 +195,9 @@ const ChartContainer: React.FC = () => {
   };
 
   const handleInstanceChange = (tabId: string, instanceId: string) => {
-    const selectedInstance = instances.find((instance) => instance.id === instanceId);
+    const selectedInstance = instances.find(
+      (instance) => instance.id === instanceId
+    );
     if (selectedInstance) {
       updateTab(tabId, {
         instanceId: selectedInstance.id,
@@ -374,11 +376,11 @@ const ChartContainer: React.FC = () => {
             <div className="flex bg-gray-700 rounded">
               <button
                 onClick={() =>
-                  updateTab(activeTab, { chartType: "candlestick" })
+                  updateTab(activeTab, { chartType: "candle_solid" })
                 }
                 className={`px-3 py-1 text-sm rounded-l ${
                   tabs.find((tab) => tab.id === activeTab)?.chartType ===
-                  "candlestick"
+                  "candle_solid"
                     ? "bg-blue-500 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-600"
                 }`}
@@ -386,9 +388,9 @@ const ChartContainer: React.FC = () => {
                 Candles
               </button>
               <button
-                onClick={() => updateTab(activeTab, { chartType: "line" })}
+                onClick={() => updateTab(activeTab, { chartType: "area" })}
                 className={`px-3 py-1 text-sm rounded-r ${
-                  tabs.find((tab) => tab.id === activeTab)?.chartType === "line"
+                  tabs.find((tab) => tab.id === activeTab)?.chartType === "area"
                     ? "bg-blue-500 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-600"
                 }`}
