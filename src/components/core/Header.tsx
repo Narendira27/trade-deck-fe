@@ -12,25 +12,25 @@ import {
   Wallet,
   TrendingDown,
 } from "lucide-react";
-import { type Column } from "./TradeTable/ColumnManager";
-import InstanceColumnManager from "./TradeTable/InstanceColumnManager";
-import TradeDetailColumnManager from "./TradeTable/TradeDetailColumnManager";
-import AddInstanceModal from "./modals/AddInstanceModal";
-import DraggableBoxColumnManager from "./DraggableBoxColumnManager";
-import PortfolioModal from "./modals/PortfolioModal";
-import FilterModal from "./modals/FilterModal";
-import useStore, { useDraggableStore } from "../store/store";
-import { type DraggableBoxColumn } from "../types/draggableBox";
+import { type Column } from "../TradeTable/ColumnManager";
+import InstanceColumnManager from "../TradeTable/InstanceColumnManager";
+import TradeDetailColumnManager from "../TradeTable/TradeDetailColumnManager";
+import AddInstanceModal from "../modals/AddInstanceModal";
+import DraggableBoxColumnManager from "../draggable/DraggableBoxColumnManager";
+import PortfolioModal from "../modals/PortfolioModal";
+import FilterModal from "../modals/FilterModal";
+import useStore, { useDraggableStore } from "../../store/store";
+import { type DraggableBoxColumn } from "../../types/draggableBox";
 import {
   type InstanceColumn,
   type TradeDetailColumn,
-} from "../types/instanceColumns";
-import { API_URL } from "../config/config";
+} from "../../types/instanceColumns";
+import { API_URL } from "../../config/config";
 import axios from "axios";
 import cookies from "js-cookie";
 import { toast } from "sonner";
 import StatusIndicator from "./StatusIndicator";
-import StatusModal from "./modals/StatusModal";
+import StatusModal from "../modals/StatusModal";
 
 interface HeaderProps {
   columns: Column[];

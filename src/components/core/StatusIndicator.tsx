@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import cookies from "js-cookie";
-import { API_URL, SOCKET_MAIN, SOCKET_FE } from "../config/config";
-import checkServiceStatusFast from "../utils/checkCoreService";
+import { API_URL, SOCKET_MAIN, SOCKET_FE } from "../../config/config";
+import checkServiceStatusFast from "../../utils/checkCoreService";
 
 interface StatusIndicatorProps {
   onClick: () => void;

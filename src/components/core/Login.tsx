@@ -3,7 +3,7 @@ import { KeyRound, Fingerprint } from "lucide-react";
 import axios from "axios";
 import cookies from "js-cookie";
 
-import { API_URL } from "../config/config";
+import { API_URL } from "../../config/config";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 

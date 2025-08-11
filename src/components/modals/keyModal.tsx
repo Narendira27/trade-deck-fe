@@ -4,7 +4,7 @@ import axios from "axios";
 import { API_URL } from "../../config/config";
 import cookies from "js-cookie";
 import { toast } from "sonner";
-import Spinner from "../spinner";
+import Spinner from "../core/spinner";
 
 interface KeyModalProps {
   isOpen: boolean;
@@ -99,11 +99,11 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
   const handleKeyCardClick = (keyNum: number) => {
     const keyId = `key-${keyNum}`;
     setSelectedKeyId(keyId);
-    
+
     // Find the key by keyName instead of array position
-    const foundKey = savedKeys.find(key => key.keyName === keyId);
+    const foundKey = savedKeys.find((key) => key.keyName === keyId);
     const getKeyType = keyNum === 1 ? "interactive" : "marketdata";
-    
+
     setFormData({
       apiKey: foundKey ? foundKey.apiKey : "",
       secretKey: foundKey ? foundKey.apiSecret : "",

@@ -2,8 +2,8 @@ import { useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import cookies from "js-cookie";
 import { toast } from "sonner";
-import useStore from "../store/store";
-import { SOCKET_MAIN } from "../config/config";
+import useStore from "../../store/store";
+import { SOCKET_MAIN } from "../../config/config";
 import throttle from "lodash/throttle";
 
 const GetValues = () => {

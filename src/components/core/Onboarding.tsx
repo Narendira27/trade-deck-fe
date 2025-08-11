@@ -5,7 +5,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import cookies from "js-cookie";
 
-import { API_URL } from "../config/config";
+import { API_URL } from "../../config/config";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 

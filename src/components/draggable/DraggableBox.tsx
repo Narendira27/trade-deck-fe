@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Minus, Trash2 } from "lucide-react";
-import { useDraggableStore } from "../store/store";
-import { type DraggableBoxColumn } from "../types/draggableBox";
+import { useDraggableStore } from "../../store/store";
+import { type DraggableBoxColumn } from "../../types/draggableBox";
 
 interface DraggableBoxProps {
   columns: DraggableBoxColumn[];

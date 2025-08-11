@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Plus } from "lucide-react";
-import useStore from "../store/store";
-import { useDraggableStore } from "../store/store";
+import useStore from "../../store/store";
+import { useDraggableStore } from "../../store/store";
 
 const DraggableBoxManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);

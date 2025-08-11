@@ -2,9 +2,9 @@ import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import cookies from "js-cookie";
 import { toast } from "sonner";
-import useStore from "../store/store";
-import { SOCKET_INFO } from "../config/config";
-import { type Instance } from "../types/trade";
+import useStore from "../../store/store";
+import { SOCKET_INFO } from "../../config/config";
+import { type Instance } from "../../types/trade";
 
 interface WsTradeInfo {
   data: Instance[];

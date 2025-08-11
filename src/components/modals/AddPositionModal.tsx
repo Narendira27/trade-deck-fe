@@ -126,7 +126,7 @@ const AddPositionModal: React.FC<AddPositionModalProps> = ({
       });
 
       toast.success("Position added successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to add position");
     }
   };

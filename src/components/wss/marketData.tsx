@@ -2,8 +2,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import cookies from "js-cookie";
 import { toast } from "sonner";
-import useStore, { useDraggableStore } from "../store/store";
-import { SOCKET_FE } from "../config/config";
+import useStore, { useDraggableStore } from "../../store/store";
+import { SOCKET_FE } from "../../config/config";
 import throttle from "lodash/throttle";
 
 interface PriceUpdate {
@@ -214,8 +214,12 @@ const MarketDataComponent = () => {
   }, [isConnected, subscribeToInstruments]);
 
   useEffect(() => {
-    const allDraggableData = [...draggableData1, ...draggableData2, ...draggableData3];
-    
+    const allDraggableData = [
+      ...draggableData1,
+      ...draggableData2,
+      ...draggableData3,
+    ];
+
     if (allDraggableData.length > 0 && isConnected) {
       const notSubscribedArr = allDraggableData.filter(
         (data) =>
@@ -229,7 +233,13 @@ const MarketDataComponent = () => {
         });
       }
     }
-  }, [draggableData1, draggableData2, draggableData3, isConnected, subscribeToOptionInfo]);
+  }, [
+    draggableData1,
+    draggableData2,
+    draggableData3,
+    isConnected,
+    subscribeToOptionInfo,
+  ]);
 
   return <></>;
 };

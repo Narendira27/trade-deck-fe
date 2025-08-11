@@ -5,8 +5,8 @@ import {
   DollarSign,
   TrendingUp,
 } from "lucide-react";
-import { type Trade } from "../types/trade";
-import { formatCurrency, formatNumber } from "../utils/formatters";
+import { type Trade } from "../../types/trade";
+import { formatCurrency, formatNumber } from "../../utils/formatters";
 
 interface TradeStatsProps {
   trades: Trade[];

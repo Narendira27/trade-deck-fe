@@ -4,8 +4,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import Header from "../components/Header";
-import SideNav from "../components/SideNav";
+import Header from "../components/core/Header";
+import SideNav from "../components/core/SideNav";
 import InstanceTable from "../components/TradeTable/InstanceTable";
 import { jwtDecode } from "jwt-decode";
 import { type Column } from "../components/TradeTable/ColumnManager";
@@ -17,13 +17,13 @@ import {
 } from "../types/instanceColumns";
 import { loadInstanceColumnsFromStorage } from "../components/TradeTable/InstanceColumnManager";
 import { loadTradeDetailColumnsFromStorage } from "../components/TradeTable/TradeDetailColumnManager";
-import MarketDataComponent from "../components/marketData";
-import GetValues from "../components/getValues";
-import ResizablePanel from "../components/ResizablePanel";
+import MarketDataComponent from "../components/wss/marketData";
+import GetValues from "../components/wss/getValues";
+import ResizablePanel from "../components/core/ResizablePanel";
 import ChartContainer from "../components/Chart/ChartContainer";
 import PositionTracker from "../components/PositionTracker/PositionTracker";
-import DraggableBoxManager from "../components/DraggableBoxManager";
-import DraggableBox from "../components/DraggableBox";
+import DraggableBoxManager from "../components/draggable/DraggableBoxManager";
+import DraggableBox from "../components/draggable/DraggableBox";
 import {
   defaultDraggableColumns,
   type DraggableBoxColumn,
@@ -31,7 +31,7 @@ import {
 
 import { API_URL } from "../config/config";
 import useStore from "../store/store";
-import LatestSocket from "../components/latestSocket";
+import LatestSocket from "../components/wss/latestSocket";
 
 interface MyJwtPayload {
   updatePassword: boolean;
