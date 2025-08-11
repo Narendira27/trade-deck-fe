@@ -76,6 +76,7 @@ const ChartContainer: React.FC = () => {
     if (
       !instance.indexName ||
       instance.indexName.trim() === "" ||
+      instance.indexName === "select" ||
       !instance.expiry ||
       instance.expiry.trim() === "" ||
       !instance.ltpRange ||
