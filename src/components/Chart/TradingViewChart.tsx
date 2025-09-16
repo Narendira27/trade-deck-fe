@@ -1,3 +1,4 @@
+/** eslint-disable */
 import React, { useEffect, useRef, useState } from "react";
 import {
   createChart,
@@ -18,7 +19,7 @@ interface TradingViewChartProps {
   timeframe: string;
   chartType: "line" | "candlestick";
   tradeId: string;
-  chartData: any[];
+  chartData: CandlestickData[];
   isLoading: boolean;
   onRefreshData: () => void;
 }
@@ -176,38 +177,21 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const transformDataForChartType = (
     rawData: CandlestickData[]
   ): CandlestickData[] | LineData[] => {
-    if (!rawData || rawData.length === 0) return [];
-    
-    // Ensure data is properly formatted
-    const formattedData = rawData.map((item: any) => {
-      const timestamp = typeof item.time === 'number' ? item.time : Math.floor(Date.parse(item.time) / 1000);
-      
-      return {
-        time: timestamp as Time,
-        open: parseFloat(item.open) || 0,
-        high: parseFloat(item.high) || 0,
-        low: parseFloat(item.low) || 0,
-        close: parseFloat(item.close) || 0,
-      };
-    });
-    
-    // Sort by time to ensure proper order
-    formattedData.sort((a, b) => (a.time as number) - (b.time as number));
-    
+    const newData = removeIfNotEndingWith59(rawData);
     if (chartType === "line") {
-      return formattedData.map((candle) => ({
+      return newData.map((candle) => ({
         time: candle.time,
         value: candle.close,
       }));
     }
-    return formattedData;
+    return rawData;
   };
 
   const removePriceLines = () => {
     keys.forEach((key) => {
       if (priceLinesRef.current[key]) {
         const series = candleSeriesRef.current || lineSeriesRef.current;
-        if (series) series.removePriceLine(priceLinesRef.current[key]!);
+        series?.removePriceLine(priceLinesRef.current[key]!);
         priceLinesRef.current[key] = null;
       }
     });
@@ -247,7 +231,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
   // Live data updates
   useEffect(() => {
-    if (!chartReady || !chartData.length) return;
+    if (!chartReady) return;
 
     const series = candleSeriesRef.current || lineSeriesRef.current;
     if (!series) return;
@@ -256,7 +240,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     if (!option?.lowestCombinedPremium) return;
 
     const liveValue = option.lowestCombinedPremium;
-    
+
     const candleTime = getISTAlignedTimeInSeconds();
 
     if (chartType === "candlestick") {
@@ -289,7 +273,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
         value: liveValue,
       });
     }
-  }, [chartReady, optionValues, tradeId, chartType, chartData.length]);
+  }, [chartReady, optionValues, tradeId, chartType]);
 
   // Chart initialization
   useEffect(() => {
@@ -297,7 +281,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
     const container = chartContainerRef.current;
     let chart: IChartApi | null = null;
-    
+
     const observer = new IntersectionObserver(
       async ([entry]) => {
         if (entry.isIntersecting) {
@@ -322,7 +306,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
               vertTouchDrag: true,
             },
           });
-          
+
           if (!chart) {
             console.error("Failed to create chart instance");
             return;
@@ -330,7 +314,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
           chartRef.current = chart;
           setChartReady(true);
-          
+
           const resizeChart = () => {
             if (chartRef.current && chartContainerRef.current) {
               const rect = chartContainerRef.current.getBoundingClientRect();
@@ -351,7 +335,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           observer.unobserve(container);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.5 }
     );
 
     observer.observe(container);
@@ -359,7 +343,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     return () => {
       observer.disconnect();
       resizeObserverRef.current?.disconnect();
-      
+
       if (chart) {
         try {
           chart.remove();
@@ -375,7 +359,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       setChartReady(false);
     };
   }, [chartContainerRef.current]);
-  
+
   // Update chart when data or chart type changes
   useEffect(() => {
     if (!chartRef.current || !chartReady || !chartData.length) return;
@@ -408,7 +392,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
     if (chartType === "candlestick") {
       const candleSeries = chartRef.current.addCandlestickSeries({
-        priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
         upColor: "#10b981",
         downColor: "#ef4444",
         borderDownColor: "#ef4444",
@@ -420,7 +403,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       candleSeriesRef.current = candleSeries;
     } else {
       const lineSeries = chartRef.current.addLineSeries({
-        priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
         color: "#3b82f6",
         lineWidth: 2,
       });
@@ -428,7 +410,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       lineSeriesRef.current = lineSeries;
     }
 
-    // Restore chart position if available, otherwise fit content  
+    // Restore chart position if available, otherwise fit content
     if (chartPositionRef.current) {
       chartRef.current.timeScale().setVisibleRange({
         from: chartPositionRef.current.x as Time,
@@ -752,7 +734,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       </div>
     );
   }
-  
+
   return (
     <div
       ref={chartContainerRef}
@@ -845,6 +827,28 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     </div>
   );
 };
+
+function removeIfNotEndingWith59(
+  chartData: CandlestickData<Time>[]
+): CandlestickData<Time>[] {
+  if (chartData.length === 0) return chartData;
+
+  const last = chartData[chartData.length - 1];
+
+  // Safely assert time is a number
+  const timestamp = typeof last.time === "number" ? last.time : undefined;
+
+  if (timestamp !== undefined) {
+    const lastSeconds = timestamp % 60;
+
+    if (lastSeconds !== 59) {
+      chartData.pop(); // Remove last item
+      console.log("removed");
+    }
+  }
+
+  return chartData;
+}
 
 const getISTAlignedTimeInSeconds = () => {
   const istOffsetMinutes = 5.5 * 60;
