@@ -105,7 +105,18 @@ const ChartContainer: React.FC = () => {
         timeout: 30000,
       });
 
-      return response.data.data || [];
+      const rawData = response.data.data || [];
+      
+      // Transform the data to match the expected format
+      const transformedData = rawData.map((item: any) => ({
+        time: Math.floor(item.timestamp / 1000) as any, // Convert to seconds if needed
+        open: parseFloat(item.open),
+        high: parseFloat(item.high),
+        low: parseFloat(item.low),
+        close: parseFloat(item.close),
+      }));
+      
+      return transformedData;
     } catch (error) {
       console.error("Error fetching chart data:", error);
       toast.error("Failed to fetch chart data");
