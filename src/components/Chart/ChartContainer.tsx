@@ -16,7 +16,7 @@ interface ChartTab {
   expiry: string;
   range: number;
   timeframe: string;
-  chartType: "candle_solid" | "area";
+  chartType: "line" | "candlestick";
 }
 
 type LayoutType = "single" | "2x2" | "3x1" | "2x2-grid";
@@ -46,7 +46,7 @@ const ChartContainer: React.FC = () => {
           expiry: firstInstance.expiry,
           range: firstInstance.ltpRange,
           timeframe: "1m",
-          chartType: "candle_solid",
+          chartType: "candlestick",
         },
       ];
     }
@@ -58,7 +58,7 @@ const ChartContainer: React.FC = () => {
         expiry: "",
         range: 0,
         timeframe: "1m",
-        chartType: "candle_solid",
+        chartType: "candlestick",
       },
     ];
   });
@@ -68,6 +68,7 @@ const ChartContainer: React.FC = () => {
   const [showTradePopup, setShowTradePopup] = useState(false);
 
   // Function to fetch candle data for a specific instance
+
   const fetchCandleData = async (instanceId: string): Promise<any[]> => {
     const instance = instances.find((i) => i.id === instanceId);
     if (!instance) return [];
@@ -136,7 +137,7 @@ const ChartContainer: React.FC = () => {
         expiry: firstInstance.expiry,
         range: firstInstance.ltpRange,
         timeframe: "1m",
-        chartType: "candle_solid" as const,
+        chartType: "candlestick" as const,
       };
       setTabs([newTab]);
       // Fetch data for the new instance
@@ -166,7 +167,7 @@ const ChartContainer: React.FC = () => {
       expiry: instances.length > 0 ? instances[0].expiry : "",
       range: instances.length > 0 ? instances[0].ltpRange : 0,
       timeframe: "1m",
-      chartType: "candle_solid",
+      chartType: "candlestick",
     };
     setTabs([...tabs, newTab]);
     setActiveTab(newTab.id);
@@ -376,11 +377,11 @@ const ChartContainer: React.FC = () => {
             <div className="flex bg-gray-700 rounded">
               <button
                 onClick={() =>
-                  updateTab(activeTab, { chartType: "candle_solid" })
+                  updateTab(activeTab, { chartType: "candlestick" })
                 }
                 className={`px-3 py-1 text-sm rounded-l ${
                   tabs.find((tab) => tab.id === activeTab)?.chartType ===
-                  "candle_solid"
+                  "candlestick"
                     ? "bg-blue-500 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-600"
                 }`}
@@ -388,9 +389,9 @@ const ChartContainer: React.FC = () => {
                 Candles
               </button>
               <button
-                onClick={() => updateTab(activeTab, { chartType: "area" })}
+                onClick={() => updateTab(activeTab, { chartType: "line" })}
                 className={`px-3 py-1 text-sm rounded-r ${
-                  tabs.find((tab) => tab.id === activeTab)?.chartType === "area"
+                  tabs.find((tab) => tab.id === activeTab)?.chartType === "line"
                     ? "bg-blue-500 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-600"
                 }`}
@@ -444,12 +445,10 @@ const ChartContainer: React.FC = () => {
                 </div>
               )}
               <TradingViewChart
-                indexName={tab.indexName}
-                expiry={tab.expiry}
-                range={tab.range}
+                symbol="test"
                 timeframe={tab.timeframe}
                 chartType={tab.chartType}
-                instanceId={tab.instanceId}
+                tradeId={tab.instanceId}
                 chartData={chartData[tab.instanceId] || []}
                 isLoading={isLoading[tab.instanceId] || false}
                 onRefreshData={() => updateChartData(tab.instanceId)}
