@@ -9,10 +9,10 @@ import {
   type Time,
 } from "lightweight-charts";
 import useStore from "../../store/store";
-import { toast } from "sonner";
-import { API_URL } from "../../config/config";
-import axios from "axios";
-import cookies from "js-cookie";
+// import { toast } from "sonner";
+// import { API_URL } from "../../config/config";
+// import axios from "axios";
+// import cookies from "js-cookie";
 
 interface TradingViewChartProps {
   symbol: string;
