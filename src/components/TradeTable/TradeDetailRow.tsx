@@ -446,7 +446,7 @@ const TradeDetailRow: React.FC<TradeDetailRowProps> = ({
                       takeProfitPremium,
                     };
                   }
-                  return { ...prev, stopLossPoints: points };
+                  return { ...prev, takeProfitPoints: points };
                 });
               }}
               className="w-20 px-1 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
