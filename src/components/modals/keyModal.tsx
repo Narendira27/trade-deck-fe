@@ -34,7 +34,7 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
   });
 
   const [savedKeys, setSavedKeys] = useState<SavedKey[]>([]);
-  const [selectedKeyId, setSelectedKeyId] = useState<string | null>("key-1");
+  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -52,12 +52,29 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
           Authorization: `Bearer ${auth}`,
         },
       });
-      setSavedKeys(response.data.keys);
-      setFormData({
-        apiKey: response.data.keys[0].apiKey,
-        secretKey: response.data.keys[0].apiSecret,
-        keyType: "interactive",
-      });
+      const keys = response.data.keys || [];
+      setSavedKeys(keys);
+
+      // Find the interactive key and select it by default
+      const interactiveKey = keys.find((key: SavedKey) => key.keyType === "interactive");
+
+      if (interactiveKey) {
+        setSelectedKeyId(interactiveKey.keyName);
+        setFormData({
+          apiKey: interactiveKey.apiKey,
+          secretKey: interactiveKey.apiSecret,
+          keyType: interactiveKey.keyType,
+        });
+      } else if (keys.length > 0) {
+        // If no interactive key, select the first available key
+        setSelectedKeyId(keys[0].keyName);
+        setFormData({
+          apiKey: keys[0].apiKey,
+          secretKey: keys[0].apiSecret,
+          keyType: keys[0].keyType,
+        });
+      }
+
       setLoading(false);
     } catch {
       toast.error("Failed to fetch saved keys");
@@ -69,46 +86,61 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     const auth = cookies.get("auth");
 
-    const keyRequest = axios.put(
-      `${API_URL}/user/keys?keyName=${selectedKeyId}`,
-      { apiKey: formData.apiKey, apiSecret: formData.secretKey },
-      {
-        headers: {
-          Authorization: `Bearer ${auth}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    if (!selectedKeyId) {
+      toast.error("Please select a key slot");
+      return;
+    }
 
-    toast.promise(keyRequest, {
-      loading: "Adding API Key...",
-      success: () => {
-        fetchKeys();
-        setFormData({
-          apiKey: "",
-          secretKey: "",
-          keyType: "interactive",
-        });
-        setSelectedKeyId("key-1");
-        return "API Key added successfully!";
-      },
-      error: "Failed to add API Key. Please try again.",
-    });
+    try {
+      await toast.promise(
+        axios.put(
+          `${API_URL}/user/keys?keyName=${selectedKeyId}`,
+          { apiKey: formData.apiKey, apiSecret: formData.secretKey },
+          {
+            headers: {
+              Authorization: `Bearer ${auth}`,
+              "Content-Type": "application/json",
+            },
+          }
+        ),
+        {
+          loading: "Updating API Key...",
+          success: "API Key updated successfully!",
+          error: "Failed to update API Key. Please try again.",
+        }
+      );
+
+      // Refresh all keys after successful update
+      await fetchKeys();
+    } catch (error) {
+      console.error("Error updating key:", error);
+    }
   };
 
   const handleKeyCardClick = (keyNum: number) => {
     const keyId = `key-${keyNum}`;
     setSelectedKeyId(keyId);
 
-    // Find the key by keyName instead of array position
+    // Find the key by keyName
     const foundKey = savedKeys.find((key) => key.keyName === keyId);
-    const getKeyType = keyNum === 1 ? "interactive" : "marketdata";
 
-    setFormData({
-      apiKey: foundKey ? foundKey.apiKey : "",
-      secretKey: foundKey ? foundKey.apiSecret : "",
-      keyType: getKeyType,
-    });
+    if (foundKey) {
+      // Use the keyType from the found key
+      setFormData({
+        apiKey: foundKey.apiKey,
+        secretKey: foundKey.apiSecret,
+        keyType: foundKey.keyType,
+      });
+    } else {
+      // Empty form for new key, determine type based on keyName
+      // key-1 is interactive, others are marketdata
+      const getKeyType = keyNum === 1 ? "interactive" : "marketdata";
+      setFormData({
+        apiKey: "",
+        secretKey: "",
+        keyType: getKeyType,
+      });
+    }
   };
 
   if (!isOpen) return null;
@@ -130,19 +162,24 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
                 const foundKey = savedKeys.find((k) => k.keyName === keyId);
                 const isSelected = selectedKeyId === keyId;
 
+                // Determine label based on keyType if key exists, otherwise use default logic
+                const keyLabel = foundKey
+                  ? (foundKey.keyType === "interactive" ? "Interactive Key" : "MarketData Key")
+                  : (keyNum === 1 ? "Interactive Key" : "MarketData Key");
+
                 return (
                   <div
                     key={keyNum}
-                    className={`bg-gray-700 p-4 rounded-lg cursor-pointer transition-colors ${
+                    className={`bg-gray-700 p-4 rounded-lg cursor-pointer transition-colors hover:bg-gray-600 ${
                       isSelected ? "ring-2 ring-blue-500" : ""
                     }`}
                     onClick={() => handleKeyCardClick(keyNum)}
                   >
                     <p className="text-white text-lg mb-2">
-                      {keyNum === 1 ? "Interactive Key" : "MarketData Key"}
+                      {keyLabel}
                     </p>
                     {foundKey ? (
-                      <p className="text-sm text-gray-400">key configured</p>
+                      <p className="text-sm text-green-400">Key configured</p>
                     ) : (
                       <p className="text-sm text-gray-400">No key configured</p>
                     )}
