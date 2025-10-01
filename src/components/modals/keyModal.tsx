@@ -55,23 +55,25 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
       const keys = response.data.keys || [];
       setSavedKeys(keys);
 
-      // Find the interactive key and select it by default
-      const interactiveKey = keys.find((key: SavedKey) => key.keyType === "interactive");
+      // Find key-1 (interactive key) and select it by default
+      const interactiveKey = keys.find((key: SavedKey) => key.keyName === "key-1");
 
       if (interactiveKey) {
-        setSelectedKeyId(interactiveKey.keyName);
+        setSelectedKeyId("key-1");
         setFormData({
           apiKey: interactiveKey.apiKey,
           secretKey: interactiveKey.apiSecret,
-          keyType: interactiveKey.keyType,
+          keyType: "interactive",
         });
       } else if (keys.length > 0) {
-        // If no interactive key, select the first available key
-        setSelectedKeyId(keys[0].keyName);
+        // If no key-1, select the first available key
+        const firstKey = keys[0];
+        const keyType = firstKey.keyName === "key-1" ? "interactive" : "marketdata";
+        setSelectedKeyId(firstKey.keyName);
         setFormData({
-          apiKey: keys[0].apiKey,
-          secretKey: keys[0].apiSecret,
-          keyType: keys[0].keyType,
+          apiKey: firstKey.apiKey,
+          secretKey: firstKey.apiSecret,
+          keyType: keyType,
         });
       }
 
@@ -121,24 +123,24 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
     const keyId = `key-${keyNum}`;
     setSelectedKeyId(keyId);
 
+    // keyName determines type: key-1 is interactive, others are marketdata
+    const keyType = keyNum === 1 ? "interactive" : "marketdata";
+
     // Find the key by keyName
     const foundKey = savedKeys.find((key) => key.keyName === keyId);
 
     if (foundKey) {
-      // Use the keyType from the found key
       setFormData({
         apiKey: foundKey.apiKey,
         secretKey: foundKey.apiSecret,
-        keyType: foundKey.keyType,
+        keyType: keyType,
       });
     } else {
-      // Empty form for new key, determine type based on keyName
-      // key-1 is interactive, others are marketdata
-      const getKeyType = keyNum === 1 ? "interactive" : "marketdata";
+      // Empty form for new key
       setFormData({
         apiKey: "",
         secretKey: "",
-        keyType: getKeyType,
+        keyType: keyType,
       });
     }
   };
@@ -162,10 +164,8 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
                 const foundKey = savedKeys.find((k) => k.keyName === keyId);
                 const isSelected = selectedKeyId === keyId;
 
-                // Determine label based on keyType if key exists, otherwise use default logic
-                const keyLabel = foundKey
-                  ? (foundKey.keyType === "interactive" ? "Interactive Key" : "MarketData Key")
-                  : (keyNum === 1 ? "Interactive Key" : "MarketData Key");
+                // keyName determines label: key-1 is Interactive, others are MarketData
+                const keyLabel = keyNum === 1 ? "Interactive Key" : "MarketData Key";
 
                 return (
                   <div
