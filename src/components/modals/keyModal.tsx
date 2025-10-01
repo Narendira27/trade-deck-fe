@@ -243,9 +243,14 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
                 <input
                   type="text"
                   value={formData.apiKey}
-                  onChange={(e) =>
-                    setFormData({ ...formData, apiKey: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const newData = { ...formData, apiKey: e.target.value };
+                    setFormData(newData);
+                    setHasUnsavedChanges(
+                      newData.apiKey !== originalFormData.apiKey ||
+                      newData.secretKey !== originalFormData.secretKey
+                    );
+                  }}
                   className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
