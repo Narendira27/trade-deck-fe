@@ -34,7 +34,13 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
   });
 
   const [savedKeys, setSavedKeys] = useState<SavedKey[]>([]);
-  const [selectedKeyId, setSelectedKeyId] = useState<string | null>("key-1");
+  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
+  const [originalFormData, setOriginalFormData] = useState<KeyData>({
+    apiKey: "",
+    secretKey: "",
+    keyType: "interactive",
+  });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -52,12 +58,36 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
           Authorization: `Bearer ${auth}`,
         },
       });
-      setSavedKeys(response.data.keys);
-      setFormData({
-        apiKey: response.data.keys[0].apiKey,
-        secretKey: response.data.keys[0].apiSecret,
-        keyType: "interactive",
-      });
+      const keys = response.data.keys || [];
+      setSavedKeys(keys);
+
+      // Find key-1 (interactive key) and select it by default
+      const interactiveKey = keys.find((key: SavedKey) => key.keyName === "key-1");
+
+      if (interactiveKey) {
+        setSelectedKeyId("key-1");
+        const initialData = {
+          apiKey: interactiveKey.apiKey,
+          secretKey: interactiveKey.apiSecret,
+          keyType: "interactive" as const,
+        };
+        setFormData(initialData);
+        setOriginalFormData(initialData);
+      } else if (keys.length > 0) {
+        // If no key-1, select the first available key
+        const firstKey = keys[0];
+        const keyType = firstKey.keyName === "key-1" ? "interactive" : "marketdata";
+        const initialData = {
+          apiKey: firstKey.apiKey,
+          secretKey: firstKey.apiSecret,
+          keyType: keyType as "interactive" | "marketdata",
+        };
+        setSelectedKeyId(firstKey.keyName);
+        setFormData(initialData);
+        setOriginalFormData(initialData);
+      }
+
+      setHasUnsavedChanges(false);
       setLoading(false);
     } catch {
       toast.error("Failed to fetch saved keys");
@@ -69,46 +99,85 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     const auth = cookies.get("auth");
 
-    const keyRequest = axios.put(
-      `${API_URL}/user/keys?keyName=${selectedKeyId}`,
-      { apiKey: formData.apiKey, apiSecret: formData.secretKey },
-      {
-        headers: {
-          Authorization: `Bearer ${auth}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    if (!selectedKeyId) {
+      toast.error("Please select a key slot");
+      return;
+    }
 
-    toast.promise(keyRequest, {
-      loading: "Adding API Key...",
-      success: () => {
-        fetchKeys();
-        setFormData({
-          apiKey: "",
-          secretKey: "",
-          keyType: "interactive",
-        });
-        setSelectedKeyId("key-1");
-        return "API Key added successfully!";
-      },
-      error: "Failed to add API Key. Please try again.",
+    console.log("Submitting with values:", {
+      apiKey: formData.apiKey,
+      secretKey: formData.secretKey,
+      keyName: selectedKeyId
     });
+
+    try {
+      await toast.promise(
+        axios.put(
+          `${API_URL}/user/keys?keyName=${selectedKeyId}`,
+          { apiKey: formData.apiKey, apiSecret: formData.secretKey },
+          {
+            headers: {
+              Authorization: `Bearer ${auth}`,
+              "Content-Type": "application/json",
+            },
+          }
+        ),
+        {
+          loading: "Updating API Key...",
+          success: "API Key updated successfully!",
+          error: "Failed to update API Key. Please try again.",
+        }
+      );
+
+      console.log("Update completed successfully");
+
+      // Refresh all keys after successful update
+      await fetchKeys();
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error("Error updating key:", error);
+    }
   };
 
   const handleKeyCardClick = (keyNum: number) => {
+    // Check for unsaved changes before switching
+    if (hasUnsavedChanges) {
+      const confirmSwitch = window.confirm(
+        "You have unsaved changes. Click 'Update Key' to save changes before switching keys."
+      );
+      if (!confirmSwitch) {
+        return;
+      }
+    }
+
     const keyId = `key-${keyNum}`;
     setSelectedKeyId(keyId);
 
-    // Find the key by keyName instead of array position
-    const foundKey = savedKeys.find((key) => key.keyName === keyId);
-    const getKeyType = keyNum === 1 ? "interactive" : "marketdata";
+    // keyName determines type: key-1 is interactive, others are marketdata
+    const keyType = keyNum === 1 ? "interactive" : "marketdata";
 
-    setFormData({
-      apiKey: foundKey ? foundKey.apiKey : "",
-      secretKey: foundKey ? foundKey.apiSecret : "",
-      keyType: getKeyType,
-    });
+    // Find the key by keyName
+    const foundKey = savedKeys.find((key) => key.keyName === keyId);
+
+    if (foundKey) {
+      const newData = {
+        apiKey: foundKey.apiKey,
+        secretKey: foundKey.apiSecret,
+        keyType: keyType as "interactive" | "marketdata",
+      };
+      setFormData(newData);
+      setOriginalFormData(newData);
+    } else {
+      // Empty form for new key
+      const newData = {
+        apiKey: "",
+        secretKey: "",
+        keyType: keyType as "interactive" | "marketdata",
+      };
+      setFormData(newData);
+      setOriginalFormData(newData);
+    }
+    setHasUnsavedChanges(false);
   };
 
   if (!isOpen) return null;
@@ -130,19 +199,22 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
                 const foundKey = savedKeys.find((k) => k.keyName === keyId);
                 const isSelected = selectedKeyId === keyId;
 
+                // keyName determines label: key-1 is Interactive, others are MarketData
+                const keyLabel = keyNum === 1 ? "Interactive Key" : "MarketData Key";
+
                 return (
                   <div
                     key={keyNum}
-                    className={`bg-gray-700 p-4 rounded-lg cursor-pointer transition-colors ${
+                    className={`bg-gray-700 p-4 rounded-lg cursor-pointer transition-colors hover:bg-gray-600 ${
                       isSelected ? "ring-2 ring-blue-500" : ""
                     }`}
                     onClick={() => handleKeyCardClick(keyNum)}
                   >
                     <p className="text-white text-lg mb-2">
-                      {keyNum === 1 ? "Interactive Key" : "MarketData Key"}
+                      {keyLabel}
                     </p>
                     {foundKey ? (
-                      <p className="text-sm text-gray-400">key configured</p>
+                      <p className="text-sm text-green-400">Key configured</p>
                     ) : (
                       <p className="text-sm text-gray-400">No key configured</p>
                     )}
@@ -179,9 +251,14 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
                 <input
                   type="text"
                   value={formData.apiKey}
-                  onChange={(e) =>
-                    setFormData({ ...formData, apiKey: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const newData = { ...formData, apiKey: e.target.value };
+                    setFormData(newData);
+                    setHasUnsavedChanges(
+                      newData.apiKey !== originalFormData.apiKey ||
+                      newData.secretKey !== originalFormData.secretKey
+                    );
+                  }}
                   className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -194,13 +271,26 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
                 <input
                   type="password"
                   value={formData.secretKey}
-                  onChange={(e) =>
-                    setFormData({ ...formData, secretKey: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const newData = { ...formData, secretKey: e.target.value };
+                    setFormData(newData);
+                    setHasUnsavedChanges(
+                      newData.apiKey !== originalFormData.apiKey ||
+                      newData.secretKey !== originalFormData.secretKey
+                    );
+                  }}
                   className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
+
+              {hasUnsavedChanges && (
+                <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-md p-3">
+                  <p className="text-yellow-500 text-sm">
+                    You have unsaved changes. Click 'Update Key' to save your changes.
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end space-x-3 mt-6">
                 <button
