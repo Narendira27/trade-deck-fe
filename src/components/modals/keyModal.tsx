@@ -35,6 +35,12 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
 
   const [savedKeys, setSavedKeys] = useState<SavedKey[]>([]);
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
+  const [originalFormData, setOriginalFormData] = useState<KeyData>({
+    apiKey: "",
+    secretKey: "",
+    keyType: "interactive",
+  });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -60,23 +66,28 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
 
       if (interactiveKey) {
         setSelectedKeyId("key-1");
-        setFormData({
+        const initialData = {
           apiKey: interactiveKey.apiKey,
           secretKey: interactiveKey.apiSecret,
-          keyType: "interactive",
-        });
+          keyType: "interactive" as const,
+        };
+        setFormData(initialData);
+        setOriginalFormData(initialData);
       } else if (keys.length > 0) {
         // If no key-1, select the first available key
         const firstKey = keys[0];
         const keyType = firstKey.keyName === "key-1" ? "interactive" : "marketdata";
-        setSelectedKeyId(firstKey.keyName);
-        setFormData({
+        const initialData = {
           apiKey: firstKey.apiKey,
           secretKey: firstKey.apiSecret,
-          keyType: keyType,
-        });
+          keyType: keyType as "interactive" | "marketdata",
+        };
+        setSelectedKeyId(firstKey.keyName);
+        setFormData(initialData);
+        setOriginalFormData(initialData);
       }
 
+      setHasUnsavedChanges(false);
       setLoading(false);
     } catch {
       toast.error("Failed to fetch saved keys");
@@ -114,12 +125,23 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
 
       // Refresh all keys after successful update
       await fetchKeys();
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error updating key:", error);
     }
   };
 
   const handleKeyCardClick = (keyNum: number) => {
+    // Check for unsaved changes before switching
+    if (hasUnsavedChanges) {
+      const confirmSwitch = window.confirm(
+        "You have unsaved changes. Click 'Update Key' to save changes before switching keys."
+      );
+      if (!confirmSwitch) {
+        return;
+      }
+    }
+
     const keyId = `key-${keyNum}`;
     setSelectedKeyId(keyId);
 
@@ -130,19 +152,24 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
     const foundKey = savedKeys.find((key) => key.keyName === keyId);
 
     if (foundKey) {
-      setFormData({
+      const newData = {
         apiKey: foundKey.apiKey,
         secretKey: foundKey.apiSecret,
-        keyType: keyType,
-      });
+        keyType: keyType as "interactive" | "marketdata",
+      };
+      setFormData(newData);
+      setOriginalFormData(newData);
     } else {
       // Empty form for new key
-      setFormData({
+      const newData = {
         apiKey: "",
         secretKey: "",
-        keyType: keyType,
-      });
+        keyType: keyType as "interactive" | "marketdata",
+      };
+      setFormData(newData);
+      setOriginalFormData(newData);
     }
+    setHasUnsavedChanges(false);
   };
 
   if (!isOpen) return null;
@@ -231,13 +258,26 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
                 <input
                   type="password"
                   value={formData.secretKey}
-                  onChange={(e) =>
-                    setFormData({ ...formData, secretKey: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const newData = { ...formData, secretKey: e.target.value };
+                    setFormData(newData);
+                    setHasUnsavedChanges(
+                      newData.apiKey !== originalFormData.apiKey ||
+                      newData.secretKey !== originalFormData.secretKey
+                    );
+                  }}
                   className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
+
+              {hasUnsavedChanges && (
+                <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-md p-3">
+                  <p className="text-yellow-500 text-sm">
+                    You have unsaved changes. Click 'Update Key' to save your changes.
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end space-x-3 mt-6">
                 <button
