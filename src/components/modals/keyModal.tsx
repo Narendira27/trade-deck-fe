@@ -104,6 +104,12 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
       return;
     }
 
+    console.log("Submitting with values:", {
+      apiKey: formData.apiKey,
+      secretKey: formData.secretKey,
+      keyName: selectedKeyId
+    });
+
     try {
       await toast.promise(
         axios.put(
@@ -122,6 +128,8 @@ const KeyModal: React.FC<KeyModalProps> = ({ isOpen, onClose }) => {
           error: "Failed to update API Key. Please try again.",
         }
       );
+
+      console.log("Update completed successfully");
 
       // Refresh all keys after successful update
       await fetchKeys();
